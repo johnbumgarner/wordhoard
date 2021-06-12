@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 
+"""
+This Python script is to create temporary dictionary caches.  These caches are
+designed to limit redundant queries.
+"""
+__author__ = 'John Bumgarner'
+__date__ = 'October 15, 2020'
+__status__ = 'Production'
+__license__ = 'MIT'
+__copyright__ = "Copyright (C) 2020 John Bumgarner"
+
 ##################################################################################
 # “AS-IS” Clause
 #
@@ -15,14 +25,10 @@
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Revised:
-# Revised by:
-#
-# This Python script is to create temporary dictionary caches.  These caches are
-# designed to limit redundant queries.
+# Date Revised: June 1, 2021
+# Revised by: John Bumgarner
 #
 ##################################################################################
-
 
 ##################################################################################
 # in memory temporary cache for antonyms
@@ -82,3 +88,44 @@ def cache_definition(word, source):
 def insert_word_cache_definition(word, source, values):
     key = f'{word}_{source}'
     temporary_dict_definition[key] = values
+
+
+##################################################################################
+# in memory temporary cache for hypernyms
+##################################################################################
+temporary_dict_hypernyms = {}
+
+
+def cache_hypernyms(word, source):
+    item_to_check = f'{word}_{source}'
+    if item_to_check in temporary_dict_hypernyms.keys():
+        new_dict = {key: val for (key, val) in temporary_dict_hypernyms.items() if key == word}
+        return new_dict
+    else:
+        return False
+
+
+def insert_word_cache_hypernyms(word, source, values):
+    key = f'{word}_{source}'
+    temporary_dict_hypernyms[key] = values
+
+
+##################################################################################
+# in memory temporary cache for hyponyms
+##################################################################################
+temporary_dict_hyponyms = {}
+
+
+def cache_hyponyms(word, source):
+    item_to_check = f'{word}_{source}'
+    if item_to_check in temporary_dict_hyponyms.keys():
+        new_dict = {key: val for (key, val) in temporary_dict_hyponyms.items() if key == word}
+        return new_dict
+    else:
+        return False
+
+
+def insert_word_cache_hyponyms(word, source, values):
+    key = f'{word}_{source}'
+    temporary_dict_hyponyms[key] = values
+

@@ -7,6 +7,7 @@ __author__ = 'John Bumgarner'
 __date__ = 'October 15, 2020'
 __status__ = 'Production'
 __license__ = 'MIT'
+__copyright__ = "Copyright (C) 2020 John Bumgarner"
 
 ##################################################################################
 # “AS-IS” Clause
@@ -16,6 +17,16 @@ __license__ = 'MIT'
 # other warranties, express or implied, and hereby disclaims all implied warranties,
 # including any warranty of merchantability and warranty of fitness for a particular
 # purpose.
+##################################################################################
+
+##################################################################################
+#
+# Date Completed: October 15, 2020
+# Author: John Bumgarner
+#
+# Date Revised:
+# Revised by:
+#
 ##################################################################################
 
 ##################################################################################
@@ -38,7 +49,7 @@ def validate_word_syntax(word):
     if len(word) == 0:
         return False
     else:
-        temp = regex.match(r'^[a-zA-Z-]*$', word.strip())
+        temp = regex.match(r'^[a-zA-Z-\s]*$', word.strip())
         if temp:
             return True
         else:
