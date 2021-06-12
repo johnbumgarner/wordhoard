@@ -5,7 +5,7 @@ This Python script is designed to query a online repository for the
 hypernyms and hyperonyms associated with a specific word.
 """
 __author__ = 'John Bumgarner'
-__date__ = 'June 1, 2021'
+__date__ = 'June 11, 2021'
 __status__ = 'Production'
 __license__ = 'MIT'
 __copyright__ = "Copyright (C) 2021 John Bumgarner"

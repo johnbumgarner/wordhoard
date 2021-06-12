@@ -5,7 +5,7 @@ This Python script is designed to query internal repositories for the
 homophones associated with the given word.
 """
 __author__ = 'John Bumgarner'
-__date__ = 'June 12, 2021'
+__date__ = 'June 11, 2021'
 __status__ = 'Production'
 __license__ = 'MIT'
 __copyright__ = "Copyright (C) 2021 John Bumgarner"

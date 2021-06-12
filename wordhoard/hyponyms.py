@@ -5,7 +5,7 @@ This Python script is designed to query a online repository for the
 hyponyms associated with a specific word.
 """
 __author__ = 'John Bumgarner'
-__date__ = 'June 1, 2021'
+__date__ = 'June 11, 2021'
 __status__ = 'Production'
 __license__ = 'MIT'
 __copyright__ = "Copyright (C) 2021 John Bumgarner"
@@ -33,6 +33,8 @@ from wordhoard.utilities import basic_soup, caching, wordhoard_logger, word_veri
 logger = logging.getLogger(__name__)
 wordhoard_logger.enable_logging(logger)
 
+rand_user_agent = basic_soup.rand_user_agent
+http_headers = {'user-agent': rand_user_agent}
 
 def _get_number_of_pages(soup):
     """
@@ -119,7 +121,7 @@ def find_hyponyms(single_word):
                 if number_of_pages >= 2:
                     for page in range(2, number_of_pages):
                         sub_html = requests.get(f'https://www.classicthesaurus.com/{single_word}/narrower/{page}',
-                                                headers={"User-Agent": "Mozilla/5.0"})
+                                                headers=http_headers)
                         sub_soup = BeautifulSoup(sub_html.text, 'lxml')
                         additional_hyponym = _get_hyponyms(sub_soup)
                         hyponym.union(additional_hyponym)
