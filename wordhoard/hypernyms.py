@@ -119,7 +119,7 @@ def find_hypernyms(single_word):
                 if number_of_pages >= 2:
                     for page in range(2, number_of_pages):
                         sub_html = requests.get(f'https://www.classicthesaurus.com/{single_word}/broader/{page}',
-                                                headers={"User-Agent": "Mozilla/5.0"})
+                                                basic_soup.http_headers)
                         sub_soup = BeautifulSoup(sub_html.text, 'lxml')
                         additional_hypernym = _get_hypernyms(sub_soup)
                         hypernym.union(additional_hypernym)

@@ -33,8 +33,6 @@ from wordhoard.utilities import basic_soup, caching, wordhoard_logger, word_veri
 logger = logging.getLogger(__name__)
 wordhoard_logger.enable_logging(logger)
 
-rand_user_agent = basic_soup.rand_user_agent
-http_headers = {'user-agent': rand_user_agent}
 
 def _get_number_of_pages(soup):
     """
@@ -54,15 +52,15 @@ def _get_number_of_pages(soup):
                 number_of_pages = int(list_of_pages[-1]) + 1
         return number_of_pages
 
-    except AttributeError as e:
+    except AttributeError as error:
         logger.error('An AttributeError occurred in the following code segment:')
-        logger.error(''.join(traceback.format_tb(e.__traceback__)))
-    except KeyError as e:
+        logger.error(''.join(traceback.format_tb(error.__traceback__)))
+    except KeyError as error:
         logger.error('A KeyError occurred in the following code segment:')
-        logger.error(''.join(traceback.format_tb(e.__traceback__)))
-    except TypeError as e:
+        logger.error(''.join(traceback.format_tb(error.__traceback__)))
+    except TypeError as error:
         logger.error('A TypeError occurred in the following code segment:')
-        logger.error(''.join(traceback.format_tb(e.__traceback__)))
+        logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
 
 def _get_hyponyms(soup):
@@ -88,15 +86,15 @@ def _get_hyponyms(soup):
                             sub_set.add('no hyponyms found')
         return sub_set
 
-    except AttributeError as e:
+    except AttributeError as error:
         logger.error('An AttributeError occurred in the following code segment:')
-        logger.error(''.join(traceback.format_tb(e.__traceback__)))
-    except KeyError as e:
+        logger.error(''.join(traceback.format_tb(error.__traceback__)))
+    except KeyError as error:
         logger.error('A KeyError occurred in the following code segment:')
-        logger.error(''.join(traceback.format_tb(e.__traceback__)))
-    except TypeError as e:
+        logger.error(''.join(traceback.format_tb(error.__traceback__)))
+    except TypeError as error:
         logger.error('A TypeError occurred in the following code segment:')
-        logger.error(''.join(traceback.format_tb(e.__traceback__)))
+        logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
 
 def find_hyponyms(single_word):
@@ -121,25 +119,25 @@ def find_hyponyms(single_word):
                 if number_of_pages >= 2:
                     for page in range(2, number_of_pages):
                         sub_html = requests.get(f'https://www.classicthesaurus.com/{single_word}/narrower/{page}',
-                                                headers=http_headers)
+                                                headers=basic_soup.http_headers)
                         sub_soup = BeautifulSoup(sub_html.text, 'lxml')
                         additional_hyponym = _get_hyponyms(sub_soup)
                         hyponym.union(additional_hyponym)
 
                 return sorted(hyponym)
 
-            except bs4.FeatureNotFound as e:
+            except bs4.FeatureNotFound as error:
                 logger.error('An error occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except AttributeError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except AttributeError as error:
                 logger.error('An AttributeError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except KeyError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except KeyError as error:
                 logger.error('A KeyError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except TypeError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except TypeError as error:
                 logger.error('A TypeError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
         else:
             logger.error(f'The word {single_word} was not in a valid format.')
             logger.error(f'Please verify that the word {single_word} is spelled correctly.')

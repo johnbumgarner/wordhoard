@@ -23,6 +23,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 ##################################################################################
 # Python imports required for basic operations
 ##################################################################################
+import os
 import sys
 import pickle
 import logging
@@ -36,36 +37,36 @@ wordhoard_logger.enable_logging(logger)
 # Opening the pickle file that contains a nested list of common
 # English language homophones.
 try:
-    with open('files/common_english_homophones.pkl', 'rb') as eng_homophones:
-        known_homophones_list = pickle.load(eng_homophones)
-        eng_homophones.close()
-except FileNotFoundError as e:
+    with open('wordhoard/files/common_english_homophones.pkl', 'rb') as _eng_homophones:
+        _known_homophones_list = pickle.load(_eng_homophones)
+        _eng_homophones.close()
+except FileNotFoundError as error:
     logger.error('The common_english_homophones.pkl file was not found. Aborting operation.')
-    logger.error(''.join(traceback.format_tb(e.__traceback__)))
+    logger.error(''.join(traceback.format_tb(error.__traceback__)))
     sys.exit(1)
-except OSError as e:
+except OSError as error:
     logger.error(f"An OS error occurred when trying to open the file common_english_homophones.pkl")
-    logger.error(''.join(traceback.format_tb(e.__traceback__)))
+    logger.error(''.join(traceback.format_tb(error.__traceback__)))
     sys.exit(1)
 
 
 # Opening the pickle file that contains a nested list of English
 # language words that have no known homophones.
 try:
-    with open('files/no_homophones_english.pkl', 'rb') as no_eng_homophones:
-        no_homophones_list = pickle.load(no_eng_homophones)
-        no_eng_homophones.close()
-except FileNotFoundError as e:
+    with open('wordhoard/files/no_homophones_english.pkl', 'rb') as _no_eng_homophones:
+        _no_homophones_list = pickle.load(_no_eng_homophones)
+        _no_eng_homophones.close()
+except FileNotFoundError as error:
     logger.error('The no_homophones_english.pkl file was not found. Aborting operation.')
-    logger.error(''.join(traceback.format_tb(e.__traceback__)))
+    logger.error(''.join(traceback.format_tb(error.__traceback__)))
     sys.exit(1)
-except OSError as e:
+except OSError as error:
     logger.error(f"An OS error occurred when trying to open the file no_homophones_english.pkl")
-    logger.error(''.join(traceback.format_tb(e.__traceback__)))
+    logger.error(''.join(traceback.format_tb(error.__traceback__)))
     sys.exit(1)
 
 
-def common_english_homophones(search_string):
+def _common_english_homophones(search_string):
     """
     This function iterates through a list of known
     English language homophones.
@@ -74,9 +75,9 @@ def common_english_homophones(search_string):
     :return: list of homophones
     :rtype: list
     """
-    global known_homophones_list
+    global _known_homophones_list
     rtn_list = []
-    for homophones in known_homophones_list:
+    for homophones in _known_homophones_list:
         match = bool([word for word in homophones if word == search_string])
         if match:
             for word in homophones:
@@ -86,7 +87,7 @@ def common_english_homophones(search_string):
         return list(set(rtn_list))
 
 
-def english_words_without_homophones(search_string):
+def _english_words_without_homophones(search_string):
     """
     This function iterates through a list of English
     language words with no known homophones.
@@ -95,8 +96,8 @@ def english_words_without_homophones(search_string):
     :return: string
     :rtype: string
     """
-    global no_homophones_list
-    match = bool(search_string in no_homophones_list)
+    global _no_homophones_list
+    match = bool(search_string in _no_homophones_list)
     if match:
         return f'no homophones for {search_string}'
 
@@ -113,15 +114,11 @@ def query_homophones(search_string):
     """
     valid_word = word_verification.validate_word_syntax(search_string)
     if valid_word:
-        known_english_homophones = common_english_homophones(search_string)
+        known_english_homophones = _common_english_homophones(search_string)
         if known_english_homophones:
             return known_english_homophones
         elif not known_english_homophones:
-            return english_words_without_homophones(search_string)
+            return _english_words_without_homophones(search_string)
     else:
         logger.error(f'The word {search_string} was not in a valid format.')
         logger.error(f'Please verify that the word {search_string} is spelled correctly.')
-
-
-results = query_homophones('horse')
-print(results)
