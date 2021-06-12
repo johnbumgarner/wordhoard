@@ -39,8 +39,10 @@ def query_synonym_com(single_word):
     """
     This function queries synonym.com for a definition
     related to the 'single_word' parameter.
+
     :param single_word: string variable to search for
     :return: definition for the word
+    :rtype: string
     """
     valid_word = word_verification.validate_word_syntax(single_word)
     if valid_word:
@@ -83,8 +85,10 @@ def query_collins_dictionary_synonym(single_word):
     """
     This function queries collinsdictionary.com for a definition
     related to the 'single_word' parameter.
+
     :param single_word: string variable to search for
     :return: definition for the word
+    :rtype: string
     """
     valid_word = word_verification.validate_word_syntax(single_word)
     if valid_word:
@@ -125,8 +129,10 @@ def query_thesaurus_com(single_word):
     """
     This function queries thesaurus.com for a definition
     related to the 'single_word' parameter.
+
     :param single_word: string variable to search for
     :return: definition for the word
+    :rtype: string
     """
     valid_word = word_verification.validate_word_syntax(single_word)
     if valid_word:

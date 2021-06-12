@@ -39,8 +39,10 @@ def query_collins_dictionary_synonym(single_word):
     """
     This function queries collinsdictionary.com for synonyms
     related to the 'single_word' parameter.
+
     :param single_word: string variable to search for
     :return: list of synonyms
+    :rtype: list
     """
     valid_word = word_verification.validate_word_syntax(single_word)
     if valid_word:
@@ -89,8 +91,10 @@ def query_synonym_com(single_word):
     """
     This function queries synonym.com for synonyms
     related to the 'single_word' parameter.
+
     :param single_word: string variable to search for
     :return: list of synonyms
+    :rtype: list
     """
     valid_word = word_verification.validate_word_syntax(single_word)
     if valid_word:
@@ -136,8 +140,10 @@ def query_thesaurus_com(single_word):
     """
     This function queries thesaurus.com for synonyms
     related to the 'single_word' parameter.
+
     :param single_word: string variable to search for
     :return: list of synonyms
+    :rtype: list
     """
     valid_word = word_verification.validate_word_syntax(single_word)
     if valid_word:
@@ -181,8 +187,10 @@ def query_thesaurus_plus(single_word):
     """
     This function queries thesaurus.plus for synonyms
     related to the 'single_word' parameter.
+
     :param single_word: string variable to search for
     :return: list of synonyms
+    :rtype: list
     """
     valid_word = word_verification.validate_word_syntax(single_word)
     if valid_word:
@@ -234,8 +242,10 @@ def query_wordnet(single_word):
     """
     This function queries wordnet for synonyms
     related to the 'single_word' parameter.
+
     :param single_word: string variable to search for
     :return: list of synonyms
+    :rtype: list
     """
     valid_word = word_verification.validate_word_syntax(single_word)
     if valid_word:

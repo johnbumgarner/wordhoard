@@ -2,7 +2,7 @@
 
 """
 This Python script is designed to query multiple online repositories for the
-antonyms associated with the given word.
+antonyms associated with a specific word.
 """
 __author__ = 'John Bumgarner'
 __date__ = 'October 15, 2020'
@@ -39,8 +39,10 @@ def query_synonym_com(single_word):
     """
     This function queries synonym.com for antonyms
     related to the 'single_word' parameter.
+
     :param single_word: string variable to search for
     :return: list of antonyms
+    :rtype: list
     """
     valid_word = word_verification.validate_word_syntax(single_word)
     if valid_word:
@@ -85,8 +87,10 @@ def query_thesaurus_com(single_word):
     """
     This function queries thesaurus.com for antonyms
     related to the 'single_word' parameter.
+
     :param single_word: string variable to search for
     :return: list of antonyms
+    :rtype: list
     """
     valid_word = word_verification.validate_word_syntax(single_word)
     if valid_word:
@@ -131,8 +135,10 @@ def query_thesaurus_plus(single_word):
     """
     This function queries thesaurus.plus for antonyms
     related to the 'single_word' parameter.
+
     :param single_word: string variable to search for
     :return: list of antonyms
+    :rtype: list
     """
     valid_word = word_verification.validate_word_syntax(single_word)
     if valid_word:
