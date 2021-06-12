@@ -61,18 +61,18 @@ def query_synonym_com(single_word):
                     return definition_list_to_string
                 else:
                     logger.error(f'synonym.com had no reference for the word {single_word}')
-            except bs4.FeatureNotFound as e:
+            except bs4.FeatureNotFound as error:
                 logger.error('An error occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except AttributeError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except AttributeError as error:
                 logger.error('An AttributeError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except KeyError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except KeyError as error:
                 logger.error('A KeyError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except TypeError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except TypeError as error:
                 logger.error('A TypeError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
         else:
             definition = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
             return definition
@@ -105,18 +105,18 @@ def query_collins_dictionary_synonym(single_word):
                     return definition.text
                 else:
                     logger.error(f'Collins Dictionary had no reference for the word {single_word}')
-            except bs4.FeatureNotFound as e:
+            except bs4.FeatureNotFound as error:
                 logger.error('An error occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except AttributeError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except AttributeError as error:
                 logger.error('An AttributeError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except KeyError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except KeyError as error:
                 logger.error('A KeyError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except TypeError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except TypeError as error:
                 logger.error('A TypeError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
         else:
             definition = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
             return definition
@@ -148,22 +148,23 @@ def query_thesaurus_com(single_word):
                     return definition
                 else:
                     logger.error(f'thesaurus.com had no reference for the word {single_word}')
-            except requests.HTTPError as e:
+            except requests.HTTPError as error:
                 logger.error('A HTTP error has occurred.')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except requests.ConnectionError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except requests.ConnectionError as error:
                 if requests.codes:
                     'Failed to establish a new connection'
-                    logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except requests.Timeout as e:
+                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except requests.Timeout as error:
                 logger.error('A connection timeout has occurred.')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except requests.RequestException as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except requests.RequestException as error:
                 logger.error('An ambiguous exception occurred.')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
         else:
             definition = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
             return definition
     else:
         logger.error(f'The word "{single_word}" was not in a valid format.')
         logger.error(f'Please verify that the word {single_word} is spelled correctly.')
+

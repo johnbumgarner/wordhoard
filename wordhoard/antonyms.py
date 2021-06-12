@@ -63,18 +63,18 @@ def query_synonym_com(single_word):
                         return antonyms
                     else:
                         logger.error(f'The word {single_word} no antonyms on synonym.com.')
-            except bs4.FeatureNotFound as e:
+            except bs4.FeatureNotFound as error:
                 logger.error('An error occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except AttributeError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except AttributeError as error:
                 logger.error('An AttributeError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except KeyError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except KeyError as error:
                 logger.error('A KeyError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except TypeError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except TypeError as error:
                 logger.error('A TypeError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
         else:
             antonyms = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
             return antonyms
@@ -110,19 +110,19 @@ def query_thesaurus_com(single_word):
                         logger.error(f'The word {single_word} has no antonyms on thesaurus.com.')
                 else:
                     logger.error(f'The word {single_word} was not found on thesaurus.com.')
-            except requests.HTTPError as e:
+            except requests.HTTPError as error:
                 logger.error('A HTTP error has occurred.')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except requests.ConnectionError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except requests.ConnectionError as error:
                 if requests.codes:
                     'Failed to establish a new connection'
-                    logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except requests.Timeout as e:
+                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except requests.Timeout as error:
                 logger.error('A connection timeout has occurred.')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except requests.RequestException as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except requests.RequestException as error:
                 logger.error('An ambiguous exception occurred.')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
         else:
             antonyms = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
             return antonyms
@@ -161,23 +161,23 @@ def query_thesaurus_plus(single_word):
                             antonyms = sorted([cleansing.normalize_space(i) for i in antonyms_list])
                     caching.insert_word_cache_antonyms(single_word, 'thesaurus_plus', antonyms)
                     return antonyms
-            except IndexError as e:
+            except IndexError as error:
                 logger.error('A IndexError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
                 logger.info(f'Please verify that the word {single_word} is spelled correctly.')
-            except requests.HTTPError as e:
+            except requests.HTTPError as error:
                 logger.error('A HTTP error has occurred.')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except requests.ConnectionError as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except requests.ConnectionError as error:
                 if requests.codes:
                     'Failed to establish a new connection'
-                    logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except requests.Timeout as e:
+                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except requests.Timeout as error:
                 logger.error('A connection timeout has occurred.')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except requests.RequestException as e:
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            except requests.RequestException as error:
                 logger.error('An ambiguous exception occurred.')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
         else:
             antonyms = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
             return antonyms
