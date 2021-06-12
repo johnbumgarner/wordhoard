@@ -4,16 +4,15 @@
   <img src="https://github.com/johnbumgarner/wordhoard/blob/master/graphic/wordhoard_graphic.jpg"/>
 </p>
 
-# Overview
+# Overviews
 
 ![PyPI version](https://img.shields.io/pypi/v/wordhoard?style=flat-square)&nbsp;
 ![License: MIT](https://img.shields.io/github/license/johnbumgarner/wordhoard?style=flat-square) &nbsp;
 
-
 <p align="justify">
-The Oxford Dictionary defines <i>wordhoard</i> as a supply of words or a lexicon. <i>Wordhoard</i> is a <i>Python</i> 3 module that can be used to obtain antonyms, synonyms and definitions for words. 
+The Oxford Dictionary defines <i>wordhoard</i> as a supply of words or a lexicon. <i>Wordhoard</i> is a <i>Python</i> 3 module that can be used to obtain antonyms, synonyms, hypernyms, hyponyms, homophones and definitions for words. 
   
-This <i>Python</i> module was spawned from a <a href="https://stackoverflow.com/questions/63705803/merge-related-words-in-nlp/63771196#63771196">Stack Overflow</a> bountied question.  That question forced me to looked into the best practices for obtaining a comprehensive lists of synonyms for a given word.  During my research, I developed the repository <a href="https://github.com/johnbumgarner/synonyms_discovery_aggregation">synonym discovery and aggregation</a> and decided to create <i>wordhoard</i>.
+This <i>Python</i> package was spawned from a <a href="https://stackoverflow.com/questions/63705803/merge-related-words-in-nlp/63771196#63771196">Stack Overflow</a> bountied question.  That question forced me to looked into the best practices for obtaining a comprehensive lists of synonyms for a given word.  During my research, I developed the repository <a href="https://github.com/johnbumgarner/synonyms_discovery_aggregation">synonym discovery and aggregation</a> and decided to create <i>wordhoard</i>.
 <p>
    
 # Primary Use Case
@@ -22,7 +21,7 @@ Textual analysis is a broad term for various research methodologies used to qual
    
 Word frequency is the technique used in textual analysis to measure the frequency of a specific word or word grouping within unstructured data. Measuring the number of word occurrences in a corpus allows a researcher to garner interesting insights about the text. A subset of word frequency is the correlation between a given word and that word's relationship to either antonyms and synonyms within the specific corpus being analyzed. Knowing these relationships is critical to improving word frequencies and topic modeling.
 
-<i>Wordhoard</i> was designed to assist researchers performing textual analysis to build more comprehensive antonyms and synonyms lists.
+<i>Wordhoard</i> was designed to assist researchers performing textual analysis to build more comprehensive lists of antonyms, synonyms, hypernyms, hyponyms and homophones.
 </p>
 
 # Installation
@@ -35,9 +34,17 @@ Word frequency is the technique used in textual analysis to measure the frequenc
 pip3 install wordhoard
 ```
 
-# Basic Usage Antonyms
+# Antonyms Module Usage
 
-## Antonyms
+<p align="justify"> 
+  An <i>antonym</i> is word that has the exact opposite meaning of another word or its antonym.
+
+Antonym examples:
+
+- bad and good
+- fast and slow
+- stop and go
+</p>
 
 ## Antonyms - single source
 
@@ -59,11 +66,19 @@ antonyms_02 = antonyms.query_thesaurus_com('mother')
 antonyms_03 = antonyms.query_thesaurus_plus('mother')
 antonyms_results = sorted(set([y for x in [antonyms_01, antonyms_02, antonyms_03] for y in x]))
 print(antonyms_results)
-['abort', 'begetter', 'brush', 'brush aside', 'brush off', 'child', 'dad', 'daughter', 'descendant', 'effect', 'end', 'father', 'follower', 
-forget', 'ignore', 'lose', 'male parent', 'miscarry', 'neglect', 'offspring', 'overlook', 'result', 'slight']
+['abort', 'begetter', 'brush', 'brush aside', 'brush off', 'child', 'dad', 'daughter', 'descendant', 'effect', 'end', 'father', 'follower', forget', 'ignore', 'lose', 'male parent', 'miscarry', 'neglect', 'offspring', 'overlook', 'result', 'slight']
 ```
 
-# Basic Usage Synonyms
+# Synonyms Module Usage
+<p align="justify">
+ A <i>synonym</i> is a word or phrase that means exactly or nearly the same as another word or phrase in the same language.
+
+Synonym examples:
+- happy, joyful, elated, cheerful
+- bad, evil, rotten, corrupt  
+- cold, chilly, freezing, frosty
+</p>
+
 
 ## Synonyms - single source
   
@@ -110,7 +125,68 @@ for key, value in synonyms_results.items():
     son ['Jnr', 'Jr', 'Junior', 'boy', 'male offspring', "mama's boy", "mamma's boy", 'man-child', "mother's boy"]
 ```
 
-# Basic Usage Definitions
+# Hypernyms Module Usage
+
+<p align="justify">
+ A <i>hypernym</i> is a word with a broad meaning that more specific words fall under.
+Other names for hypernym include umbrella term and blanket term.
+
+Hypernym examples:
+- diamond is a hypernym of gem
+- eagle is a hypernym of bird 
+- red is a hypernym of color
+</p>
+
+```python
+from wordhoard import hypernyms
+
+results = hypernyms.find_hypernyms('horse')
+print(results)
+['animal', 'animal classification', 'animal kingdom', 'animal life', 'animal species', 'animate being', 'being', 'class of animal', 'creation', 'creature', 'entity', 'equidae', 'fauna', 'gymnastic apparatus', 'kingdom animalia', 'living being', 'living thing', 'mammal', 'mortal being', 'provide']
+```
+
+# Hyponyms Module Usage
+<p align="justify">
+A <i>hyponym</i> is a word of more specific meaning than a general or superordinate term applicable to it.
+
+Hyponym examples:
+- horse is a hyponym of animal
+- table is a hyponym of furniture
+- maple is a hyponym of tree
+
+</p>
+
+```python
+from wordhoard import hyponyms
+
+results = hyponyms.find_hyponyms('horse')
+print(results)
+['american saddlebred', 'andalusian horse', 'arabian horse', 'azteca horse', 'barb horse', 'belgian horse', 'belgian warmblood', 'clydesdale horse', 'coldblood trotter', 'curly horse', 'dutch warmblood', 'ethiopian horses', 'falabella', 'fjord horse', 'friesian horse', 'gypsy horse', 'lusitano', "przewalski's horse", 'shire horse', 'wild horse']
+```
+
+# Homophones Module Usage
+<p align="justify">
+A <i>homophone</i> is a word that is pronounced the same as another word but differs in meaning.
+
+Homophone examples:
+- one is a homophone of won
+- ate is a homophone of eight
+- meet is a homophone of meat
+
+</p>
+
+```python
+from wordhoard import homophones
+
+results = homophones.find_homophones('horse')
+print(results)
+['horse is a homophone of hoarse']
+```
+
+# Definitions Module Usage
+<p align="justify">
+A <i>definition</i> is a statement of the exact meaning of a word, especially in a dictionary.
+</p>
 
 ## Definition -  single source
 
@@ -149,13 +225,14 @@ A more advanced example is provided in the example script
 # Sources
 
 <p align="justify">
-This package is designed to query these online sources for antonyms, synonyms and definitions:
+This package is designed to query these online sources for antonyms, synonyms, hypernyms, hyponyms, homophones and definitions:
 
-1. collinsdictionary.com
-2. wordnet.princeton.edu
-3. synonym.com
-4. thesaurus.com
-5. thesaurus.plus
+1. classicthesaurus.com
+2. collinsdictionary.com
+3. wordnet.princeton.edu
+4. synonym.com
+5. thesaurus.com
+6. thesaurus.plus
 <p>
   
 # Dependencies
