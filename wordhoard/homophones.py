@@ -28,16 +28,19 @@ import sys
 import pickle
 import logging
 import traceback
-from wordhoard.utilities import caching, wordhoard_logger, word_verification
+import wordhoard
+from wordhoard.utilities import wordhoard_logger, word_verification
 
 logger = logging.getLogger(__name__)
 wordhoard_logger.enable_logging(logger)
 
+__PACKAGE_BASE_PATH = os.path.dirname(wordhoard.__file__)
 
 # Opening the pickle file that contains a nested list of common
 # English language homophones.
 try:
-    with open('wordhoard/files/common_english_homophones.pkl', 'rb') as _eng_homophones:
+    _file_known_homophones = os.path.join(__PACKAGE_BASE_PATH, 'files/common_english_homophones.pkl')
+    with open(_file_known_homophones, 'rb') as _eng_homophones:
         _known_homophones_list = pickle.load(_eng_homophones)
         _eng_homophones.close()
 except FileNotFoundError as error:
@@ -53,7 +56,8 @@ except OSError as error:
 # Opening the pickle file that contains a nested list of English
 # language words that have no known homophones.
 try:
-    with open('wordhoard/files/no_homophones_english.pkl', 'rb') as _no_eng_homophones:
+    _file_no_known_homophones = os.path.join(__PACKAGE_BASE_PATH, 'files/no_homophones_english.pkl')
+    with open(_file_no_known_homophones, 'rb') as _no_eng_homophones:
         _no_homophones_list = pickle.load(_no_eng_homophones)
         _no_eng_homophones.close()
 except FileNotFoundError as error:
