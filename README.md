@@ -7,7 +7,8 @@
 # Overviews
 
 ![PyPI version](https://img.shields.io/pypi/v/wordhoard?style=flat-square)&nbsp;
-![License: MIT](https://img.shields.io/github/license/johnbumgarner/wordhoard?style=flat-square) &nbsp;
+![License: MIT](https://img.shields.io/github/license/johnbumgarner/wordhoard?style=flat-square)&nbsp;
+![PyPI downloads](https://img.shields.io/pypi/dm/wordhoard?style=flat-square)&nbsp;
 
 <p align="justify">
 The Oxford Dictionary defines <i>wordhoard</i> as a supply of words or a lexicon. <i>Wordhoard</i> is a <i>Python</i> 3 module that can be used to obtain antonyms, synonyms, hypernyms, hyponyms, homophones and definitions for words. 
