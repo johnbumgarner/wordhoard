@@ -36,9 +36,9 @@ import logging
 
 
 def enable_logging(logger):
-    console = logging.StreamHandler()
-    logger.addHandler(console)
-    console.setLevel(logging.INFO)
+    # console = logging.StreamHandler()
+    # logger.addHandler(console)
+    # console.setLevel(logging.ERROR)
 
     log_name = 'wordhoard_error.yaml'
     log_handler = logging.FileHandler(f'{log_name}')

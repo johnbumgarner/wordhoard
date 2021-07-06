@@ -38,10 +38,8 @@ import logging
 import requests
 import traceback
 from bs4 import BeautifulSoup
-from wordhoard.utilities import wordhoard_logger
 
 logger = logging.getLogger(__name__)
-wordhoard_logger.enable_logging(logger)
 
 ##################################################################
 # Array of common user agents to use for the HTTP connection

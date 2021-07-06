@@ -41,15 +41,16 @@ def normalize_space(list_of_words):
     return ' '.join(list_of_words.split()).lower()
 
 
-def flatten_multidimensional_list(list_item):
+def flatten_multidimensional_list(list_of_lists):
     """
     This function is used to flatten a multidimensional list into
     a single list.
+
     :return: a multidimensional list that has been flattened
     :rtype: list
     """
-    flatten_list = []
-    for element in list_item:
-        for item in element:
-            flatten_list.append(item)
-    return flatten_list
+    if len(list_of_lists) == 0:
+        return list_of_lists
+    if isinstance(list_of_lists[0], list):
+        return flatten_multidimensional_list(list_of_lists[0]) + flatten_multidimensional_list(list_of_lists[1:])
+    return list_of_lists[:1] + flatten_multidimensional_list(list_of_lists[1:])
