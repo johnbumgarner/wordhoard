@@ -10,7 +10,7 @@
 ##################################################################################
 # Python imports required for basic operations
 ##################################################################################
-from wordhoard import synonyms
+from wordhoard import Synonyms
 from nltk.corpus import stopwords
 from string import punctuation
 from string import digits
@@ -86,7 +86,8 @@ word_frequencies = (dict(zip(wordlist, wordfreq)))
 # word in the dictionary word_frequencies
 synonyms_dict = {}
 for word in word_frequencies.keys():
-    synonyms_results = synonyms.query_synonym_com(word)
+    synonym = Synonyms(word)
+    synonyms_results = synonym.find_synonyms()
     if synonyms_results is not None:
         synonyms_dict[word] = synonyms_results
     else:
