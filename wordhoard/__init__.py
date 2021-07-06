@@ -12,7 +12,7 @@ from .homophones import Homophones
 from .dictionary import Definitions
 
 import logging
-from utilities import wordhoard_logger
+from .utilities import wordhoard_logger
 
 logger = logging.getLogger(__name__)
 wordhoard_logger.enable_logging(logger)
