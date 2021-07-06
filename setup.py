@@ -5,7 +5,7 @@ with open("PYPI_description.md", "r") as fh:
 
 setuptools.setup(
     name="wordhoard",
-    version="1.4.5",
+    version="1.4.6",
     author="John Bumgarner",
     author_email="wordhoardproject@gmail.com",
     description="A comprehensive lexical discovery application that is useful for finding semantic relationships between "
@@ -26,8 +26,8 @@ setuptools.setup(
                  "Programming Language :: Python :: 3.6",
                  "Programming Language :: Python :: 3.7",
                  "Programming Language :: Python :: 3.8",
-                 "Programming Language :: Python :: 3.9"
-                 "Topic :: Software Development :: Libraries"
+                 "Programming Language :: Python :: 3.9",
+                 "Topic :: Software Development :: Libraries",
                  "Topic :: Text Processing :: Linguistic",
                  "Topic :: Utilities"],
     keywords=['antonyms', 'synonyms', 'hypernyms', 'hyponyms', 'homophones', 'definitions', 'lexicon',
