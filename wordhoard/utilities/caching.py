@@ -91,7 +91,7 @@ def cache_definition(word):
 
 def insert_word_cache_definition(word, values):
     if word in temporary_dict_definition:
-        temporary_dict_definition[word].append(values)
+        temporary_dict_definition.update({word: values})
     else:
         temporary_dict_definition[word] = values
 
