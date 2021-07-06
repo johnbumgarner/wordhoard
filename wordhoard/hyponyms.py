@@ -5,10 +5,18 @@ This Python script is designed to query a online repository for the
 hyponyms associated with a specific word.
 """
 __author__ = 'John Bumgarner'
-__date__ = 'June 11, 2021'
+__date__ = 'June 12, 2021'
 __status__ = 'Production'
 __license__ = 'MIT'
 __copyright__ = "Copyright (C) 2021 John Bumgarner"
+
+##################################################################################
+# Date Initially Completed: June 12, 2021
+# Author: John Bumgarner
+#
+# Date Last Revised: July 4, 2021
+# Revised by: John Bumgarner
+###################################################################################
 
 ##################################################################################
 # “AS-IS” Clause
@@ -28,7 +36,7 @@ import logging
 import requests
 import traceback
 from bs4 import BeautifulSoup
-from wordhoard.utilities import basic_soup, caching, wordhoard_logger, word_verification
+from wordhoard.utilities import basic_soup, caching, cleansing, wordhoard_logger, word_verification
 
 logger = logging.getLogger(__name__)
 wordhoard_logger.enable_logging(logger)
@@ -40,8 +48,18 @@ def _get_number_of_pages(soup):
     that contain hyponyms for a specific word.
 
     :param soup: BeautifulSoup lxml
+
     :return: number of pages
+
     :rtype: int
+
+    :raises
+        AttributeError: Raised when an attribute reference or assignment fails.
+
+        KeyError: Raised when a mapping (dictionary) key is not found in the set of existing keys.
+
+        TypeError: Raised when an operation or function is applied to an object of inappropriate type.
+
     """
     try:
         number_of_pages = 0
@@ -65,11 +83,21 @@ def _get_number_of_pages(soup):
 
 def _get_hyponyms(soup):
     """
-    This function queries a table for hyponyms.
+    This function queries a HTML table for hyponyms.
 
     :param soup: BeautifulSoup lxml
-    :return: set of hyponyms
+
+    :return:
+        hyponyms: set of hyponyms
+
     :rtype: set
+
+    :raises
+        AttributeError: Raised when an attribute reference or assignment fails.
+
+        KeyError: Raised when a mapping (dictionary) key is not found in the set of existing keys.
+
+        TypeError: Raised when an operation or function is applied to an object of inappropriate type.
     """
     try:
         sub_set = set()
@@ -97,48 +125,100 @@ def _get_hyponyms(soup):
         logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
 
-def find_hyponyms(single_word):
+class Hyponyms(object):
     """
-    This function queries classicthesaurus_com for hyponyms
-    related to the 'single_word' parameter.
+    This class is used to query online repositories for the hyponyms associated
+    with a specific word.
 
-    :param single_word: string variable to search for
-    :return: list of hyponyms
-    :rtype: list
+    Usage:
+      hyponym = Hyponyms(word)
+      results = hyponyms.find_hyponyms()
     """
-    valid_word = word_verification.validate_word_syntax(single_word)
-    if valid_word:
-        check_cache = caching.cache_hyponyms(single_word, 'classicthesaurus_com')
-        if not check_cache:
-            try:
-                results_hyponyms = basic_soup.get_single_page_html(f'https://www.classicthesaurus.com/{single_word}/narrower')
-                soup = BeautifulSoup(results_hyponyms, "lxml")
-                hyponym = _get_hyponyms(soup)
 
-                number_of_pages = _get_number_of_pages(soup)
-                if number_of_pages >= 2:
-                    for page in range(2, number_of_pages):
-                        sub_html = requests.get(f'https://www.classicthesaurus.com/{single_word}/narrower/{page}',
-                                                headers=basic_soup.http_headers)
-                        sub_soup = BeautifulSoup(sub_html.text, 'lxml')
-                        additional_hyponym = _get_hyponyms(sub_soup)
-                        hyponym.union(additional_hyponym)
+    def __init__(self, word):
+        """
+        :param word: string variable used to find hyponyms for
+        """
+        self._word = word
 
-                return sorted(hyponym)
+    def _validate_word(self):
+        """
+        This function is designed to validate that the syntax for
+        a string variable is in an acceptable format.
 
-            except bs4.FeatureNotFound as error:
-                logger.error('An error occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(error.__traceback__)))
-            except AttributeError as error:
-                logger.error('An AttributeError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(error.__traceback__)))
-            except KeyError as error:
-                logger.error('A KeyError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(error.__traceback__)))
-            except TypeError as error:
-                logger.error('A TypeError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+        :return: True or False
+        :rtype: bool
+        """
+        valid_word = word_verification.validate_word_syntax(self._word)
+        if valid_word:
+            return valid_word
         else:
-            logger.error(f'The word {single_word} was not in a valid format.')
-            logger.error(f'Please verify that the word {single_word} is spelled correctly.')
+            logger.error(f'The word {self._word} was not in a valid format.')
+            logger.error(f'Please verify that the word {self._word} is spelled correctly.')
 
+    def _check_cache(self):
+        check_cache = caching.cache_hyponyms(self._word)
+        return check_cache
+
+    def _update_cache(self, hyponyms):
+        caching.insert_word_cache_hyponyms(self._word, hyponyms)
+        return
+
+    def find_hyponyms(self):
+        """
+        This function queries classicthesaurus_com for hyponyms associated
+        with the specific word provided to the Class Hyponyms.
+
+         :returns:
+             hyponyms: list of hyponyms
+
+        :rtype: list
+
+        :raises
+            AttributeError: Raised when an attribute reference or assignment fails.
+
+            IndexError: Raised when a sequence subscript is out of range
+
+            KeyError: Raised when a mapping (dictionary) key is not found in the set of existing keys.
+
+            TypeError: Raised when an operation or function is applied to an object of inappropriate type.
+
+            bs4.FeatureNotFound: raised by the BeautifulSoup constructor if no parser with the requested features
+            is found
+        """
+        valid_word = self._validate_word()
+        if valid_word:
+            check_cache = self._check_cache()
+            if check_cache is False:
+                try:
+                    results_hyponyms = basic_soup.get_single_page_html(
+                        f'https://www.classicthesaurus.com/{self._word}/narrower')
+                    soup = BeautifulSoup(results_hyponyms, "lxml")
+                    hyponym = _get_hyponyms(soup)
+
+                    number_of_pages = _get_number_of_pages(soup)
+                    if number_of_pages >= 2:
+                        for page in range(2, number_of_pages):
+                            sub_html = requests.get(f'https://www.classicthesaurus.com/{self._word}/narrower/{page}',
+                                                    headers=basic_soup.http_headers)
+                            sub_soup = BeautifulSoup(sub_html.text, 'lxml')
+                            additional_hyponym = _get_hyponyms(sub_soup)
+                            hyponym.union(additional_hyponym)
+                    self._update_cache(sorted(hyponym))
+                    return sorted(hyponym)
+
+                except bs4.FeatureNotFound as error:
+                    logger.error('An error occurred in the following code segment:')
+                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
+                except AttributeError as error:
+                    logger.error('An AttributeError occurred in the following code segment:')
+                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
+                except KeyError as error:
+                    logger.error('A KeyError occurred in the following code segment:')
+                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
+                except TypeError as error:
+                    logger.error('A TypeError occurred in the following code segment:')
+                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            else:
+                hyponym = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
+                return hyponym

@@ -2,13 +2,22 @@
 
 """
 This Python script is designed to query a online repository for the
-hypernyms and hyperonyms associated with a specific word.
+hypernyms associated with a specific word.
 """
 __author__ = 'John Bumgarner'
-__date__ = 'June 11, 2021'
+__date__ = 'June 12, 2021'
 __status__ = 'Production'
 __license__ = 'MIT'
 __copyright__ = "Copyright (C) 2021 John Bumgarner"
+
+##################################################################################
+# Date Initially Completed: June 12, 2021
+# Author: John Bumgarner
+#
+# Date Last Revised: July 4, 2021
+# Revised by: John Bumgarner
+##################################################################################
+
 
 ##################################################################################
 # “AS-IS” Clause
@@ -28,20 +37,27 @@ import logging
 import requests
 import traceback
 from bs4 import BeautifulSoup
-from wordhoard.utilities import basic_soup, caching, wordhoard_logger, word_verification
+from wordhoard.utilities import basic_soup, caching, cleansing, word_verification
 
 logger = logging.getLogger(__name__)
-wordhoard_logger.enable_logging(logger)
 
 
 def _get_number_of_pages(soup):
     """
-    This function determines the number of pages
-    that contain hypernyms and hyperonyms for a specific word.
+    This function determines the number of pages that
+    contain hypernyms and hyperonyms for a specific word.
 
     :param soup: BeautifulSoup lxml
     :return: number of pages
     :rtype: int
+
+    :raises
+
+        AttributeError: Raised when an attribute reference or assignment fails.
+
+        KeyError: Raised when a mapping (dictionary) key is not found in the set of existing keys.
+
+        TypeError: Raised when an operation or function is applied to an object of inappropriate type.
     """
     try:
         number_of_pages = 0
@@ -70,6 +86,14 @@ def _get_hypernyms(soup):
     :param soup: BeautifulSoup lxml
     :return: set of hypernyms and hyperonyms
     :rtype: set
+
+    :raises
+
+        AttributeError: Raised when an attribute reference or assignment fails.
+
+        KeyError: Raised when a mapping (dictionary) key is not found in the set of existing keys.
+
+        TypeError: Raised when an operation or function is applied to an object of inappropriate type.
     """
     try:
         sub_set = set()
@@ -97,48 +121,104 @@ def _get_hypernyms(soup):
         logger.error(''.join(traceback.format_tb(e.__traceback__)))
 
 
-def find_hypernyms(single_word):
+class Hypernyms(object):
     """
-    This function queries classicthesaurus_com for hypernyms and hyperonyms
-    related to the 'single_word' parameter.
+    This class is used to query online repositories for the hypernyms associated
+    with a specific word.
 
-    :param single_word: string variable to search for
-    :return: list of hypernyms and hyperonyms
-    :rtype: list
+    Usage:
+      hypernym = Hypernyms(word)
+
+      results = hypernym.find_hypernyms
+
     """
-    valid_word = word_verification.validate_word_syntax(single_word)
-    if valid_word:
-        check_cache = caching.cache_hypernyms(single_word, 'classicthesaurus_com')
-        if not check_cache:
-            try:
-                results_hypernyms = basic_soup.get_single_page_html(f'https://www.classicthesaurus.com/{single_word}/broader')
-                soup = BeautifulSoup(results_hypernyms, "lxml")
-                hypernym = _get_hypernyms(soup)
 
-                number_of_pages = _get_number_of_pages(soup)
-                if number_of_pages >= 2:
-                    for page in range(2, number_of_pages):
-                        sub_html = requests.get(f'https://www.classicthesaurus.com/{single_word}/broader/{page}',
-                                                basic_soup.http_headers)
-                        sub_soup = BeautifulSoup(sub_html.text, 'lxml')
-                        additional_hypernym = _get_hypernyms(sub_soup)
-                        hypernym.union(additional_hypernym)
+    def __init__(self, word):
+        """
+        :param word: string variable used to find hypernyms for
+        """
+        self._word = word
 
-                return sorted(hypernym)
+    def _validate_word(self):
+        """
+        This function is designed to validate that the syntax for
+        a string variable is in an acceptable format.
 
-            except bs4.FeatureNotFound as e:
-                logger.error('An error occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except AttributeError as e:
-                logger.error('An AttributeError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except KeyError as e:
-                logger.error('A KeyError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            except TypeError as e:
-                logger.error('A TypeError occurred in the following code segment:')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-    else:
-        logger.error(f'The word {single_word} was not in a valid format.')
-        logger.error(f'Please verify that the word {single_word} is spelled correctly.')
+        :return: True or False
+        :rtype bool
 
+        """
+        valid_word = word_verification.validate_word_syntax(self._word)
+        if valid_word:
+            return valid_word
+        else:
+            logger.error(f'The word {self._word} was not in a valid format.')
+            logger.error(f'Please verify that the word {self._word} is spelled correctly.')
+
+    def _check_cache(self):
+        check_cache = caching.cache_hypernyms(self._word)
+        return check_cache
+
+    def _update_cache(self, hypernym):
+        caching.insert_word_cache_hypernyms(self._word, hypernym)
+        return
+
+    def find_hypernyms(self):
+        """
+        This function queries classicthesaurus_com for hypernyms associated
+        with the specific word provided to the Class Hypernyms.
+
+        :returns:
+            hypernym: list of hypernyms
+
+        :rtype: list
+
+        :raises
+
+            AttributeError: Raised when an attribute reference or assignment fails.
+
+            KeyError: Raised when a mapping (dictionary) key is not found in the set of existing keys.
+
+            TypeError: Raised when an operation or function is applied to an object of inappropriate type.
+
+            bs4.FeatureNotFound: raised by the BeautifulSoup constructor if no parser with the requested features
+            is found
+        """
+        valid_word = self._validate_word()
+        if valid_word:
+            check_cache = self._check_cache()
+            if check_cache is not False:
+                hypernym = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
+                return hypernym
+            elif check_cache is False:
+                try:
+                    results_hypernyms = basic_soup.get_single_page_html(
+                        f'https://www.classicthesaurus.com/{self._word}/broader')
+                    soup = BeautifulSoup(results_hypernyms, "lxml")
+                    hypernym = _get_hypernyms(soup)
+
+                    number_of_pages = _get_number_of_pages(soup)
+                    if number_of_pages >= 2:
+                        for page in range(2, number_of_pages):
+                            sub_html = requests.get(f'https://www.classicthesaurus.com/{self._word}/broader/{page}',
+                                                    basic_soup.http_headers)
+                            sub_soup = BeautifulSoup(sub_html.text, 'lxml')
+                            additional_hypernym = _get_hypernyms(sub_soup)
+                            if additional_hypernym:
+                                hypernym.union(additional_hypernym)
+
+                    self._update_cache(hypernym)
+                    return sorted(hypernym)
+
+                except bs4.FeatureNotFound as e:
+                    logger.error('An error occurred in the following code segment:')
+                    logger.error(''.join(traceback.format_tb(e.__traceback__)))
+                except AttributeError as e:
+                    logger.error('An AttributeError occurred in the following code segment:')
+                    logger.error(''.join(traceback.format_tb(e.__traceback__)))
+                except KeyError as e:
+                    logger.error('A KeyError occurred in the following code segment:')
+                    logger.error(''.join(traceback.format_tb(e.__traceback__)))
+                except TypeError as e:
+                    logger.error('A TypeError occurred in the following code segment:')
+                    logger.error(''.join(traceback.format_tb(e.__traceback__)))

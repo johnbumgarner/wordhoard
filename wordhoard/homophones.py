@@ -11,6 +11,14 @@ __license__ = 'MIT'
 __copyright__ = "Copyright (C) 2021 John Bumgarner"
 
 ##################################################################################
+# Date Completed: June 11, 2021
+# Author: John Bumgarner
+#
+# Date Last Revised: July 4, 2021
+# Revised by: John Bumgarner
+##################################################################################
+
+##################################################################################
 # “AS-IS” Clause
 #
 # Except as represented in this agreement, all work produced by Developer is
@@ -25,14 +33,12 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 ##################################################################################
 import os
 import sys
-import pkgutil
 import pickle
 import logging
 import traceback
-from wordhoard.utilities import wordhoard_logger, word_verification
+from wordhoard.utilities import word_verification
 
 logger = logging.getLogger(__name__)
-wordhoard_logger.enable_logging(logger)
 
 PARENT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
@@ -70,59 +76,87 @@ except OSError as error:
     sys.exit(1)
 
 
-def _common_english_homophones(search_string):
+class Homophones(object):
     """
-    This function iterates through a list of known
-    English language homophones.
+    This class is used to query internal files containing
+    English language homophones associated with a specific word.
 
-    :param search_string: string variable to search for
-    :return: list of homophones
-    :rtype: list
+    Usage: homophone = Homophones(word)
+           results = homophone.find_homophones()
     """
-    global _known_homophones_list
-    rtn_list = []
-    for homophones in _known_homophones_list:
-        match = bool([word for word in homophones if word == search_string])
+
+    def __init__(self, word):
+        """
+        :param word: string containing the variable to search for
+        """
+        self._word = word
+
+    def _validate_word(self):
+        """
+        This function is designed to validate that the syntax for
+        a string variable is in an acceptable format.
+
+        :return: True or False
+        :rtype: boolean
+        """
+        valid_word = word_verification.validate_word_syntax(self._word)
+        if valid_word:
+            return valid_word
+        else:
+            logger.error(f'The word {self._word} was not in a valid format.')
+            logger.error(f'Please verify that the word {self._word} is spelled correctly.')
+
+    def _common_english_homophones(self):
+        """
+        This function iterates through a list of known
+        English language homophones.
+
+        :return:
+            homophones: list of homophones
+
+        :rtype: list
+        """
+        global _known_homophones_list
+        rtn_list = []
+        for homophones in _known_homophones_list:
+            match = bool([word for word in homophones if word == self._word])
+            if match:
+                for word in homophones:
+                    if word != self._word:
+                        rtn_list.append(f'{self._word} is a homophone of {word}')
+        if len(rtn_list) > 0:
+            return list(set(rtn_list))
+
+    def _english_words_without_homophones(self):
+        """
+        This function iterates through a list of English
+        language words with no known homophones.
+
+        :return: no homophones for word
+        :rtype: str
+        """
+        global _no_homophones_list
+        match = bool(self._word in _no_homophones_list)
         if match:
-            for word in homophones:
-                if word != search_string:
-                    rtn_list.append(f'{search_string} is a homophone of {word}')
-    if len(rtn_list) > 0:
-        return list(set(rtn_list))
+            return f'no homophones for {self._word}'
 
+    def find_homophones(self):
+        """
+        This function queries multiple lists to find an
+        English language homophones associated with the
+        specific word provided to the Class Homophones.
 
-def _english_words_without_homophones(search_string):
-    """
-    This function iterates through a list of English
-    language words with no known homophones.
+        :return:
+            homophones: list of homophones
+            no_homophones: string
 
-    :param search_string: string variable to search for
-    :return: string
-    :rtype: string
-    """
-    global _no_homophones_list
-    match = bool(search_string in _no_homophones_list)
-    if match:
-        return f'no homophones for {search_string}'
-
-
-def query_homophones(search_string):
-    """
-    This function queries multiple lists to
-    find an English language homophones for
-    the a specific word.
-
-    :param search_string: string variable to search for
-    :return: list of homophones or string
-    :rtype: list or string
-    """
-    valid_word = word_verification.validate_word_syntax(search_string)
-    if valid_word:
-        known_english_homophones = _common_english_homophones(search_string)
-        if known_english_homophones:
-            return known_english_homophones
-        elif not known_english_homophones:
-            return _english_words_without_homophones(search_string)
-    else:
-        logger.error(f'The word {search_string} was not in a valid format.')
-        logger.error(f'Please verify that the word {search_string} is spelled correctly.')
+        :rtype: list
+        :rtype: str
+        """
+        valid_word = self._validate_word()
+        if valid_word:
+            known_english_homophones = self._common_english_homophones()
+            if known_english_homophones:
+                return known_english_homophones
+            elif not known_english_homophones:
+                return self._english_words_without_homophones()
