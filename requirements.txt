@@ -1,4 +1,5 @@
 beautifulsoup4>=4.9.3
+deep-translator>=1.4.4
 lxml>=4.6.1
 requests>=2.24.0
 urllib3>=1.25.11
