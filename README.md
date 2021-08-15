@@ -10,10 +10,11 @@
 ![License: MIT](https://img.shields.io/github/license/johnbumgarner/wordhoard)&nbsp;
 ![GitHub issues](https://img.shields.io/github/issues/johnbumgarner/wordhoard)&nbsp;
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/johnbumgarner/wordhoard)&nbsp;
+[![wordhoard](https://snyk.io/advisor/python/wordhoard/badge.svg)](https://snyk.io/advisor/python/wordhoard)&nbsp;
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/wordhoard)&nbsp;
 
 <p align="justify">
-The Oxford Dictionary defines <i>wordhoard</i> as a supply of words or a lexicon. <i>Wordhoard</i> is a <span style="color:red; font-weight: bold; font-style: italic">Python 3 module</span> that can be used to obtain antonyms, synonyms, hypernyms, hyponyms, homophones and definitions for words. 
+The Oxford Dictionary defines <i>wordhoard</i> as a supply of words or a lexicon. <i>Wordhoard</i> is a <b>Python 3 module </b> that can be used to obtain antonyms, synonyms, hypernyms, hyponyms, homophones and definitions for words. 
   
 This <i>Python</i> package was spawned from a <a href="https://stackoverflow.com/questions/63705803/merge-related-words-in-nlp/63771196#63771196">Stack Overflow</a> bountied question.  That question forced me to look into the best practices for obtaining a comprehensive lists of synonyms for a given word.  During my research, I developed the repository <a href="https://github.com/johnbumgarner/synonyms_discovery_aggregation">synonym discovery and aggregation</a> and decided to create <i>wordhoard</i>.
 <p>
