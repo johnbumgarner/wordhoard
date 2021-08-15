@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: July 3, 2021
+# Date Last Revised: August 15, 2021
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -128,14 +128,15 @@ class Antonyms(object):
         try:
             results_antonyms = basic_soup.get_single_page_html(f'https://www.synonym.com/synonyms/{self._word}')
             soup = BeautifulSoup(results_antonyms, "lxml")
-            description_tag = soup.find("meta", property="og:description")
-            if 'find any words based on your search' in description_tag['content']:
+            status_tag = soup.find("meta", {"name": "pagetype"})
+            if status_tag.attrs['content'] == '404':
                 logger.error(f'synonym.com had no reference for the word {self._word}')
-            else:
-                find_antonyms = regex.split(r'\|', description_tag['content'])
-                antonyms_list = find_antonyms[3].lstrip().replace('antonyms:', '').split(',')
-                antonyms = sorted([cleansing.normalize_space(i) for i in antonyms_list])
+                logger.error(f'Please verify that the word {self._word} is spelled correctly.')
+            elif status_tag.attrs['content'] == 'Term':
+                antonyms_class = soup.find('div', {'data-section': 'antonyms'})
+                antonyms = [word.text for word in antonyms_class.find('ul', {'class': 'section-list'}).find_all('li')]
                 if antonyms:
+                    print(antonyms)
                     self._update_cache(antonyms)
                     return antonyms
                 else:

@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: July 3, 2021
+# Date Last Revised: August 15, 2021
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -123,16 +123,15 @@ class Definitions:
             results_definition = basic_soup.get_single_page_html(
                 f'https://www.synonym.com/synonyms/{self._word}')
             soup = BeautifulSoup(results_definition, "lxml")
-            description_tag = soup.find("meta", property="og:description")
-            if 'find any words based on your search' not in description_tag['content']:
-                find_definition = regex.split(r'\|', description_tag['content'])
-                definition_list = find_definition[1].lstrip().replace('definition:', '').split(',')
-                definition = [cleansing.normalize_space(i) for i in definition_list]
-                definition_list_to_string = ' '.join([str(elem) for elem in definition])
-                self._update_cache(definition_list_to_string)
-                return definition_list_to_string
-            else:
+            status_tag = soup.find("meta", {"name": "pagetype"})
+            if status_tag.attrs['content'] == '404':
                 logger.error(f'synonym.com had no reference for the word {self._word}')
+                logger.error(f'Please verify that the word {self._word} is spelled correctly.')
+            elif status_tag.attrs['content'] == 'Term':
+                definition_list_to_string = soup.find('div', {'class': 'section'}).find('p').text.split(']')[-1]
+                self._update_cache(definition_list_to_string)
+                print(definition_list_to_string)
+                return definition_list_to_string
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))

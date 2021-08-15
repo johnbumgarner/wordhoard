@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: July 3, 2021
+# Date Last Revised: August 15, 2021
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -185,14 +185,13 @@ class Synonyms(object):
             results_synonym = basic_soup.get_single_page_html(
                 f'https://www.synonym.com/synonyms/{self._word}')
             soup = BeautifulSoup(results_synonym, "lxml")
-            description_tag = soup.find("meta", property="og:description")
-            if 'find any words based on your search' in description_tag['content']:
+            status_tag = soup.find("meta", {"name": "pagetype"})
+            if status_tag.attrs['content'] == '404':
                 logger.error(f'synonym.com had no reference for the word {self._word}')
                 logger.error(f'Please verify that the word {self._word} is spelled correctly.')
-            else:
-                find_synonyms = regex.split(r'\|', description_tag['content'])
-                synonyms_list = find_synonyms[2].lstrip().replace('synonyms:', '').split(',')
-                synonyms = [cleansing.normalize_space(i) for i in synonyms_list]
+            elif status_tag.attrs['content'] == 'Term':
+                synonyms_class = soup.find('div', {'data-section': 'synonyms'})
+                synonyms = [word.text for word in synonyms_class.find('ul', {'class': 'section-list'}).find_all('li')]
                 self._update_cache(synonyms)
                 return sorted(synonyms)
         except bs4.FeatureNotFound as error:
