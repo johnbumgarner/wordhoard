@@ -8,6 +8,8 @@
 
 ![PyPI](https://img.shields.io/pypi/v/wordhoard) &nbsp;
 ![License: MIT](https://img.shields.io/github/license/johnbumgarner/wordhoard)&nbsp;
+![GitHub issues](https://img.shields.io/github/issues/johnbumgarner/wordhoard)&nbsp;
+![GitHub pull requests](https://img.shields.io/github/issues-pr/johnbumgarner/wordhoard)&nbsp;
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/wordhoard)&nbsp;
 
 <p align="justify">
