@@ -14,7 +14,7 @@
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/wordhoard)&nbsp;
 
 <p align="justify">
-The Oxford Dictionary defines <i>wordhoard</i> as a supply of words or a lexicon. <i>Wordhoard</i> is a <b>Python 3 module </b> that can be used to obtain antonyms, synonyms, hypernyms, hyponyms, homophones and definitions for words. 
+The Oxford Dictionary defines <i>wordhoard</i> as a supply of words or a lexicon. <i>Wordhoard</i> is a <b>Python 3 module </b> that can be used to obtain antonyms, synonyms, hypernyms, hyponyms, homophones and definitions for words in the English language. 
   
 This <i>Python</i> package was spawned from a <a href="https://stackoverflow.com/questions/63705803/merge-related-words-in-nlp/63771196#63771196">Stack Overflow</a> bountied question.  That question forced me to look into the best practices for obtaining a comprehensive lists of synonyms for a given word.  During my research, I developed the repository <a href="https://github.com/johnbumgarner/synonyms_discovery_aggregation">synonym discovery and aggregation</a> and decided to create <i>wordhoard</i>.
 <p>
@@ -323,13 +323,15 @@ nonsensical literal translations.  So any translation should be reviewed for the
 
 # Additional Features
 <p align="justify">
-<i>wordhoard</i> uses an in-memory cache, which helps prevent redundant queries to an individual resource for the same word.  This application also uses <i>Python logging</i> to both the terminal and to the logfile <i>wordhoard_error.yaml</i>.
+<i>wordhoard</i> uses an in-memory cache, which helps prevent redundant queries to an individual resource for the same word.  These caches are currently being erased after each session. 
+   
+This application also uses <i>Python logging</i> to both the terminal and to the logfile <i>wordhoard_error.yaml</i>.
 <p>
 
 # Sources
 
 <p align="justify">
-This package is designed to query these online sources for antonyms, synonyms, hypernyms, hyponyms, homophones and definitions:
+This package is designed to query these online sources for antonyms, synonyms, hypernyms, hyponyms and definitions:
 
 1. classicthesaurus.com
 2. collinsdictionary.com
@@ -354,7 +356,7 @@ This package has these dependencies:
 # Development
 
 <p align="justify">
-If you would like to contribute to the <i>wordhoard</i> project, feel free to clone a development version of this repository locally.
+If you would like to contribute to the <i>wordhoard</i> project, feel free to clone a development version of this repository locally. 
 <p>
 
 ```git clone https://github.com/johnbumgarner/wordhoard.git```
