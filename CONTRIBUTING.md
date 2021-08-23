@@ -114,7 +114,7 @@ Typo correction, white space and formatting changes
 Comment clean up
 Bug fixes that change default return values or error codes stored in constants
 Adding logging messages or debugging output
-Changes to 'metadata' files like Gemfile, .gitignore, build scripts, etc.
+Changes to 'metadata' files like .gitignore, build scripts, etc.
 Moving source files from one directory or package to another
 Whenever you invoke the "obvious fix" rule, please say so in your commit message:
 
@@ -128,6 +128,4 @@ Date:   Fri Aug 13 14:00:40 2021 -0500
   Obvious fix.
 
 ------------------------------------------------------------------------
-
-
 
