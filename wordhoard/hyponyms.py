@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Initially Completed: June 12, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: July 4, 2021
+# Date Last Revised: August 24, 2021
 # Revised by: John Bumgarner
 ###################################################################################
 
@@ -205,7 +205,7 @@ class Hyponyms(object):
                             additional_hyponym = _get_hyponyms(sub_soup)
                             hyponym.union(additional_hyponym)
                     self._update_cache(sorted(hyponym))
-                    return sorted(hyponym)
+                    return sorted(set(hyponym))
 
                 except bs4.FeatureNotFound as error:
                     logger.error('An error occurred in the following code segment:')

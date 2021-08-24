@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: August 15, 2021
+# Date Last Revised: August 24, 2021
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -35,7 +35,6 @@ import bs4
 import logging
 import requests
 import traceback
-import re as regex
 from bs4 import BeautifulSoup
 from wordhoard.utilities import basic_soup, caching, cleansing, word_verification
 
@@ -97,13 +96,12 @@ class Antonyms(object):
             if check_cache is False:
                 antonyms_01 = self._query_synonym_com()
                 antonyms_02 = self._query_thesaurus_com()
-                antonyms_03 = self._query_thesaurus_plus()
-                antonyms = ([x for x in [antonyms_01, antonyms_02, antonyms_03] if x is not None])
+                antonyms = ([x for x in [antonyms_01, antonyms_02] if x is not None])
                 antonyms_results = cleansing.flatten_multidimensional_list(antonyms)
                 return sorted(set(antonyms_results))
             else:
                 antonyms = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
-                return antonyms
+                return sorted(set(antonyms))
 
     def _query_synonym_com(self):
         """
@@ -136,7 +134,7 @@ class Antonyms(object):
                 antonyms_class = soup.find('div', {'data-section': 'antonyms'})
                 antonyms = [word.text for word in antonyms_class.find('ul', {'class': 'section-list'}).find_all('li')]
                 if antonyms:
-                    print(antonyms)
+                    antonyms = sorted([x.lower() for x in antonyms])
                     self._update_cache(antonyms)
                     return antonyms
                 else:
@@ -183,68 +181,11 @@ class Antonyms(object):
             if '{"data":null}' not in req.text:
                 dict_antonyms = req.json()['data']['definitionData']['definitions'][0]['antonyms']
                 if len(dict_antonyms) > 0:
-                    antonyms = sorted([r["term"] for r in dict_antonyms])
+                    antonyms = sorted([r["term"].lower() for r in dict_antonyms])
                     self._update_cache(antonyms)
                     return antonyms
             else:
                 logger.error(f'The word {self._word} was not found on thesaurus.com.')
-        except requests.HTTPError as error:
-            logger.error('A HTTP error has occurred.')
-            logger.error(''.join(traceback.format_tb(error.__traceback__)))
-        except requests.ConnectionError as error:
-            if requests.codes:
-                'Failed to establish a new connection'
-                logger.error(''.join(traceback.format_tb(error.__traceback__)))
-        except requests.Timeout as error:
-            logger.error('A connection timeout has occurred.')
-            logger.error(''.join(traceback.format_tb(error.__traceback__)))
-        except requests.RequestException as error:
-            logger.error('An ambiguous exception occurred.')
-            logger.error(''.join(traceback.format_tb(error.__traceback__)))
-
-    def _query_thesaurus_plus(self):
-        """
-        This function queries thesaurus.plus for antonyms associated
-        with the specific word provided to the Class Antonyms.
-
-        :returns:
-            antonyms: list of antonyms
-
-        :rtype: list
-
-        :raises
-
-            IndexError: Raised when a sequence subscript is out of range.
-
-            requests.ConnectionError: Raised when a connection error has occurred.
-
-            requests.HTTPError: Raised when an HTTP error has occurred.
-
-            requests.RequestException: Raised when an unknown error has occurred.
-
-            requests.Timeout: Raised when the request timed out.
-        """
-        try:
-            results_antonym = basic_soup.get_single_page_html(f'https://thesaurus.plus/antonyms/{self._word}')
-            soup = BeautifulSoup(results_antonym, "lxml")
-            no_word = soup.find('title', text='404. Page not found')
-            if no_word:
-                logger.error(f'thesaurus.plus has no reference for the word {self._word}')
-            else:
-                antonyms_list = []
-                antonyms = []
-                parent_node = soup.find('ul', {'class': 'list paper'}).findAll('li')
-                for children in parent_node:
-                    for child in children.findAll('div', {'class': 'action_pronounce'}):
-                        split_dictionary = str(child.attrs).split(',')
-                        antonyms_list.append(split_dictionary[1].replace("'data-term':", "").replace("'", ""))
-                        antonyms = sorted([cleansing.normalize_space(i) for i in antonyms_list])
-                self._update_cache(antonyms)
-                return antonyms
-        except IndexError as error:
-            logger.error('A IndexError occurred in the following code segment:')
-            logger.error(''.join(traceback.format_tb(error.__traceback__)))
-            logger.info(f'Please verify that the word {self._word} is spelled correctly.')
         except requests.HTTPError as error:
             logger.error('A HTTP error has occurred.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))

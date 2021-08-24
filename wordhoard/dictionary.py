@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: August 15, 2021
+# Date Last Revised: August 24, 2021
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -35,7 +35,6 @@ import bs4
 import logging
 import requests
 import traceback
-import re as regex
 from bs4 import BeautifulSoup
 from wordhoard.utilities import basic_soup, caching, cleansing, word_verification
 
@@ -97,7 +96,7 @@ class Definitions:
                 return sorted(set(definitions))
             else:
                 definitions = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
-                return definitions
+                return sorted(set(definitions))
 
     def _query_synonym_com(self):
         """
@@ -130,7 +129,6 @@ class Definitions:
             elif status_tag.attrs['content'] == 'Term':
                 definition_list_to_string = soup.find('div', {'class': 'section'}).find('p').text.split(']')[-1]
                 self._update_cache(definition_list_to_string)
-                print(definition_list_to_string)
                 return definition_list_to_string
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')

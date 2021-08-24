@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: August 15, 2021
+# Date Last Revised: August 24, 2021
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -35,7 +35,6 @@ import bs4
 import logging
 import requests
 import traceback
-import re as regex
 from bs4 import BeautifulSoup
 from wordhoard.utilities import basic_soup, caching, cleansing, word_verification
 
@@ -97,14 +96,14 @@ class Synonyms(object):
             if check_cache is False:
                 synonyms_01 = self._query_collins_dictionary()
                 synonyms_02 = self._query_synonym_com()
-                synonyms_03 = self._query_thesaurus_plus()
+                synonyms_03 = self._query_thesaurus_com()
                 synonyms_04 = self._query_wordnet()
                 synonyms = ([x for x in [synonyms_01, synonyms_02, synonyms_03, synonyms_04] if x is not None])
                 synonyms_results = cleansing.flatten_multidimensional_list(synonyms)
-                return sorted(set(synonyms_results))
+                return sorted(set([word.lower() for word in synonyms_results]))
             else:
                 synonyms = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
-                return synonyms
+                return sorted(set(synonyms))
 
     def _query_collins_dictionary(self):
         """
@@ -144,6 +143,7 @@ class Synonyms(object):
                         if children is not None:
                             synonyms.append(children.text)
 
+                synonyms = sorted([x.lower() for x in synonyms])
                 self._update_cache(synonyms)
                 return sorted(synonyms)
         except bs4.FeatureNotFound as error:
@@ -191,7 +191,9 @@ class Synonyms(object):
                 logger.error(f'Please verify that the word {self._word} is spelled correctly.')
             elif status_tag.attrs['content'] == 'Term':
                 synonyms_class = soup.find('div', {'data-section': 'synonyms'})
-                synonyms = [word.text for word in synonyms_class.find('ul', {'class': 'section-list'}).find_all('li')]
+                synonyms = [word.text for word in synonyms_class.find('ul', {'class': 'section-list'}).find_all(
+                    'li')]
+                synonyms = sorted([x.lower() for x in synonyms])
                 self._update_cache(synonyms)
                 return sorted(synonyms)
         except bs4.FeatureNotFound as error:
@@ -210,9 +212,9 @@ class Synonyms(object):
             logger.error('A TypeError occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
-    def _query_thesaurus_plus(self):
+    def _query_thesaurus_com(self):
         """
-        This function queries thesaurus.plus for synonyms associated
+        This function queries thesaurus.com for synonyms associated
         with the specific word provided to the Class Synonyms.
 
         :returns:
@@ -236,20 +238,20 @@ class Synonyms(object):
         try:
             synonyms_list = []
             results_synonym = basic_soup.get_single_page_html(
-                f'https://thesaurus.plus/synonyms/{self._word}/category/noun')
+                f'https://www.thesaurus.com/browse/{self._word}')
             soup = BeautifulSoup(results_synonym, "lxml")
-            no_word = soup.find('title', text='404. Page not found')
-            if no_word:
-                logger.error(f'thesaurus.plus has no reference for the word {self._word}')
+            status_tag = soup.find("h1")
+            if status_tag.text.startswith('0 results for'):
+                logger.error(f'thesaurus.com has no reference for the word {self._word}')
                 logger.error(f'Please verify that the word {self._word} is spelled correctly.')
             else:
                 synonyms = []
-                parent_node = soup.find('ul', {'class': 'list paper'}).findAll('li')[1:]
-                for children in parent_node:
-                    for child in children.findAll('div', {'class': 'action_pronounce'}):
-                        split_dictionary = str(child.attrs).split(',')
-                        synonyms_list.append(split_dictionary[1].replace("'data-term':", "").replace("'", ""))
-                        synonyms = sorted([cleansing.normalize_space(i) for i in synonyms_list])
+                word_container = soup.find('div', {'data-testid': 'word-grid-container'})
+                for list_item in word_container.find('ul').find_all('li'):
+                    for link in list_item.find_all('a', href=True):
+                        synonyms_list.append(link.text)
+                    synonyms = sorted([cleansing.normalize_space(i) for i in synonyms_list])
+                    synonyms = sorted([x.lower() for x in synonyms])
                 self._update_cache(synonyms)
                 return synonyms
         except IndexError as error:

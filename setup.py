@@ -5,11 +5,11 @@ with open("PYPI_description.md", "r") as fh:
 
 setuptools.setup(
     name="wordhoard",
-    version="1.4.6",
+    version="1.4.8",
     author="John Bumgarner",
     author_email="wordhoardproject@gmail.com",
-    description="A comprehensive lexical discovery application that is useful for finding semantic relationships between "
-                "words including a word's synonyms, synonyms, hypernyms, hyponyms and homophones.",
+    description="A comprehensive lexical discovery application that is useful for finding semantic relationships "
+                "such as, the antonyms, synonyms, hypernyms, hyponyms, homophones and definitions for a specific word.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/johnbumgarner/wordhoard",
