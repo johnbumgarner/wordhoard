@@ -56,9 +56,7 @@ from wordhoard import Antonyms
 antonym = Antonyms('mother')
 antonym_results = antonym.find_antonyms()
 print(antonym_results)
-['abort', 'begetter', 'brush', 'brush aside', 'brush off', 'child', 'dad', 'daughter', 'descendant', 
- 'effect', 'end','father', 'follower', 'forget', 'ignore', 'lose', 'male parent', 'miscarry', 
- 'neglect', 'offspring', 'overlook', 'result', 'slight']
+['descendant', 'disassemble', 'dissuade', 'effect', 'end', 'father', 'male parent', 'result']
 ```
 
 ## Antonyms written to Python dictionary
@@ -76,19 +74,13 @@ for word in list_of_words:
 for key, value in antonyms_results.items():
     print(key, value)
     
-    mother ['abort', 'begetter', 'brush', 'brush aside', 'brush off', 'child', 'dad', 'daughter', 
-            'descendant', 'effect', 'end', 'father', 'follower', 'forget', 'ignore', 'lose', 
-            'male parent', 'miscarry', 'neglect', 'offspring', 'overlook', 'result', 'slight']
-    
-    daughter ['ben', 'boy', 'child', 'dad', 'dependents', 'father', 'fils', 'male', 'male offspring', 
-              'mom', 'mother', 'parent', 'parents', 'son']
+    mother['descendant', 'disassemble', 'dissuade', 'effect', 'end', 'father', 'male parent', 'result']
 
-    father ['child', 'children', 'classical', 'daughter', 'descendant', 'destroy', 'effect', 'end', 
-            'family', 'female parent', 'finish', 'halt', 'heir', 'inheritor', 'issue', 'kill', 'lineage', 
-            'mom', 'mother', 'offspring', 'posterity', 'progeny', 'result', 'ruin', 'scion', 'seed', 
-            'son', 'stay', 'stock', 'stop', 'successor', 'supporter']
+    daughter['boy', 'man', 'son']
 
-    son ['child', 'dad', 'daughter', 'father', 'female', 'female offspring', 'girl', 'parent']
+    father['descendant', 'effect', 'end', 'euphemism', 'explode', 'female parent', 'mother', 'result']
+
+    son['daughter', 'female', 'female offspring', 'parent']
 ```
 
 
@@ -108,13 +100,7 @@ from wordhoard import Synonyms
 synonym = Synonyms('mother')
 synonym_results = synonym.find_synonyms()
 print(synonym_results)
-['ancestor', 'antecedent', 'architect', 'author', 'begetter', 'beginning', 'child-bearer', 'creator', 'dam',
- 'female parent', 'forebearer', 'forefather', 'foster mother', 'founder', 'fount', 'fountain', 'fountainhead',
- 'genesis', 'inspiration', 'inventor', 'lady', 'ma', 'maker', 'mam', 'mama', 'mamma', 'mammy', 'mater', 'materfamilias',
- 'matriarch', 'mom', 'momma', 'mommy', 'mother-in-law', 'mum', 'mummy', 'nurse', 'old lady', 'old woman', 'origin',
- 'originator', 'para I', 'parent', 'predecessor', 'primipara', 'procreator', 'producer', 'progenitor', 'provenience',
- 'puerpera', 'quadripara', 'quintipara', 'sire', 'source', 'spring', 'start', 'stimulus', 'supermom',
- 'surrogate mother', 'wellspring']
+['ancestor', 'child-bearer', 'creator', 'dam', 'female parent', 'forebearer', 'foster mother', 'ma', 'mama', 'mamma', 'mater', 'mom', 'momma', 'mommy', 'mother-in-law', 'mum', 'mummy', 'old lady', 'old woman', 'origin', 'para i', 'parent', 'predecessor', 'primipara', 'procreator', 'progenitor', 'puerpera', 'quadripara', 'quintipara', 'source', 'supermom', 'surrogate mother']
 ```
 
 ## Synonyms written to Python dictionary
@@ -133,16 +119,18 @@ for word in list_of_words:
 for key, value in synonyms_results.items():
     print(key, value)
     
-    mother['female parent', 'ma', 'mama', 'mamma', 'mammy', 'mater', 'mom', 'momma', 'mommy', 
-           'mother-in-law', 'mum', 'mummy', 'para I', 'parent', 'primipara', 'puerpera', 
-           'quadripara', 'quintipara', 'supermom', 'surrogate mother']
+    mother['ancestor', 'child-bearer', 'creator', 'dam', 'female parent', 'forebearer', 'foster mother', 'ma', 'mama', 'mamma', 'mater', 'mom', 'momma', 'mommy',
+           'mother-in-law', 'mum', 'mummy', 'old lady', 'old woman', 'origin', 'para i', 'parent', 'predecessor', 'primipara', 'procreator', 'progenitor',  
+           'puerpera', 'quadripara', 'quintipara', 'source', 'supermom', 'surrogate mother']
+
+    daughter['female offspring', 'girl', 'lass', "mother's daughter", 'offspring', 'woman']
     
-    daughter['female offspring', 'girl', "mother's daughter"]
-    
-    father['begetter', 'dad', 'dada', 'daddy', 'father-in-law', 'male parent', 'old man', 'pa', 'papa', 
-           'pappa', 'parent', 'pater', 'pop']
-    
-    son['Jnr', 'Jr', 'Junior', 'boy', 'male offspring', "mama's boy", "mamma's boy", 'man-child', "mother's boy"]
+    father['ancestor', 'begetter', 'beginner', 'church father', 'dad', 'dada', 'daddy', 'don', 'father of the church', 'father-god', 'father-in-law', 'fatherhood',
+           'forebearer', 'forefather', 'founder', 'founding father', 'governor', 'male parent', 'old boy', 'old man', 'origin', 'pa', 'padre', 'papa', 'pappa', 
+           'parent', 'pater', 'paterfamilias', 'patriarch', 'pop', 'predecessor', 'procreator', 'progenitor', 'sire', 'source']
+
+    son['boy', 'dependent', 'descendant', 'heir', 'jnr', 'jr', 'junior', 'lad', 'logos', 'male offspring', "mama's boy", "mamma's boy", "mother's boy", 
+        'offspring', 'scion', 'word']
 ```
 
 # Hypernyms Module Usage
@@ -338,7 +326,6 @@ This package is designed to query these online sources for antonyms, synonyms, h
 3. wordnet.princeton.edu
 4. synonym.com
 5. thesaurus.com
-6. thesaurus.plus
 <p>
   
 # Dependencies
