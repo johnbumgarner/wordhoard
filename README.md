@@ -56,7 +56,7 @@ from wordhoard import Antonyms
 antonym = Antonyms('mother')
 antonym_results = antonym.find_antonyms()
 print(antonym_results)
-['descendant', 'disassemble', 'dissuade', 'effect', 'end', 'father', 'male parent', 'result']
+['dad', 'daddy', 'father', 'old man', 'pa', 'papa', 'pop', 'poppa']
 ```
 
 ## Antonyms written to Python dictionary
@@ -74,17 +74,18 @@ for word in list_of_words:
 for key, value in antonyms_results.items():
     print(key, value)
     
-    mother['descendant', 'disassemble', 'dissuade', 'effect', 'end', 'father', 'male parent', 'result']
+    mother['dad', 'daddy', 'father', 'old man', 'pa', 'papa', 'pop', 'poppa']
 
-    daughter['boy', 'man', 'son']
+    daughter['son']
 
-    father['descendant', 'effect', 'end', 'euphemism', 'explode', 'female parent', 'mother', 'result']
+    father['biological mother', 'birth mother', 'ma', 'mama', 'mom', 'momma', 'mommy', 'mother', 'mum', 'mummy', 'progenitress', 'progenitrix']
 
-    son['daughter', 'female', 'female offspring', 'parent']
+    son['daughter']
 ```
 
 
 # Synonyms Module Usage
+
 <p align="justify">
  A <i>synonym</i> is a word or phrase that means exactly or nearly the same as another word or phrase in the same language.
 
@@ -100,7 +101,7 @@ from wordhoard import Synonyms
 synonym = Synonyms('mother')
 synonym_results = synonym.find_synonyms()
 print(synonym_results)
-['ancestor', 'child-bearer', 'creator', 'dam', 'female parent', 'forebearer', 'foster mother', 'ma', 'mama', 'mamma', 'mater', 'mom', 'momma', 'mommy', 'mother-in-law', 'mum', 'mummy', 'old lady', 'old woman', 'origin', 'para i', 'parent', 'predecessor', 'primipara', 'procreator', 'progenitor', 'puerpera', 'quadripara', 'quintipara', 'source', 'supermom', 'surrogate mother']
+['ancestor', 'biological mother', 'birth mother', 'child-bearer', 'creator', 'dam', 'female parent', 'forebearer', 'foster mother', 'ma', 'mama', 'mamma', 'mammy', 'mater', 'mom', 'momma', 'mommy', 'mother-in-law', 'mum', 'mummy', 'old lady', 'old woman', 'origin', 'para i', 'parent', 'predecessor', 'primipara', 'procreator', 'progenitor', 'puerpera', 'quadripara', 'quintipara', 'source', 'supermom', 'surrogate mother']
 ```
 
 ## Synonyms written to Python dictionary
@@ -119,18 +120,19 @@ for word in list_of_words:
 for key, value in synonyms_results.items():
     print(key, value)
     
-    mother['ancestor', 'child-bearer', 'creator', 'dam', 'female parent', 'forebearer', 'foster mother', 'ma', 'mama', 'mamma', 'mater', 'mom', 'momma', 'mommy',
-           'mother-in-law', 'mum', 'mummy', 'old lady', 'old woman', 'origin', 'para i', 'parent', 'predecessor', 'primipara', 'procreator', 'progenitor',  
-           'puerpera', 'quadripara', 'quintipara', 'source', 'supermom', 'surrogate mother']
+    mother['ancestor', 'biological mother', 'birth mother', 'child-bearer', 'creator', 'dam', 'female parent', 'forebearer', 'foster mother', 'ma', 
+    'mama', 'mamma', 'mammy', 'mater', 'mom', 'momma', 'mommy', 'mother-in-law', 'mum', 'mummy', 'old lady', 'old woman', 'origin', 'para i', 
+    'parent', 'predecessor', 'primipara', 'procreator', 'progenitor', 'puerpera', 'quadripara', 'quintipara', 'source', 'supermom', 'surrogate mother']
 
-    daughter['female offspring', 'girl', 'lass', "mother's daughter", 'offspring', 'woman']
+    daughter['female child', 'female offspring', 'girl', 'lass', "mother's daughter", 'offspring', 'woman']
     
-    father['ancestor', 'begetter', 'beginner', 'church father', 'dad', 'dada', 'daddy', 'don', 'father of the church', 'father-god', 'father-in-law', 'fatherhood',
-           'forebearer', 'forefather', 'founder', 'founding father', 'governor', 'male parent', 'old boy', 'old man', 'origin', 'pa', 'padre', 'papa', 'pappa', 
-           'parent', 'pater', 'paterfamilias', 'patriarch', 'pop', 'predecessor', 'procreator', 'progenitor', 'sire', 'source']
+    father['ancestor', 'begetter', 'beginner', 'biological father', 'birth father', 'church father', 'dad', 'dada', 'daddy', 'don', 'father of the church', 
+    'father-god', 'father-in-law', 'fatherhood', 'forebearer', 'forefather', 'foster father', 'founder', 'founding father', 'governor', 'male parent', 
+    'old boy', 'old man', 'origin', 'pa', 'padre', 'papa', 'pappa', 'parent', 'pater', 'paterfamilias', 'patriarch', 'pop', 'poppa', 'predecessor', 
+    'procreator', 'progenitor', 'sire', 'source']
 
-    son['boy', 'dependent', 'descendant', 'heir', 'jnr', 'jr', 'junior', 'lad', 'logos', 'male offspring', "mama's boy", "mamma's boy", "mother's boy", 
-        'offspring', 'scion', 'word']
+    son['boy', 'dependent', 'descendant', 'heir', 'jnr', 'jr', 'junior', 'lad', 'logos', 'male child', 'male offspring', "mama's boy", "mamma's boy", 
+    "mother's boy", 'offspring', 'scion', 'son and heir']
 ```
 
 # Hypernyms Module Usage
@@ -161,6 +163,7 @@ print(hypernym_results)
 ```
 
 # Hyponyms Module Usage
+
 <p align="justify">
 A <i>hyponym</i> is a word of more specific meaning than a general or superordinate term applicable to it.
 
@@ -184,6 +187,7 @@ print(hyponym_results)
 ```
 
 # Homophones Module Usage
+
 <p align="justify">
 A <i>homophone</i> is a word that is pronounced the same as another word but differs in meaning.
 
@@ -204,6 +208,7 @@ print(homophone_results)
 ```
 
 # Definitions Module Usage
+
 <p align="justify">
 A <i>definition</i> is a statement of the exact meaning of a word, especially in a dictionary.
 </p>
@@ -219,6 +224,7 @@ print(definition_results)
 ```
 
 # Advanced Usage 
+
 <p align="justify">
 One of the <a href="https://github.com/johnbumgarner/wordhoard/blob/master/examples/nlp_synonym_use_case.py">example scripts</a> uses the <a href="https://pypi.org/project/nltk/">Natural Language Toolkit (NLTK)</a> to parse a block of text.
 Part of the parsing process includes removing punctuation and numeral characters for the text.  It also includes removed English language stop words.  After the text has been cleaned the script looks for synonyms for each word. 
@@ -245,7 +251,7 @@ The example below uses `GoogleTranslator` to translate Spanish language words to
 from wordhoard import Synonyms
 from deep_translator import GoogleTranslator
 
-list_of_words = ['mama', 'hija', 'padre', 'hijo']
+list_of_words = ['madre', 'hija', 'padre', 'hiño']
 synonyms_results = {}
 
 for word in list_of_words:
@@ -260,56 +266,33 @@ for key, values in synonyms_results.items():
     # The languages keywords can be either the:
     # Full word: spanish
     # or the abbreviation: es
-    translated_key = GoogleTranslator(source='english', target='spanish').translate(key)
-    translated_synonyms.setdefault(translated_key, [])
+    translated_synonyms.setdefault(key, [])
     for value in sorted(set(values)):
         translated_value = GoogleTranslator(source='english', target='spanish').translate(value)
         unique_values.add(translated_value.lower())
-    translated_synonyms[translated_key].append(sorted(unique_values))
+    translated_synonyms[key].append(sorted(unique_values))
     print(translated_synonyms)
     
-    {'mamá': [['abuela', 'anciana', 'antepasado', 'creador', 'fuente', 'madrastra', 'madre', 
-               'madre mamá', 'mam', 'mamita', 'mammie', 'mamá', 'mamá mamá', 'mater', 
-               'materfamilias', 'matriarca', 'matrona', 'momia', 'mumsy', 'origen', 'padre', 
-               'portador de hijos', 'predecesor', 'procreador', 'progenitor', 'señora mayor', 
-               'supermujer', 'súper mamá']]}
-
-    {'hija': [['adolescente', 'aparecer', 'asunto', 'bebé', 'chica de escuela', 'chico', 
-               'chiquillo', 'chorro', 'dama', 'damisela', 'descendencia', 'descendencia femenina', 
-               'descendiente', 'femme', 'galón', 'generacion', 'heredero', 'hermana', 
-               'hija de la madre', 'hijo', 'infantil', 'joven', 'juvenil', 'juventud', 
-               'moppet', 'muchacha', 'muchacho', 'mujer', 'mujer joven', 'nene', 'niña', 'niño', 
-               'niño pequeño', 'pequeño', 'perder', 'perro de calle', 'señora', 'señorita', 
-               'sra', 'sucesor', 'vástago']]}
+   {'madre': [['anciana', 'antepasado', 'creador', 'fuente', 'madre', 'madre adoptiva', 'madre biológica', 'madre sustituta', 'mami', 'mamita', 
+   'mamá', 'mater', 'momia', 'origen', 'padre', 'para yo', 'portador de hijos', 'predecesor', 'primípara', 'procreador', 'progenitor', 'puerpera', 
+   'quadripara', 'quintipara', 'represa', 'señora mayor', 'suegra', 'súper mamá']]}
    
-    {'capellán': [['amante', 'anciano', 'chico mayor', 'comandante', 'conde', 'contar', 
-                   'cónyuge masculino', 'dada', 'don', 'engendrador', 'estallidos', 'gobernador', 
-                   'hombre arriba', 'jefe de la casa', 'líder', 'magnate', 'marqués', 'mirar', 
-                   'música pop', 'noble', 'nobleza', 'novio', 'padrastro', 'padre', 'padre adoptivo', 
-                   'padre biológico', 'papa', 'papi', 'pappa', 'papá', 'parlamentario', 'paterfamilias', 
-                   'patriarca', 'patricio', 'pensilvania', 'progenitor', 'realeza', 'regla', 'rey', 
-                   'señor', 'vizconde']]}
+   {'hija': [['descendencia', 'descendencia femenina', 'hija de la madre', 'muchacha', 'mujer', 'niña']]}
 
-    {'hijo': [['adolescente', 'asunto', 'añojo', 'bambino', 'bebé', 'bribón', 'buster', 'cachorro', 
-               'cambiante', 'canalla', 'cartel de niño', 'chico', 'chiquillo', 'colegial', 
-               'cuerpo de niño', 'descendencia', 'descendiente', 'destetar', 'diablillo', 'educando', 
-               'freír', 'frito pequeño', 'grapadora', 'heredero', 'hija', 'hijo', 'hijo adoptivo', 
-               'huérfano', 'infantil', 'inocente', 'joven', 'juvenil', 'juventud', 'kindergarten', 
-               'lactante', 'mamón', 'maní', 'maquinilla de afeitar', 'menor', 'mequetrefe', 'mono', 
-               'moppet', 'mordedor de tobillo', 'mozuelo', 'muchacho', 'munchkin', 'negrito', 'nene', 
-               'neonato', 'niña', 'niño', 'niño abandonado', 'niño de la calle', 'niño maravilla', 
-               'niño negrito', 'niño pequeño', 'niño prodigio', 'pajarito en el nido', 'palo de golf', 
-               'pececillo', 'pequeño', 'perro de calle', 'persona juvenil', 'picaninny', 'pilluelo', 
-               'pizca', 'preescolar', 'progenie', 'pícaro', 'querubín', 'rapscallion', 'rata de alfombra', 
-               'recién nacido', 'sprog', 'sucesor', 'teenybopper', 'tike', 'tonto', 'vale', 'vástago']]}
+   {'padre': [['anciano', 'chico mayor', 'dada', 'engendrador', 'música pop', 'padrastro', 'padre', 'padre adoptivo', 'padre biológico', 'papito', 
+   'pappa', 'papá', 'paterfamilias', 'patriarca', 'pensilvania']]}
+
+   {'hiño': [['chico', 'dependiente', 'descendencia', 'descendencia masculina', 'descendiente', 'el hijo de mamá', 'el niño de mama', 'heredero', 
+   'hijo de la madre', 'hijo y heredero', 'jnr', 'jr', 'júnior', 'logotipos', 'muchacho', 'niño', 'palabra', 'vástago']]}
+
 ```
 
 <p align="justify">
-It is worth noting that Google Translate is not perfect, thus it can make “lost in translation” translation mistakes. These mistakes are usually related to Google Translate not having an in-depth understanding of the language or not being able to under the context of these words being translated.  In some cases Google Translate will make 
-nonsensical literal translations.  So any translation should be reviewed for these mistakes. 
+It is worth noting that Google Translate is not perfect, thus it can make “lost in translation” translation mistakes. These mistakes are usually related to Google Translate not having an in-depth understanding of the language or not being able to under the context of these words being translated.  In some cases Google Translate will make nonsensical literal translations.  So any translation should be reviewed for these mistakes. 
 <p>
 
 # Additional Features
+   
 <p align="justify">
 <i>wordhoard</i> uses an in-memory cache, which helps prevent redundant queries to an individual resource for the same word.  These caches are currently being erased after each session. 
    
@@ -323,9 +306,11 @@ This package is designed to query these online sources for antonyms, synonyms, h
 
 1. classicthesaurus.com
 2. collinsdictionary.com
-3. wordnet.princeton.edu
+3. merriam-webster.com
 4. synonym.com
 5. thesaurus.com
+6. wordhippo.com
+7. wordnet.princeton.edu
 <p>
   
 # Dependencies
@@ -343,17 +328,38 @@ This package has these dependencies:
 # Development
 
 <p align="justify">
-If you would like to contribute to the <i>wordhoard</i> project, feel free to clone a development version of this repository locally. 
+If you would like to contribute to the <i>wordhoard</i> project please read the <a href="https://github.com/johnbumgarner/wordhoard/blob/master/CONTRIBUTING.md">contributing guidelines</a>.
+   
+Items currently under development:
+   - Rate limiting related to `Python Requests`
+   - English language word verifcation using the Python package `pyenchant` 
+   - Embedded translations using the Python package `deep-translator`
+   - Selectable query output - list or dictionary format. 
+   
 <p>
 
-```git clone https://github.com/johnbumgarner/wordhoard.git```
-
 # Issues
+
 <p align="justify">
 This repository is actively maintained.  Feel free to open any issues related to bugs, coding errors, broken links or enhancements. 
 
 You can also contact me at [John Bumgarner](mailto:wordhoardproject@gmail.com?subject=[GitHub]%20wordhoard%20project%20request) with any issues or enhancement requests.
 <p>
+
+# Limitations
+   
+<p align="justify">
+   
+The querying capabilities of this Python package is highly dependent on the navigational structure of each source in the query pool.  If a source modifies its navigational structure then extraction from that specific source will likely have some challenges. The maintainers of `Wordhoard` will correct these navigational extraction issues when they are discovered in periodic testing or reported as an issue.    
+
+Another package limitation is the accuracy of certain antonyms or synonyms provided by a source.  Some sources provide _near antonyms_ or _near synonyms_ for specific words.  The maintainers of `Wordhoard` have made a best effort to remove these types of erroneous responses from the output of any given query.
+   
+Some sources have ratelimits, which can impact querying and extraction for that source. In some cases exceeding these ratelimits will trigger a `Cloudflare` challenge session.  Errors related to these blocked sessions are written the `wordhoard_error.yaml` file.  Such entries will have a `status code` of 521, which is a Cloudflare-specific error message. The maintainers of `Wordhoard` are exploring adding ratelimits to those sources that impose querying limits for a specific period.
+<p>
+
+# Sponsorship
+   
+Under consideration at the moment. 
 
 # License
 
