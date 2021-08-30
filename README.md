@@ -78,7 +78,8 @@ for key, value in antonyms_results.items():
 
     daughter['son']
 
-    father['biological mother', 'birth mother', 'ma', 'mama', 'mom', 'momma', 'mommy', 'mother', 'mum', 'mummy', 'progenitress', 'progenitrix']
+    father['biological mother', 'birth mother', 'ma', 'mama', 'mom', 'momma', 'mommy', 'mother', 'mum', 'mummy', 
+    'progenitress', 'progenitrix']
 
     son['daughter']
 ```
@@ -101,7 +102,11 @@ from wordhoard import Synonyms
 synonym = Synonyms('mother')
 synonym_results = synonym.find_synonyms()
 print(synonym_results)
-['ancestor', 'biological mother', 'birth mother', 'child-bearer', 'creator', 'dam', 'female parent', 'forebearer', 'foster mother', 'ma', 'mama', 'mamma', 'mammy', 'mater', 'mom', 'momma', 'mommy', 'mother-in-law', 'mum', 'mummy', 'old lady', 'old woman', 'origin', 'para i', 'parent', 'predecessor', 'primipara', 'procreator', 'progenitor', 'puerpera', 'quadripara', 'quintipara', 'source', 'supermom', 'surrogate mother']
+['ancestor', 'biological mother', 'birth mother', 'child-bearer', 'creator', 'dam', 'female parent', 
+'forebearer', 'foster mother', 'ma', 'mama', 'mamma', 'mammy', 'mater', 'mom', 'momma', 'mommy', 
+'mother-in-law', 'mum', 'mummy', 'old lady', 'old woman', 'origin', 'para i', 'parent', 'predecessor', 
+'primipara', 'procreator', 'progenitor', 'puerpera', 'quadripara', 'quintipara', 'source', 'supermom', 
+'surrogate mother']
 ```
 
 ## Synonyms written to Python dictionary
@@ -120,19 +125,22 @@ for word in list_of_words:
 for key, value in synonyms_results.items():
     print(key, value)
     
-    mother['ancestor', 'biological mother', 'birth mother', 'child-bearer', 'creator', 'dam', 'female parent', 'forebearer', 'foster mother', 'ma', 
-    'mama', 'mamma', 'mammy', 'mater', 'mom', 'momma', 'mommy', 'mother-in-law', 'mum', 'mummy', 'old lady', 'old woman', 'origin', 'para i', 
-    'parent', 'predecessor', 'primipara', 'procreator', 'progenitor', 'puerpera', 'quadripara', 'quintipara', 'source', 'supermom', 'surrogate mother']
+    mother['ancestor', 'biological mother', 'birth mother', 'child-bearer', 'creator', 'dam', 'female parent', 
+    'forebearer', 'foster mother', 'ma', 'mama', 'mamma', 'mammy', 'mater', 'mom', 'momma', 'mommy', 
+    'mother-in-law', 'mum', 'mummy', 'old lady', 'old woman', 'origin', 'para i', 'parent', 'predecessor', 
+    'primipara', 'procreator', 'progenitor', 'puerpera', 'quadripara', 'quintipara', 'source', 'supermom', 
+    'surrogate mother']
 
     daughter['female child', 'female offspring', 'girl', 'lass', "mother's daughter", 'offspring', 'woman']
     
-    father['ancestor', 'begetter', 'beginner', 'biological father', 'birth father', 'church father', 'dad', 'dada', 'daddy', 'don', 'father of the church', 
-    'father-god', 'father-in-law', 'fatherhood', 'forebearer', 'forefather', 'foster father', 'founder', 'founding father', 'governor', 'male parent', 
-    'old boy', 'old man', 'origin', 'pa', 'padre', 'papa', 'pappa', 'parent', 'pater', 'paterfamilias', 'patriarch', 'pop', 'poppa', 'predecessor', 
-    'procreator', 'progenitor', 'sire', 'source']
+    father['ancestor', 'begetter', 'beginner', 'biological father', 'birth father', 'church father', 'dad', 
+    'dada', 'daddy', 'don', 'father of the church', 'father-god', 'father-in-law', 'fatherhood', 'forebearer', 
+    'forefather', 'foster father', 'founder', 'founding father', 'governor', 'male parent', 'old boy', 'old man', 
+    'origin', 'pa', 'padre', 'papa', 'pappa', 'parent', 'pater', 'paterfamilias', 'patriarch', 'pop', 'poppa', 
+    'predecessor', 'procreator', 'progenitor', 'sire', 'source']
 
-    son['boy', 'dependent', 'descendant', 'heir', 'jnr', 'jr', 'junior', 'lad', 'logos', 'male child', 'male offspring', "mama's boy", "mamma's boy", 
-    "mother's boy", 'offspring', 'scion', 'son and heir']
+    son['boy', 'dependent', 'descendant', 'heir', 'jnr', 'jr', 'junior', 'lad', 'logos', 'male child', 
+    'male offspring', "mama's boy", "mamma's boy", "mother's boy", 'offspring', 'scion', 'son and heir']
 ```
 
 # Hypernyms Module Usage
@@ -273,17 +281,20 @@ for key, values in synonyms_results.items():
     translated_synonyms[key].append(sorted(unique_values))
     print(translated_synonyms)
     
-   {'madre': [['anciana', 'antepasado', 'creador', 'fuente', 'madre', 'madre adoptiva', 'madre biológica', 'madre sustituta', 'mami', 'mamita', 
-   'mamá', 'mater', 'momia', 'origen', 'padre', 'para yo', 'portador de hijos', 'predecesor', 'primípara', 'procreador', 'progenitor', 'puerpera', 
+   {'madre': [['anciana', 'antepasado', 'creador', 'fuente', 'madre', 'madre adoptiva', 'madre biológica', 
+   'madre sustituta', 'mami', 'mamita', 'mamá', 'mater', 'momia', 'origen', 'padre', 'para yo', 
+   'portador de hijos', 'predecesor', 'primípara', 'procreador', 'progenitor', 'puerpera', 
    'quadripara', 'quintipara', 'represa', 'señora mayor', 'suegra', 'súper mamá']]}
    
    {'hija': [['descendencia', 'descendencia femenina', 'hija de la madre', 'muchacha', 'mujer', 'niña']]}
 
-   {'padre': [['anciano', 'chico mayor', 'dada', 'engendrador', 'música pop', 'padrastro', 'padre', 'padre adoptivo', 'padre biológico', 'papito', 
-   'pappa', 'papá', 'paterfamilias', 'patriarca', 'pensilvania']]}
+   {'padre': [['anciano', 'chico mayor', 'dada', 'engendrador', 'música pop', 'padrastro', 'padre', 
+   'padre adoptivo', 'padre biológico', 'papito', 'pappa', 'papá', 'paterfamilias', 'patriarca', 
+   'pensilvania']]}
 
-   {'hiño': [['chico', 'dependiente', 'descendencia', 'descendencia masculina', 'descendiente', 'el hijo de mamá', 'el niño de mama', 'heredero', 
-   'hijo de la madre', 'hijo y heredero', 'jnr', 'jr', 'júnior', 'logotipos', 'muchacho', 'niño', 'palabra', 'vástago']]}
+   {'hiño': [['chico', 'dependiente', 'descendencia', 'descendencia masculina', 'descendiente', 
+   'el hijo de mamá', 'el niño de mama', 'heredero', 'hijo de la madre', 'hijo y heredero', 'jnr', 
+   'jr', 'júnior', 'logotipos', 'muchacho', 'niño', 'palabra', 'vástago']]}
 
 ```
 
