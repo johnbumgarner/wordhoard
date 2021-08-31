@@ -385,6 +385,7 @@ print(results)
 ```
 
 <p align="justify">
+   
 It is hard for an application like `Wordhoard` to intuitively extract the words, which are actually synonyms for the `WordHippo` results. 
  
 Additionally, some sources provide _near antonyms_ or _near synonyms_ for a specific word.  The maintainers of `Wordhoard` have made a best effort to remove these types of erroneous responses from the output of any given query.
