@@ -203,7 +203,7 @@ Homophone examples:
 - one is a homophone of won
 - ate is a homophone of eight
 - meet is a homophone of meat
-
+   
 </p>
 
 ```python
@@ -236,6 +236,7 @@ print(definition_results)
 <p align="justify">
 One of the <a href="https://github.com/johnbumgarner/wordhoard/blob/master/examples/nlp_synonym_use_case.py">example scripts</a> uses the <a href="https://pypi.org/project/nltk/">Natural Language Toolkit (NLTK)</a> to parse a block of text.
 Part of the parsing process includes removing punctuation and numeral characters for the text.  It also includes removed English language stop words.  After the text has been cleaned the script looks for synonyms for each word. 
+</p>
 
 # Language Translation
 <p align="justify">
@@ -300,7 +301,7 @@ for key, values in synonyms_results.items():
 
 <p align="justify">
 It is worth noting that Google Translate is not perfect, thus it can make “lost in translation” translation mistakes. These mistakes are usually related to Google Translate not having an in-depth understanding of the language or not being able to under the context of these words being translated.  In some cases Google Translate will make nonsensical literal translations.  So any translation should be reviewed for these mistakes. 
-<p>
+</p>
 
 # Additional Features
    
@@ -308,7 +309,7 @@ It is worth noting that Google Translate is not perfect, thus it can make “los
 <i>wordhoard</i> uses an in-memory cache, which helps prevent redundant queries to an individual resource for the same word.  These caches are currently being erased after each session. 
    
 This application also uses <i>Python logging</i> to both the terminal and to the logfile <i>wordhoard_error.yaml</i>.
-<p>
+</p>
 
 # Sources
 
@@ -322,7 +323,7 @@ This package is designed to query these online sources for antonyms, synonyms, h
 5. thesaurus.com
 6. wordhippo.com
 7. wordnet.princeton.edu
-<p>
+</p>
   
 # Dependencies
 
@@ -334,7 +335,7 @@ This package has these dependencies:
 3. <b>lxml</b>
 4. <b>requests</b>
 5. <b>urllib3</b>
-<p>
+</p>
 
 # Development
 
@@ -343,11 +344,11 @@ If you would like to contribute to the <i>wordhoard</i> project please read the 
    
 Items currently under development:
    - Rate limiting related to `Python Requests`
-   - English language word verifcation using the Python package `pyenchant` 
+   - English language word verification using the Python package `pyenchant` 
    - Embedded translations using the Python package `deep-translator`
-   - Selectable query output - list or dictionary format. 
-   
-<p>
+   - Selectable query output - list or dictionary format
+   - Expanding the list of hypernyms, hyponyms and homophones
+</p>
 
 # Issues
 
@@ -355,7 +356,7 @@ Items currently under development:
 This repository is actively maintained.  Feel free to open any issues related to bugs, coding errors, broken links or enhancements. 
 
 You can also contact me at [John Bumgarner](mailto:wordhoardproject@gmail.com?subject=[GitHub]%20wordhoard%20project%20request) with any issues or enhancement requests.
-<p>
+</p>
 
 # Limitations
    
@@ -366,7 +367,7 @@ The querying capabilities of this Python package is highly dependent on the navi
 Another package limitation is the accuracy of certain antonyms or synonyms provided by a source.  Some sources provide _near antonyms_ or _near synonyms_ for specific words.  The maintainers of `Wordhoard` have made a best effort to remove these types of erroneous responses from the output of any given query.
    
 Some sources have ratelimits, which can impact querying and extraction for that source. In some cases exceeding these ratelimits will trigger a `Cloudflare` challenge session.  Errors related to these blocked sessions are written the `wordhoard_error.yaml` file.  Such entries will have a `status code` of 521, which is a Cloudflare-specific error message. The maintainers of `Wordhoard` are exploring adding ratelimits to those sources that impose querying limits for a specific period.
-<p>
+</p>
 
 # Sponsorship
    
