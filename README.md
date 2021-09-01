@@ -321,7 +321,8 @@ This package is designed to query these online sources for antonyms, synonyms, h
 3. merriam-webster.com
 4. synonym.com
 5. thesaurus.com
-6. wordnet.princeton.edu
+6. wordhippo.com
+7. wordnet.princeton.edu
 </p>
   
 # Dependencies
@@ -347,6 +348,7 @@ Items currently under development:
    - Embedded translations using the Python package `deep-translator`
    - Selectable query output - list or dictionary format
    - Expanding the list of hypernyms, hyponyms and homophones
+   - Adding part-of-speech filters in queries 
 </p>
 
 # Issues
@@ -364,7 +366,7 @@ You can also contact me at [John Bumgarner](mailto:wordhoardproject@gmail.com?su
 The querying capabilities of this Python package is highly dependent on the navigational structure of each source in the query pool.  If a source modifies its navigational structure then extraction from that specific source will likely have some challenges. The maintainers of `Wordhoard` will correct these navigational extraction issues when they are discovered in periodic testing or reported as an issue.    
 
 Another package limitation is the accuracy of certain antonyms or synonyms provided by a source. For instance 
-<a href="https://www.wordhippo.com/">WordHippo</a> (a source under consideration) provides an overabundance of antonyms or synonyms for a given word.  In most cases the words provided have almost no relationship to the word inputted. 
+<a href="https://www.wordhippo.com/">WordHippo</a> (a source still under evaluation) provides an overabundance of synonyms for a given word.  In most cases the words provided have almost no relationship to the word inputted. 
    
 For example:  
 </p>
@@ -373,24 +375,22 @@ For example:
 from wordhoard import Synonyms
 
 synonym = Synonyms('banana')
-results = synonym.find_synonyms()
+results = synonym.query_wordhippo() # debugging source
 print(results)
-['abaca', 'actor', 'banana tree', 'buffoon', 'card', 'clown', 'comedian', 'comic', 'cutup', 'droll', 
-'dwarf banana', 'edible banana', 'farceur', 'fool', 'funster', 'gagster', 'genus musa', 'herb', 
-'herbaceous plant', 'humorist', 'japanese banana', 'jester', 'jokesmith', 'jokester', 'jook-sing', 
-'josher', 'kidder', 'life of the party', 'manila hemp', 'musa', 'musa acuminata', 'musa basjoo', 
-'musa paradisiaca', 'musa paradisiaca sapientum', 'musa textilis', 'plantain', 'prankster', 'punster', 
-'quipster', 'second banana', 'stand-up comic', 'stooge', 'straight person', 'top banana', 'trickster', 
+['actor', 'buffoon', 'card', 'clown', 'comedian', 'comic', 'cutup', 'droll', 'farceur', 'fool', 'funster', 'gagster', 
+'humorist', 'jester', 'jokesmith', 'jokester', 'jook-sing', 'josher', 'kidder', 'life of the party', 'prankster', 
+'punster', 'quipster', 'second banana', 'stand-up comic', 'stooge', 'straight person', 'top banana', 'trickster', 
 'twinkie', 'wag', 'wisecracker', 'wit']
+
 ```
 
 <p align="justify">
    
-It is hard for an application like `Wordhoard` to intuitively extract the words, which are actually synonyms for the `WordHippo` results. 
+It is hard for an application like `Wordhoard` to intuitively extract the words, which are actually synonyms from the `WordHippo` results.  To counter this `WordHippo` was removed for the `Synonyms` module. 
  
 Additionally, some sources provide _near antonyms_ or _near synonyms_ for a specific word.  The maintainers of `Wordhoard` have made a best effort to remove these types of erroneous responses from the output of any given query.
    
-Some sources have ratelimits, which can impact querying and extraction for that source. In some cases exceeding these ratelimits will trigger a `Cloudflare` challenge session.  Errors related to these blocked sessions are written the `wordhoard_error.yaml` file.  Such entries will have a `status code` of 521, which is a Cloudflare-specific error message. The maintainers of `Wordhoard` are exploring adding ratelimits to those sources that impose querying limits for a specific period.
+Some sources have ratelimits, which can impact querying and extraction for that source. In some cases exceeding these ratelimits will trigger a `Cloudflare` challenge session.  Errors related to these blocked sessions are written the `wordhoard_error.yaml` file.  Such entries can have a `status code` of 521, which is a Cloudflare-specific error message. The maintainers of `Wordhoard` are exploring adding ratelimits to those sources that impose querying limits for a specific period.
 </p>
 
 # Sponsorship
