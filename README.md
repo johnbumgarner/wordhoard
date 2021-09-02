@@ -340,7 +340,7 @@ This package has these dependencies:
 # Development
 
 <p align="justify">
-If you would like to contribute to the <i>wordhoard</i> project please read the <a href="https://github.com/johnbumgarner/wordhoard/blob/master/CONTRIBUTING.md">contributing guidelines</a>.
+If you would like to contribute to the <i>Wordhoard</i> project please read the <a href="https://github.com/johnbumgarner/wordhoard/blob/master/CONTRIBUTING.md">contributing guidelines</a>.
    
 Items currently under development:
    - Rate limiting related to `Python Requests`
@@ -395,7 +395,7 @@ Some sources have ratelimits, which can impact querying and extraction for that 
 
 # Sponsorship
    
-Under consideration at the moment. 
+If you would like to contribute financially to the development and maintenance of the <i>Wordhoard</i> project please read the <a href="https://github.com/johnbumgarner/wordhoard/blob/master/SPONSOR.md">sponsorship information.</a>.
 
 # License
 
