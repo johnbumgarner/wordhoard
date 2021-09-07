@@ -20,13 +20,11 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 ##################################################################################
 
 ##################################################################################
-#
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Revised:
-# Revised by:
-#
+# Date Last Revised: September 4, 2021
+# Revised by: John Bumgarner
 ##################################################################################
 
 ##################################################################################
@@ -45,7 +43,6 @@ def enable_logging(logger):
     logger.addHandler(log_handler)
     formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s: %(message)s', '%Y-%m-%d %H:%M:%S')
     log_handler.setFormatter(formatter)
-    log_handler.setLevel(logging.ERROR)
 
 
 

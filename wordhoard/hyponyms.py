@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Initially Completed: June 12, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: August 23, 2021
+# Date Last Revised: September 7, 2021
 # Revised by: John Bumgarner
 ###################################################################################
 
@@ -36,10 +36,11 @@ import logging
 import requests
 import traceback
 from bs4 import BeautifulSoup
-from wordhoard.utilities import basic_soup, caching, cleansing, wordhoard_logger, word_verification
+from backoff import on_exception, expo
+from ratelimit import limits, RateLimitException
+from wordhoard.utilities import basic_soup, caching, cleansing, word_verification
 
 logger = logging.getLogger(__name__)
-wordhoard_logger.enable_logging(logger)
 
 
 def _get_number_of_pages(soup):
@@ -130,16 +131,46 @@ class Hyponyms(object):
     This class is used to query online repositories for the hyponyms associated
     with a specific word.
 
-    Usage:
-      hyponym = Hyponyms(word)
-      results = hyponyms.find_hyponyms()
     """
 
-    def __init__(self, word):
+    def __init__(self, search_string='', max_number_of_requests=30, rate_limit_timeout_period=60):
         """
-        :param word: string variable used to find hyponyms for
+        Usage Examples
+        ----------
+
+        >>> hyponyms = Hyponyms('horse')
+        >>> results = hyponyms.find_hyponyms()
+
+        >>> hyponyms = Hyponyms(search_string='horse')
+        >>> results = hyponyms.find_hyponyms()
+
+        Parameters
+        ----------
+        :param search_string: string variable used to find hyponyms for
+        :param max_number_of_requests: maximum number of requests for a specific timeout_period
+        :param rate_limit_timeout_period: the time period before a session is placed in a temporary hibernation mode
         """
-        self._word = word
+        ratelimit_status = False
+        self._rate_limit_status = ratelimit_status
+
+        self._word = search_string
+
+        # Retries the requests after a certain time period has elapsed
+        handler = on_exception(expo, RateLimitException, max_time=60, on_backoff=self._backoff_handler)
+        # Establishes a rate limit for making requests to the antonyms repositories
+        limiter = limits(calls=max_number_of_requests, period=rate_limit_timeout_period)
+        self.find_hyponyms = handler(limiter(self.find_hyponyms))
+
+    def _colorized_text(self, r, g, b, text):
+        return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
+
+    def _backoff_handler(self, details):
+        if self._rate_limit_status is False:
+            print(self._colorized_text(255, 0, 0,
+                                       'The hyponyms query rate Limit was reached. The querying process is entering '
+                                       'a temporary hibernation mode.'))
+            logger.info('The hyponyms query rate limit was reached.')
+            self._rate_limit_status = True
 
     def _validate_word(self):
         """
@@ -166,14 +197,20 @@ class Hyponyms(object):
 
     def find_hyponyms(self):
         """
+        Purpose
+        ----------
         This function queries classicthesaurus_com for hyponyms associated
         with the specific word provided to the Class Hyponyms.
 
+        Returns
+        ----------
          :returns:
              hyponyms: list of hyponyms
 
         :rtype: list
 
+        Raises
+        ----------
         :raises
             AttributeError: Raised when an attribute reference or assignment fails.
 
@@ -191,27 +228,35 @@ class Hyponyms(object):
             check_cache = self._check_cache()
             if check_cache is False:
                 try:
-                    results_hyponyms = basic_soup.get_single_page_html(
+                    response = basic_soup.get_single_page_html(
                         f'https://www.classicthesaurus.com/{self._word}/narrower')
-                    soup = BeautifulSoup(results_hyponyms, "lxml")
-                    hyponym = _get_hyponyms(soup)
-
-                    number_of_pages = _get_number_of_pages(soup)
-                    if number_of_pages >= 2:
-                        for page in range(2, number_of_pages):
-                            sub_html = requests.get(f'https://www.classicthesaurus.com/{self._word}/narrower/{page}',
-                                                    headers=basic_soup.http_headers)
-                            sub_soup = BeautifulSoup(sub_html.text, 'lxml')
-                            additional_hyponym = _get_hyponyms(sub_soup)
-                            hyponym.union(additional_hyponym)
-                    self._update_cache(sorted(hyponym))
-                    return sorted(set(hyponym))
+                    if response.status_code == 404:
+                        logger.info(f'Classic Thesaurus had no hyponyms reference for the word {self._word}')
+                    else:
+                        soup = BeautifulSoup(response.text, "lxml")
+                        hyponym = _get_hyponyms(soup)
+                        if 'no hyponyms found' in hyponym:
+                            return f'No hyponyms were found for the word: {self._word}'
+                        else:
+                            number_of_pages = _get_number_of_pages(soup)
+                            if number_of_pages >= 2:
+                                for page in range(2, number_of_pages):
+                                    sub_html = requests.get(f'https://www.classicthesaurus.com/{self._word}/narrower/{page}',
+                                                            headers=basic_soup.http_headers)
+                                    sub_soup = BeautifulSoup(sub_html.text, 'lxml')
+                                    additional_hyponym = _get_hyponyms(sub_soup)
+                                    hyponym.union(additional_hyponym)
+                            self._update_cache(sorted(hyponym))
+                            return sorted(set(hyponym))
 
                 except bs4.FeatureNotFound as error:
                     logger.error('An error occurred in the following code segment:')
                     logger.error(''.join(traceback.format_tb(error.__traceback__)))
                 except AttributeError as error:
                     logger.error('An AttributeError occurred in the following code segment:')
+                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
+                except IndexError as error:
+                    logger.error('An IndexError occurred in the following code segment:')
                     logger.error(''.join(traceback.format_tb(error.__traceback__)))
                 except KeyError as error:
                     logger.error('A KeyError occurred in the following code segment:')

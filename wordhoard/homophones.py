@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: June 11, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: July 4, 2021
+# Date Last Revised: September 7, 2021
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -81,15 +81,24 @@ class Homophones(object):
     This class is used to query internal files containing
     English language homophones associated with a specific word.
 
-    Usage: homophone = Homophones(word)
-           results = homophone.find_homophones()
     """
 
-    def __init__(self, word):
+    def __init__(self, search_string=''):
         """
-        :param word: string containing the variable to search for
+        Usage Examples
+        ----------
+
+        >>> homophones = Homophones('horse')
+        >>> results = homophones.find_homophones()
+
+        >>> homophones = Homophones(search_string='horse')
+        >>> results = homophones.find_homophones()
+
+        Parameters
+        ----------
+        :param search_string: string containing the variable to obtain homophones for
         """
-        self._word = word
+        self._word = search_string
 
     def _validate_word(self):
         """
@@ -142,10 +151,14 @@ class Homophones(object):
 
     def find_homophones(self):
         """
+        Purpose
+        ----------
         This function queries multiple lists to find an
         English language homophones associated with the
         specific word provided to the Class Homophones.
 
+        Returns
+        ----------
         :return:
             homophones: list of homophones
             no_homophones: string

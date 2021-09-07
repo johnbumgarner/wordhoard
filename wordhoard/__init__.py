@@ -15,4 +15,6 @@ import logging
 from .utilities import wordhoard_logger
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 wordhoard_logger.enable_logging(logger)
+
