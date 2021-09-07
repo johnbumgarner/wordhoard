@@ -1,4 +1,3 @@
-
 <p align="center">
    <! -- Graphic source: https://thesaurus.plus --> 
   <img src="https://github.com/johnbumgarner/wordhoard/blob/master/graphic/wordhoard_graphic.jpg"/>
