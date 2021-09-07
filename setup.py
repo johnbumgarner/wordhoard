@@ -5,7 +5,7 @@ with open("PYPI_description.md", "r") as fh:
 
 setuptools.setup(
     name="wordhoard",
-    version="1.4.8",
+    version="1.4.9",
     author="John Bumgarner",
     author_email="wordhoardproject@gmail.com",
     description="A comprehensive lexical discovery application that is useful for finding semantic relationships "
@@ -30,10 +30,13 @@ setuptools.setup(
                  "Topic :: Software Development :: Libraries",
                  "Topic :: Text Processing :: Linguistic",
                  "Topic :: Utilities"],
-    keywords=['antonyms', 'synonyms', 'hypernyms', 'hyponyms', 'homophones', 'definitions', 'lexicon',
-              'semantic relationships', 'natural language processing'],
+    keywords=['antonyms', 'bag of words', 'definitions', 'hypernyms', 'hyponyms', 'homophones',
+              'information retrieval', 'lexicon', 'semantic relationships', 'synonyms',
+              'natural language processing'],
     python_requires='>=3.6',
-    install_requires=['bs4',
+    install_requires=['backoff',
+                      'bs4',
+                      'deckar01-ratelimit',
                       'deep-translator',
                       'lxml',
                       'requests',
