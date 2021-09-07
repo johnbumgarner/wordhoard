@@ -38,7 +38,9 @@ Word frequency is the technique used in textual analysis to measure the frequenc
 pip3 install wordhoard
 ```
 
-# Antonyms Module Usage
+# General Package Utilization
+
+## Antonyms Module Usage
 
 <p align="justify"> 
   An <i>antonym</i> is word that has the exact opposite meaning of another word or its antonym.
@@ -85,7 +87,7 @@ for key, value in antonyms_results.items():
 ```
 
 
-# Synonyms Module Usage
+## Synonyms Module Usage
 
 <p align="justify">
  A <i>synonym</i> is a word or phrase that means exactly or nearly the same as another word or phrase in the same language.
@@ -143,7 +145,7 @@ for key, value in synonyms_results.items():
     'male offspring', "mama's boy", "mamma's boy", "mother's boy", 'offspring', 'scion', 'son and heir']
 ```
 
-# Hypernyms Module Usage
+## Hypernyms Module Usage
 
 <p align="justify">
 
@@ -170,7 +172,7 @@ print(hypernym_results)
  'rainbow', 'river', 'spectral color', 'spectral colour', 'sum', 'sum of money']
 ```
 
-# Hyponyms Module Usage
+## Hyponyms Module Usage
 
 <p align="justify">
 A <i>hyponym</i> is a word of more specific meaning than a general or superordinate term applicable to it.
@@ -194,7 +196,7 @@ print(hyponym_results)
  'wild horse']
 ```
 
-# Homophones Module Usage
+## Homophones Module Usage
 
 <p align="justify">
 A <i>homophone</i> is a word that is pronounced the same as another word but differs in meaning.
@@ -215,7 +217,7 @@ print(homophone_results)
 ['horse is a homophone of hoarse']
 ```
 
-# Definitions Module Usage
+## Definitions Module Usage
 
 <p align="justify">
 A <i>definition</i> is a statement of the exact meaning of a word, especially in a dictionary.
@@ -233,12 +235,8 @@ print(definition_results)
 
 # Advanced Usage 
 
-<p align="justify">
-One of the <a href="https://github.com/johnbumgarner/wordhoard/blob/master/examples/nlp_synonym_use_case.py">example scripts</a> uses the <a href="https://pypi.org/project/nltk/">Natural Language Toolkit (NLTK)</a> to parse a block of text.
-Part of the parsing process includes removing punctuation and numeral characters for the text.  It also includes removed English language stop words.  After the text has been cleaned the script looks for synonyms for each word. 
-</p>
+## Language Translation
 
-# Language Translation
 <p align="justify">
 The majority of the sources that <i>wordhoard</i> queries are primarily in the English language. To find antonyms, synonyms, hypernyms, hyponyms and homophones for other languages <i>wordhoard</i> uses the Python package <a href="https://github.com/nidhaloff/deep-translator">deep-translator.</a>
 
@@ -303,12 +301,45 @@ for key, values in synonyms_results.items():
 It is worth noting that Google Translate is not perfect, thus it can make “lost in translation” translation mistakes. These mistakes are usually related to Google Translate not having an in-depth understanding of the language or not being able to under the context of these words being translated.  In some cases Google Translate will make nonsensical literal translations.  So any translation should be reviewed for these mistakes. 
 </p>
 
+## Natural Language Processing
+
+<p align="justify">
+One of the <a href="https://github.com/johnbumgarner/wordhoard/blob/master/examples/nlp_synonym_use_case.py">example scripts</a> uses the <a href="https://pypi.org/project/nltk/">Natural Language Toolkit (NLTK)</a> to parse a block of text.
+Part of the parsing process includes removing punctuation and numeral characters for the text.  It also includes removing common English language stop words.  After the text has been cleaned the script looks for synonyms for each word (aka token).
+</p>
+
 # Additional Features
+
+## In-memory cache
    
 <p align="justify">
 <i>wordhoard</i> uses an in-memory cache, which helps prevent redundant queries to an individual resource for the same word.  These caches are currently being erased after each session. 
+</p>
    
-This application also uses <i>Python logging</i> to both the terminal and to the logfile <i>wordhoard_error.yaml</i>.
+## Rate limiting
+<p align="justify">
+Some sources have ratelimits, which can impact querying and extraction for that source. In some cases exceeding these ratelimits will trigger a `Cloudflare` challenge session.  Errors related to these blocked sessions are written the `wordhoard_error.yaml` file.  Such entries can have a `status code` of 521, which is a Cloudflare-specific error message. The maintainers of `Wordhoard` have added ratelimits to mutiple modules.  These ratelimits can be modified, but reducing these predefined limits can lead to querying sessions being dropped or blocked by a source.  
+
+Currently there are 2 parameters that can be set:
+   
+- max_number_of_requests
+- rate_limit_timeout_period
+   
+These parameters are currently set to 30 requests every 60 seconds.   Requests is a misnomer, because within the Synonyms module 150 queries will be made.  The reason here is that there are 5 sources, which will be called 30 times each in the 60 seconds timeout period.  
+   
+When a ratelimit is trigger a warning message is written to both the console and the `wordhoard_error.yaml` file.  The ratelimit will automatically reset after a set time period, which currently cannot be modified using a parameter passed in a `Class object`.  
+
+</p>
+
+```python 
+from wordhoard import Synonyms
+synonym = Synonyms(search_string='mother', max_number_of_requests=30, rate_limit_timeout_period=60)
+results = synonym.find_synonyms()   
+```
+
+## Logging 
+<p align="justify">
+This application also uses <i>Python logging</i> to both the terminal and to the logfile <i>wordhoard_error.yaml</i>.  The maintainers of `Wordhoard` have attempted to catch any potential exception and write these error messages to the logfile. The logfile is useful to troubleshooting any issue with this package or with the sources being queried by `Wordhoard`.
 </p>
 
 # Sources
@@ -328,14 +359,17 @@ This package is designed to query these online sources for antonyms, synonyms, h
 # Dependencies
 
 <p align="justify">
-This package has these dependencies:
+This package has these core dependencies:
   
-1. <b>BeautifulSoup</b>
-2. <b>deep-translator</b>
-3. <b>lxml</b>
-4. <b>requests</b>
-5. <b>urllib3</b>
+1. <b>backoff</b>
+2. <b>BeautifulSoup</b>
+3. <b>deckar01-ratelimit</b>
+4. <b>deep-translator</b>
+5. <b>lxml</b>
+6. <b>requests</b>
+7. <b>urllib3</b>
 </p>
+
 
 # Development
 
@@ -343,7 +377,6 @@ This package has these dependencies:
 If you would like to contribute to the <i>Wordhoard</i> project please read the <a href="https://github.com/johnbumgarner/wordhoard/blob/master/CONTRIBUTING.md">contributing guidelines</a>.
    
 Items currently under development:
-   - Rate limiting related to `Python Requests`
    - English language word verification using the Python package `pyenchant` 
    - Embedded translations using the Python package `deep-translator`
    - Selectable query output - list or dictionary format
@@ -390,7 +423,6 @@ It is hard for an application like `Wordhoard` to intuitively extract the words,
  
 Additionally, some sources provide _near antonyms_ or _near synonyms_ for a specific word.  The maintainers of `Wordhoard` have made a best effort to remove these types of erroneous responses from the output of any given query.
    
-Some sources have ratelimits, which can impact querying and extraction for that source. In some cases exceeding these ratelimits will trigger a `Cloudflare` challenge session.  Errors related to these blocked sessions are written the `wordhoard_error.yaml` file.  Such entries can have a `status code` of 521, which is a Cloudflare-specific error message. The maintainers of `Wordhoard` are exploring adding ratelimits to those sources that impose querying limits for a specific period.
 </p>
 
 # Sponsorship
