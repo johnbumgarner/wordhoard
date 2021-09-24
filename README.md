@@ -237,67 +237,131 @@ print(definition_results)
 ## Language Translation
 
 <p align="justify">
-The majority of the sources that <i>wordhoard</i> queries are primarily in the English language. To find antonyms, synonyms, hypernyms, hyponyms and homophones for other languages <i>wordhoard</i> uses the Python package <a href="https://github.com/nidhaloff/deep-translator">deep-translator.</a>
+The majority of the sources that <i>wordhoard</i> queries are primarily in the English language. To find antonyms, synonyms, hypernyms, hyponyms and homophones for other languages <i>wordhoard</i> has 3 translation service modules. These modules support <a href="https://translate.google.com">Google Translate</a>, <a href="https://www.deepl.com/translator">DeepL Translate</a> and <a href="https://mymemory.translated.net">MyMemory Translate.</a> 
 
-One of the many translators embedded in `deep-translator` is `GoogleTranslator.` Some of these other translators, such as `MicrosoftTranslator` require an API key.
-You can obtain a list of supported languages by querying `get_supported_languages().`  As of July 5, 2021, there were 107 languages supported by `GoogleTranslator`
+<p align="justify">
+The example below uses the <i>Google Translate</i> module within <i>wordhoard</i> to translate Spanish language words to English language and then back into Spanish.
 </p>
 
 ```python
-from deep_translator import GoogleTranslator
+from wordhoard import Antonyms
+from wordhoard.utilities.google_translator import Translator
 
-langs_dict = GoogleTranslator.get_supported_languages(as_dict=True)
-for lang_name, lang_abbreviation in langs_dict.items():
-    print(f'{lang_name}: {lang_abbreviation}')
-```
-
-The example below uses `GoogleTranslator` to translate Spanish language words to English language ones.  The translated words are processed using `Synonyms.find_synonyms()` and the English results are retranslated back to Spanish.
-
-```python
-from wordhoard import Synonyms
-from deep_translator import GoogleTranslator
-
-list_of_words = ['madre', 'hija', 'padre', 'hiño']
-synonyms_results = {}
-
-for word in list_of_words:
-    translated_word = GoogleTranslator(source='spanish', target='english').translate(word)
-    synonym = Synonyms(translated_word.lower())
-    results = synonym.find_synonyms()
-    synonyms_results[word] = results
-
-for key, values in synonyms_results.items():
-    translated_synonyms = {}
-    unique_values = set()
-    # The languages keywords can be either the:
-    # Full word: spanish
-    # or the abbreviation: es
-    translated_synonyms.setdefault(key, [])
-    for value in sorted(set(values)):
-        translated_value = GoogleTranslator(source='english', target='spanish').translate(value)
-        unique_values.add(translated_value.lower())
-    translated_synonyms[key].append(sorted(unique_values))
-    print(translated_synonyms)
-    
-   {'madre': [['anciana', 'antepasado', 'creador', 'fuente', 'madre', 'madre adoptiva', 'madre biológica', 
-   'madre sustituta', 'mami', 'mamita', 'mamá', 'mater', 'momia', 'origen', 'padre', 'para yo', 
-   'portador de hijos', 'predecesor', 'primípara', 'procreador', 'progenitor', 'puerpera', 
-   'quadripara', 'quintipara', 'represa', 'señora mayor', 'suegra', 'súper mamá']]}
+words = ['buena', 'contenta', 'suave']
+for word in words:
+    translated_word = Translator(source_language='es', str_to_translate=word).translate_word()
+    antonyms = Antonyms(translated_word).find_antonyms()
+    reverse_translations = []
+    for antonym in antonyms:
+        reverse_translated_word = Translator(source_language='es', str_to_translate=antonym).reverse_translate()
+        reverse_translations.append(reverse_translated_word)
+    output_dict = {word: sorted(reverse_translations)}
+    print(output_dict)
+   {'buena': ['Dios espantoso', 'OK', 'abominable', 'aborrecible', 'acogedor', 'agravante', 'amenazante', 
+   'angustioso', 'antiestético', 'asqueroso', 'basura', 'carente', 'contaminado', 'de segunda', 'decepcionante', 
+   'defectuoso', 'deficiente', 'deplorable', 'deprimente', 'desagradable', 'desaliñado', 'descorazonador', 
+   'desfavorecido', 'desgarbado', 'desgarrador', 'detestable', 'doloroso', 'duro', 'débil', 'enfermo', 
+   'enfureciendo', 'enloquecedor', 'espantoso', 'esperado', 'exasperante', 'falsificado', 'falso', 'falta', 
+   'falto', 'feo', 'frustrante', 'grotesco', 'horrible', 'hostil', 'impactante', 'imperfecto', 'inaceptable', 
+   'inadecuado', 'inadmisible', 'inaguantable', 'incensar', 'incompetente', 'incongruente', 'inconsecuente', 
+   'incorrecto', 'indeseable', 'indignante', 'indigno', 'indigno de', 'infeliz', 'inferior', 'infernal', 'inflamando', 
+   'inmoral', 'insalubre', 'insatisfactorio', 'insignificante', 'insoportable', 'insuficiente', 'insufrible', 
+   'intimidante', 'inútil', 'irreal', 'irritante', 'lamentable', 'lúgubre', 'maldad', 'malo', 'malvado', 'malísimo', 
+   'mediocre', 'menor', 'miserable', 'molesto', 'nauseabundo', 'no a la par', 'no atractivo', 'no capacitado', 
+   'no es bueno', 'no es suficiente', 'no fidedigno', 'no satisfactorio', 'nocivo', 'objetable', 'odioso', 'ofensiva', 
+   'ordinario', 'pacotilla', 'patético', 'pecaminoso', 'perturbador', 'pobre', 'poco agraciado', 'poco apetecible', 
+   'poco hermoso', 'poco imponente', 'poco satisfactorio', 'poco virtuoso', 'podrido', 'portarse mal', 'preocupante', 
+   'repelente', 'repugnante', 'repulsivo', 'sencillo', 'significar', 'sin forma', 'sin importancia', 'sin placer', 
+   'sin valor', 'sombrío', 'subóptimo', 'sucio', 'terrible', 'triste', 'trágico', 'vicioso', 'vil']}
    
-   {'hija': [['descendencia', 'descendencia femenina', 'hija de la madre', 'muchacha', 'mujer', 'niña']]}
-
-   {'padre': [['anciano', 'chico mayor', 'dada', 'engendrador', 'música pop', 'padrastro', 'padre', 
-   'padre adoptivo', 'padre biológico', 'papito', 'pappa', 'papá', 'paterfamilias', 'patriarca', 
-   'pensilvania']]}
-
-   {'hiño': [['chico', 'dependiente', 'descendencia', 'descendencia masculina', 'descendiente', 
-   'el hijo de mamá', 'el niño de mama', 'heredero', 'hijo de la madre', 'hijo y heredero', 'jnr', 
-   'jr', 'júnior', 'logotipos', 'muchacho', 'niño', 'palabra', 'vástago']]}
-
+    truncated....
 ```
 
 <p align="justify">
-It is worth noting that Google Translate is not perfect, thus it can make “lost in translation” translation mistakes. These mistakes are usually related to Google Translate not having an in-depth understanding of the language or not being able to under the context of these words being translated.  In some cases Google Translate will make nonsensical literal translations.  So any translation should be reviewed for these mistakes. 
+The example below uses the <i>Deep Translate</i> module within <i>wordhoard</i> to translate Spanish language words to English language and then back into Spanish.
+</p>
+
+```python
+from wordhoard import Antonyms
+from wordhoard.utilities.deep_translator import Translator
+
+words = ['buena', 'contenta', 'suave']
+for word in words:
+    translated_word = Translator(source_language='es', str_to_translate=word,
+                                 api_key='your_api_key').translate_word()
+    antonyms = Antonyms(translated_word).find_antonyms()
+    reverse_translations = []
+    for antonym in antonyms:
+        reverse_translated_word = Translator(source_language='es', str_to_translate=antonym,
+                                             api_key='your_api_key').reverse_translate()
+        reverse_translations.append(reverse_translated_word)
+    output_dict = {word: sorted(set(reverse_translations))}
+    print(output_dict)
+    {'buena': ['abominable', 'agravante', 'angustia', 'antiestético', 'antipático', 'asqueroso', 'basura', 'casero', 
+    'contaminado', 'crummy', 'de mala calidad', 'de segunda categoría', 'decepcionante', 'defectuoso', 'deficiente', 
+    'deplorable', 'deprimente', 'desagradable', 'descorazonador', 'desgarrador', 'detestable', 'dios-horrible', 
+    'doloroso', 'duro', 'débil', 'en llamas', 'enfermo', 'enfureciendo a', 'enloquecedor', 'equivocada', 'espantoso', 
+    'esperado', 'exasperante', 'falso', 'falta', 'feo', 'forjado', 'frumpish', 'frumpy', 'frustrante', 'grotesco', 
+    'horrible', 'hostil', 'impactante', 'imperfecto', 'impermisible', 'inaceptable', 'inadecuado', 'inadmisible', 
+    'incandescente', 'incompetente', 'incongruente', 'indeseable', 'indignante', 'indigno', 'infeliz', 'inferior', 
+    'infernal', 'inflamando', 'inmoral', 'inquietante', 'insalubre', 'insatisfactorio', 'insignificante', 'insoportable', 
+    'insostenible', 'insuficiente', 'insufrible', 'intimidante', 'intrascendente', 'irreal', 'irritante', 'lamentable', 
+    'llano', 'lúgubre', 'mal', 'mal favorecido', 'malvado', 'media', 'mediocre', 'menor', 'miserable', 'molestos', 
+    'nauseabundo', 'no apto', 'no cualificado', 'no es agradable', 'no es bienvenido', 'no es bueno', 
+    'no es lo suficientemente bueno', 'no es sano', 'no está a la altura', 'no hay que olvidar que', 'no se puede confiar en', 
+    'nocivo', 'objetable', 'odioso', 'ofensiva', 'ok', 'ordinario', 'patético', 'pecaminoso', 'perturbando', 'pobre', 
+    'poco apetecible', 'poco atractivo', 'poco encantador', 'poco imponente', 'poco útil', 'podrido', 'problemático', 
+    'prohibiendo', 'pésimo', 'que molesta', 'queriendo', 'rankling', 'repelente', 'repugnante', 'repulsivo', 'rilando', 
+    'se comportan mal', 'sin alegría', 'sin duda', 'sin forma', 'sin importancia', 'sin placer', 'sin pretensiones', 
+    'sin sentido', 'sin valor', 'sombrío', 'subestándar', 'subóptima', 'terrible', 'triste', 'trágico', 'uncute', 'unvirtuoso', 
+    'vicioso', 'vil', 'yukky']}
+    
+     truncated.... 
+```
+<p align="justify">
+The example below uses the <i>MyMemory Translate</i> module within <i>wordhoard</i> to translate Spanish language words to English language and then back into Spanish.
+</p>
+
+```python
+from wordhoard import Antonyms
+from wordhoard.utilities.mymemory_translator import Translator
+
+words = ['buena', 'contenta', 'suave']
+for word in words:
+    translated_word = Translator(source_language='es', str_to_translate=word,
+                                 email_address='your_email_address').translate_word()
+    antonyms = Antonyms(translated_word).find_antonyms()
+    reverse_translations = []
+    for antonym in antonyms:
+        reverse_translated_word = Translator(source_language='es', str_to_translate=antonym,
+                                             email_address='your_email_address').reverse_translate()
+        reverse_translations.append(reverse_translated_word)
+    output_dict = {word: sorted(set(reverse_translations))}
+    print(output_dict)
+    {'buena': ['abominable', 'aborrecible', 'aceptar', 'afligido', 'agravante', 'amenazante', 'ansia nauseosa', 
+    'antiestético', 'asco', 'asqueroso', 'atroz', 'basura', 'caballo que padece tiro', 'carente', 'chocante', 
+    'consternador', 'de baja calidad', 'decepcionando', 'defectuoso', 'deficiente', 'deprimentes', 'desagradable', 
+    'desaliñado', 'descorazonador', 'desfavorecido', 'desgarbado', 'desgarrador', 'desgraciado', 'detestable', 
+    'dios espantoso', 'doloroso', 'duelo psicológico', 'débil', 'enfermas', 'enfermo', 'enfureciendo', 'enloquecedor', 
+    'es lo suficientemente buena', 'espantoso', 'esperado', 'está por el suelo', 'exasperante', 'fake', 'familiar', 
+    'feo', 'forjado', 'fúnebre', 'grutesco', 'horrible', 'hostil', 'impropio', 'inaceptable', 'inadecuado', 'inadmisible', 
+    'inaguantable', 'incensar', 'incomible', 'incompetente', 'incongruente', 'indeseable', 'indignante', 'indigno', 
+    'inexperto', 'infeliz', 'inferior', 'infernal', 'inflamando', 'inmoral', 'inquietante', 'insatisfactorio', 'insignificante', 
+    'insoportable', 'insuficientes', 'insufrible', 'insípido', 'intimidante', 'intrascendente', 'irreal', 'irritante', 
+    'lamentable', 'lúgubre', 'mal', 'mal acogido', 'malo', 'media', 'mezquino', 'molesto', 'nauseabundo', 'no es bueno', 
+    'no satisfactorio', 'no útil', 'nocivo', 'o antipatico', 'odioso', 'ofensivo', 'parcialmente podrido', 'patético', 
+    'pecador', 'penoso', 'pequeños', 'perturbador', 'piojoso', 'poco agraciado', 'poco apetecible', 'poco atractivo', 
+    'poco fiable', 'poco hermoso', 'poco imponente', 'poco satisfactorio', 'poco virtuoso', 'podrido', 'portarse mal', 
+    'preocupante', 'pretérito imperfecto', 'puede ser frustrante', 'querer', 'repelente', 'repugnante', 'repulsivo', 
+    'residuos de lana', 'riling', 'ser agrupado con', 'simple', 'sin forma', 'sin importancia', 'sin placer', 'sin valor', 
+    'sombría', 'subóptimo', 'sucio', 'tarifa segunda', 'temperatura', 'terrible', 'triste', 'trágico', 'tu bienvenida mi hermano', 
+    'un error', 'vano', 'vicioso', 'vil', '¡horrible', 'áspero']}
+    
+      truncated.... 
+```
+
+<p align="justify">
+It is worth noting that none of the translation services are perfect, thus it can make “lost in translation” translation mistakes. These mistakes are usually related to the translation service not having an in-depth understanding of the language or not being able to under the context of these words being translated.  In some cases there will be nonsensical literal translations.  So any translations should be reviewed for these common mistakes. 
 </p>
 
 ## Natural Language Processing
@@ -316,6 +380,7 @@ Part of the parsing process includes removing punctuation and numeral characters
 </p>
    
 ## Rate limiting
+
 <p align="justify">
 Some sources have ratelimits, which can impact querying and extraction for that source. In some cases exceeding these ratelimits will trigger a `Cloudflare` challenge session.  Errors related to these blocked sessions are written the `wordhoard_error.yaml` file.  Such entries can have a `status code` of 521, which is a Cloudflare-specific error message. The maintainers of `Wordhoard` have added ratelimits to mutiple modules.  These ratelimits can be modified, but reducing these predefined limits can lead to querying sessions being dropped or blocked by a source.  
 
@@ -336,9 +401,52 @@ synonym = Synonyms(search_string='mother', max_number_of_requests=30, rate_limit
 results = synonym.find_synonyms()   
 ```
 
+## Proxy usage 
+
+<p align="justify">
+<i>Wordhoard</i> provides out of the box usage of proxies. Just define your proxies config as a dictionary and pass it to the corresponding module as shown below.
+</p>
+
+```python 
+from wordhoard import Synonyms
+proxies_example = {
+    "http": "your http proxy if available" # example: http://149.28.94.152:8080
+    "https": "your https proxy"  # example: https://128.230.60.178:3128
+}
+
+synonym = Synonyms(search_string='mother', proxies=proxies_example)
+results = synonym.find_synonyms()  
+```
+<p align="justify">
+There is a known bug in <i>urllib3</i> between versions 1.26.0 and 1.26.7, which will raise different errors. <i>Wordhoard</i> will be using <i>urllib3</i> version 1.25.11 until the bug is fixed in a future release.  
+</p>
+
+## Output Formatting
+
+<p align="justify">
+The default output of <i>wordhoard</i> is a <i>Python</i> List.  The output format can be changed to use a <i>Python</i> dictionary.  The code example below shows how to change the formatting.  
+</p>
+
+```python
+from wordhoard import Antonyms
+
+words = ['good', 'bad', 'happy']
+for word in words:
+    antonym_dict = Antonyms(search_string=word, output_format='dictionary').find_antonyms()
+    print(antonym_dict)
+    {'good': ['detestable', 'evil', 'fake', 'forged', 'immoral', 'inadequate', 'incompetent', 'inconsequential',
+              'inconsiderable', 'mean', 'misbehaving', 'noxious', 'rotten', 'sinful', 'tainted', 'unpleasant', 'unreal',
+              'unreliable', 'unskilled', 'unsuitable', 'unvirtuous', 'vicious', 'vile', 'wicked']}
+    {'bad': ['advantageous', 'beneficial', 'benevolent', 'honest', 'just', 'profitable', 'reputable', 'right', 'true',
+             'undecayed', 'upright', 'virtuous', 'worthy']}
+    {'happy': ['discouraged', 'dissatisfied', 'forsaken', 'hopeless', 'morose', 'pained', 'unfortunate', 'unlucky']}
+
+```
+
+
 ## Logging 
 <p align="justify">
-This application also uses <i>Python logging</i> to both the terminal and to the logfile <i>wordhoard_error.yaml</i>.  The maintainers of `Wordhoard` have attempted to catch any potential exception and write these error messages to the logfile. The logfile is useful to troubleshooting any issue with this package or with the sources being queried by `Wordhoard`.
+This application also uses <i>Python logging</i> to both the terminal and to the logfile <i>wordhoard_error.yaml</i>.  The maintainers of <i>Wordhoard</i> have attempted to catch any potential exception and write these error messages to the logfile. The logfile is useful to troubleshooting any issue with this package or with the sources being queried by `Wordhoard`.
 </p>
 
 # Sources
@@ -363,7 +471,7 @@ This package has these core dependencies:
 1. <b>backoff</b>
 2. <b>BeautifulSoup</b>
 3. <b>deckar01-ratelimit</b>
-4. <b>deep-translator</b>
+4. <b>deepl</b>
 5. <b>lxml</b>
 6. <b>requests</b>
 7. <b>urllib3</b>
@@ -377,8 +485,6 @@ If you would like to contribute to the <i>Wordhoard</i> project please read the 
    
 Items currently under development:
    - English language word verification using the Python package `pyenchant` 
-   - Embedded translations using the Python package `deep-translator`
-   - Selectable query output - list or dictionary format
    - Expanding the list of hypernyms, hyponyms and homophones
    - Adding part-of-speech filters in queries 
 </p>
