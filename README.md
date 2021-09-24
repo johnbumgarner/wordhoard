@@ -444,6 +444,22 @@ for word in words:
 ```
 
 
+##Proxy usage 
+<p align="justify">
+<i>Wordhoard</i> provides out of the box usage of proxies. Just define your proxies config as a dictionary and pass it to the corresponding module as shown below.
+</p>
+
+```python 
+from wordhoard import Synonyms
+proxies_example = {
+    "https": "your https proxy",  # example: 34.195.196.27:8080
+    "http": "your http proxy if available"
+}
+
+synonym = Synonyms(search_string='mother', proxies=proxies_example)
+results = synonym.find_synonyms()  
+```
+
 ## Logging 
 <p align="justify">
 This application also uses <i>Python logging</i> to both the terminal and to the logfile <i>wordhoard_error.yaml</i>.  The maintainers of <i>Wordhoard</i> have attempted to catch any potential exception and write these error messages to the logfile. The logfile is useful to troubleshooting any issue with this package or with the sources being queried by `Wordhoard`.

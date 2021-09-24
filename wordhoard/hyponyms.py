@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Initially Completed: June 12, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: September 7, 2021
+# Date Last Revised: September 17, 2021
 # Revised by: John Bumgarner
 ###################################################################################
 
@@ -33,12 +33,12 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 ##################################################################################
 import bs4
 import logging
-import requests
 import traceback
 from bs4 import BeautifulSoup
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
-from wordhoard.utilities import basic_soup, caching, cleansing, word_verification
+from wordhoard.utilities.basic_soup import Query
+from wordhoard.utilities import caching, cleansing, word_verification
 
 logger = logging.getLogger(__name__)
 
@@ -133,7 +133,7 @@ class Hyponyms(object):
 
     """
 
-    def __init__(self, search_string='', max_number_of_requests=30, rate_limit_timeout_period=60):
+    def __init__(self, search_string='', max_number_of_requests=30, rate_limit_timeout_period=60, proxies=None):
         """
         Usage Examples
         ----------
@@ -149,11 +149,13 @@ class Hyponyms(object):
         :param search_string: string variable used to find hyponyms for
         :param max_number_of_requests: maximum number of requests for a specific timeout_period
         :param rate_limit_timeout_period: the time period before a session is placed in a temporary hibernation mode
+        :param proxies: dictionary of proxies to use with Python Requests
         """
+        self._word = search_string
+        self._proxies = proxies
+
         ratelimit_status = False
         self._rate_limit_status = ratelimit_status
-
-        self._word = search_string
 
         # Retries the requests after a certain time period has elapsed
         handler = on_exception(expo, RateLimitException, max_time=60, on_backoff=self._backoff_handler)
@@ -228,27 +230,48 @@ class Hyponyms(object):
             check_cache = self._check_cache()
             if check_cache is False:
                 try:
-                    response = basic_soup.get_single_page_html(
-                        f'https://www.classicthesaurus.com/{self._word}/narrower')
-                    if response.status_code == 404:
-                        logger.info(f'Classic Thesaurus had no hyponyms reference for the word {self._word}')
-                    else:
-                        soup = BeautifulSoup(response.text, "lxml")
-                        hyponym = _get_hyponyms(soup)
-                        if 'no hyponyms found' in hyponym:
-                            return f'No hyponyms were found for the word: {self._word}'
+                    if self._proxies is None:
+                        response = Query(
+                            f'https://www.classicthesaurus.com/{self._word}/narrower').get_single_page_html()
+                        if response.status_code == 404:
+                            logger.info(f'Classic Thesaurus had no hyponyms reference for the word {self._word}')
                         else:
-                            number_of_pages = _get_number_of_pages(soup)
-                            if number_of_pages >= 2:
-                                for page in range(2, number_of_pages):
-                                    sub_html = requests.get(f'https://www.classicthesaurus.com/{self._word}/narrower/{page}',
-                                                            headers=basic_soup.http_headers)
-                                    sub_soup = BeautifulSoup(sub_html.text, 'lxml')
-                                    additional_hyponym = _get_hyponyms(sub_soup)
-                                    hyponym.union(additional_hyponym)
-                            self._update_cache(sorted(hyponym))
-                            return sorted(set(hyponym))
-
+                            soup = BeautifulSoup(response.text, "lxml")
+                            hyponym = _get_hyponyms(soup)
+                            if 'no hyponyms found' in hyponym:
+                                return f'No hyponyms were found for the word: {self._word}'
+                            else:
+                                number_of_pages = _get_number_of_pages(soup)
+                                if number_of_pages >= 2:
+                                    for page in range(2, number_of_pages):
+                                        sub_html = Query(f'https://www.classicthesaurus.com/{self._word}/narrower/'
+                                                         f'{page}').get_single_page_html()
+                                        sub_soup = BeautifulSoup(sub_html.text, 'lxml')
+                                        additional_hyponym = _get_hyponyms(sub_soup)
+                                        hyponym.union(additional_hyponym)
+                                self._update_cache(sorted(hyponym))
+                                return sorted(set(hyponym))
+                    elif self._proxies is not None:
+                        response = Query(f'https://www.classicthesaurus.com/{self._word}/narrower',
+                                         self._proxies).get_single_page_html()
+                        if response.status_code == 404:
+                            logger.info(f'Classic Thesaurus had no hyponyms reference for the word {self._word}')
+                        else:
+                            soup = BeautifulSoup(response.text, "lxml")
+                            hyponym = _get_hyponyms(soup)
+                            if 'no hyponyms found' in hyponym:
+                                return f'No hyponyms were found for the word: {self._word}'
+                            else:
+                                number_of_pages = _get_number_of_pages(soup)
+                                if number_of_pages >= 2:
+                                    for page in range(2, number_of_pages):
+                                        sub_html = Query(f'https://www.classicthesaurus.com/{self._word}/narrower/'
+                                                         f'{page}', self._proxies).get_single_page_html()
+                                        sub_soup = BeautifulSoup(sub_html.text, 'lxml')
+                                        additional_hyponym = _get_hyponyms(sub_soup)
+                                        hyponym.union(additional_hyponym)
+                                self._update_cache(sorted(hyponym))
+                                return sorted(set(hyponym))
                 except bs4.FeatureNotFound as error:
                     logger.error('An error occurred in the following code segment:')
                     logger.error(''.join(traceback.format_tb(error.__traceback__)))

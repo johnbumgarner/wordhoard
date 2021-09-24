@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Initially Completed: June 12, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: September 7, 2021
+# Date Last Revised: September 17, 2021
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -34,12 +34,12 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 ##################################################################################
 import bs4
 import logging
-import requests
 import traceback
 from bs4 import BeautifulSoup
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
-from wordhoard.utilities import basic_soup, caching, cleansing, word_verification
+from wordhoard.utilities.basic_soup import Query
+from wordhoard.utilities import caching, cleansing, word_verification
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ class Hypernyms(object):
 
     """
 
-    def __init__(self, search_string='', max_number_of_requests=30, rate_limit_timeout_period=60):
+    def __init__(self, search_string='', max_number_of_requests=30, rate_limit_timeout_period=60, proxies=None):
         """
         Usage Examples
         ----------
@@ -145,11 +145,13 @@ class Hypernyms(object):
         :param search_string: string containing the variable to obtain hypernyms for
         :param max_number_of_requests: maximum number of requests for a specific timeout_period
         :param rate_limit_timeout_period: the time period before a session is placed in a temporary hibernation mode
+        :param proxies: dictionary of proxies to use with Python Requests
         """
+        self._word = search_string
+        self._proxies = proxies
+
         ratelimit_status = False
         self._rate_limit_status = ratelimit_status
-
-        self._word = search_string
 
         # Retries the requests after a certain time period has elapsed
         handler = on_exception(expo, RateLimitException, max_time=60, on_backoff=self._backoff_handler)
@@ -228,29 +230,48 @@ class Hypernyms(object):
                 return hypernym
             elif check_cache is False:
                 try:
-                    response = basic_soup.get_single_page_html(
-                        f'https://www.classicthesaurus.com/{self._word}/broader')
-                    if response.status_code == 404:
-                        logger.info(f'Classic Thesaurus had no hypernyms reference for the word {self._word}')
-                    else:
-                        soup = BeautifulSoup(response.text, "lxml")
-                        hypernym = _get_hypernyms(soup)
-                        if 'no hypernyms found' in hypernym:
-                            return f'No hypernyms were found for the word: {self._word}'
+                    if self._proxies is None:
+                        response = Query(f'https://www.classicthesaurus.com/{self._word}/broader').get_single_page_html()
+                        if response.status_code == 404:
+                            logger.info(f'Classic Thesaurus had no hypernyms reference for the word {self._word}')
                         else:
-                            number_of_pages = _get_number_of_pages(soup)
-                            if number_of_pages >= 2:
-                                for page in range(2, number_of_pages):
-                                    sub_html = requests.get(f'https://www.classicthesaurus.com/{self._word}/broader/{page}',
-                                                            basic_soup.http_headers)
-                                    sub_soup = BeautifulSoup(sub_html.text, 'lxml')
-                                    additional_hypernym = _get_hypernyms(sub_soup)
-                                    if additional_hypernym:
-                                        hypernym.union(additional_hypernym)
-
-                            self._update_cache(hypernym)
-                            return sorted(set(hypernym))
-
+                            soup = BeautifulSoup(response.text, "lxml")
+                            hypernym = _get_hypernyms(soup)
+                            if 'no hypernyms found' in hypernym:
+                                return f'No hypernyms were found for the word: {self._word}'
+                            else:
+                                number_of_pages = _get_number_of_pages(soup)
+                                if number_of_pages >= 2:
+                                    for page in range(2, number_of_pages):
+                                        sub_html = Query(f'https://www.classicthesaurus.com/{self._word}/broader/{page}').get_single_page_html()
+                                        sub_soup = BeautifulSoup(sub_html.text, 'lxml')
+                                        additional_hypernym = _get_hypernyms(sub_soup)
+                                        if additional_hypernym:
+                                            hypernym.union(additional_hypernym)
+                                self._update_cache(hypernym)
+                                return sorted(set(hypernym))
+                    elif self._proxies is not None:
+                        response = Query(f'https://www.classicthesaurus.com/{self._word}/broader',
+                                         self._proxies).get_single_page_html()
+                        if response.status_code == 404:
+                            logger.info(f'Classic Thesaurus had no hypernyms reference for the word {self._word}')
+                        else:
+                            soup = BeautifulSoup(response.text, "lxml")
+                            hypernym = _get_hypernyms(soup)
+                            if 'no hypernyms found' in hypernym:
+                                return f'No hypernyms were found for the word: {self._word}'
+                            else:
+                                number_of_pages = _get_number_of_pages(soup)
+                                if number_of_pages >= 2:
+                                    for page in range(2, number_of_pages):
+                                        sub_html = Query(f'https://www.classicthesaurus.com/{self._word}/broader/'
+                                                         f'{page}', self._proxies).get_single_page_html()
+                                        sub_soup = BeautifulSoup(sub_html.text, 'lxml')
+                                        additional_hypernym = _get_hypernyms(sub_soup)
+                                        if additional_hypernym:
+                                            hypernym.union(additional_hypernym)
+                                self._update_cache(hypernym)
+                                return sorted(set(hypernym))
                 except bs4.FeatureNotFound as error:
                     logger.error('An error occurred in the following code segment:')
                     logger.error(''.join(traceback.format_tb(error.__traceback__)))

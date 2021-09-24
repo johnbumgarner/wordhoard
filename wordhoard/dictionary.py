@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: September 7, 2021
+# Date Last Revised: September 17, 2021
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -38,7 +38,8 @@ import re as regex
 from bs4 import BeautifulSoup
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
-from wordhoard.utilities import basic_soup, caching, cleansing, word_verification
+from wordhoard.utilities.basic_soup import Query
+from wordhoard.utilities import caching, cleansing, word_verification
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class Definitions(object):
 
     """
 
-    def __init__(self, search_string='', max_number_of_requests=30, rate_limit_timeout_period=60):
+    def __init__(self, search_string='', max_number_of_requests=30, rate_limit_timeout_period=60, proxies=None):
         """
         Usage Examples
         ----------
@@ -66,11 +67,14 @@ class Definitions(object):
         :param search_string: string containing the variable to obtain definition for
         :param max_number_of_requests: maximum number of requests for a specific timeout_period
         :param rate_limit_timeout_period: the time period before a session is placed in a temporary hibernation mode
+        :param proxies: dictionary of proxies to use with Python Requests
         """
-        ratelimit_status = False
-        self._rate_limit_status = ratelimit_status
 
         self._word = search_string
+        self._proxies = proxies
+
+        ratelimit_status = False
+        self._rate_limit_status = ratelimit_status
 
         # Retries the requests after a certain time period has elapsed
         handler = on_exception(expo, RateLimitException, max_time=60, on_backoff=self._backoff_handler)
@@ -163,19 +167,34 @@ class Definitions(object):
             is found
         """
         try:
-            response = basic_soup.get_single_page_html(
-                f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}')
-            if response.status_code == 404:
-                logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
-            else:
-                soup = BeautifulSoup(response.text, "lxml")
-                query_results = soup.find('div', {'class': 'form type-def titleTypeSubContainer'})
-                if query_results is not None:
-                    definition = query_results.findNext('div', {'class': 'def'})
-                    self._update_cache(definition.text)
-                    return definition.text
-                else:
+            if self._proxies is None:
+                response = Query(
+                    f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}').get_single_page_html()
+                if response.status_code == 404:
                     logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
+                else:
+                    soup = BeautifulSoup(response.text, "lxml")
+                    query_results = soup.find('div', {'class': 'form type-def titleTypeSubContainer'})
+                    if query_results is not None:
+                        definition = query_results.findNext('div', {'class': 'def'})
+                        self._update_cache(definition.text)
+                        return definition.text
+                    else:
+                        logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
+            elif self._proxies is not None:
+                response = Query(f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}',
+                                 self._proxies).get_single_page_html()
+                if response.status_code == 404:
+                    logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
+                else:
+                    soup = BeautifulSoup(response.text, "lxml")
+                    query_results = soup.find('div', {'class': 'form type-def titleTypeSubContainer'})
+                    if query_results is not None:
+                        definition = query_results.findNext('div', {'class': 'def'})
+                        self._update_cache(definition.text)
+                        return definition.text
+                    else:
+                        logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -215,27 +234,49 @@ class Definitions(object):
             is found
         """
         try:
-            response = basic_soup.get_single_page_html(
-                f'https://www.merriam-webster.com/dictionary/{self._word}')
-            if response.status_code == 404:
-                logger.info(f'Merriam-webster.com has no definition reference for the word {self._word}')
-            else:
-                definition_list = []
-                soup = BeautifulSoup(response.text, "lxml")
-                pattern = regex.compile(r'Words fail us')
-                if soup.find(text=pattern):
-                    logger.info(f'Merriam-webster.com has no reference for the word {self._word}')
-                elif soup.find('h1', {'class': 'mispelled-word'}):
+            if self._proxies is None:
+                response = Query(f'https://www.merriam-webster.com/dictionary/{self._word}').get_single_page_html()
+                if response.status_code == 404:
                     logger.info(f'Merriam-webster.com has no definition reference for the word {self._word}')
                 else:
-                    dictionary_entry = soup.find('div', {'id': 'dictionary-entry-1'})
-                    definition_container = dictionary_entry.find('div', {'class': 'vg'})
-                    definition_entries = definition_container.find_all('span', {'class': 'sb-0'})[0]
-                    for definition_entry in definition_entries.find_all('span', {'class': 'dtText'}):
-                        definition_list.append(definition_entry.text.lower().replace(':', '').strip())
-                    definitions = sorted([cleansing.normalize_space(i) for i in definition_list])
-                    self._update_cache(definitions)
-                    return definitions
+                    definition_list = []
+                    soup = BeautifulSoup(response.text, "lxml")
+                    pattern = regex.compile(r'Words fail us')
+                    if soup.find(text=pattern):
+                        logger.info(f'Merriam-webster.com has no reference for the word {self._word}')
+                    elif soup.find('h1', {'class': 'mispelled-word'}):
+                        logger.info(f'Merriam-webster.com has no definition reference for the word {self._word}')
+                    else:
+                        dictionary_entry = soup.find('div', {'id': 'dictionary-entry-1'})
+                        definition_container = dictionary_entry.find('div', {'class': 'vg'})
+                        definition_entries = definition_container.find_all('span', {'class': 'sb-0'})[0]
+                        for definition_entry in definition_entries.find_all('span', {'class': 'dtText'}):
+                            definition_list.append(definition_entry.text.lower().replace(':', '').strip())
+                        definitions = sorted([cleansing.normalize_space(i) for i in definition_list])
+                        self._update_cache(definitions)
+                        return definitions
+            elif self._proxies is not None:
+                response = Query(f'https://www.merriam-webster.com/dictionary/{self._word}',
+                                 self._proxies).get_single_page_html()
+                if response.status_code == 404:
+                    logger.info(f'Merriam-webster.com has no definition reference for the word {self._word}')
+                else:
+                    definition_list = []
+                    soup = BeautifulSoup(response.text, "lxml")
+                    pattern = regex.compile(r'Words fail us')
+                    if soup.find(text=pattern):
+                        logger.info(f'Merriam-webster.com has no reference for the word {self._word}')
+                    elif soup.find('h1', {'class': 'mispelled-word'}):
+                        logger.info(f'Merriam-webster.com has no definition reference for the word {self._word}')
+                    else:
+                        dictionary_entry = soup.find('div', {'id': 'dictionary-entry-1'})
+                        definition_container = dictionary_entry.find('div', {'class': 'vg'})
+                        definition_entries = definition_container.find_all('span', {'class': 'sb-0'})[0]
+                        for definition_entry in definition_entries.find_all('span', {'class': 'dtText'}):
+                            definition_list.append(definition_entry.text.lower().replace(':', '').strip())
+                        definitions = sorted([cleansing.normalize_space(i) for i in definition_list])
+                        self._update_cache(definitions)
+                        return definitions
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -275,25 +316,45 @@ class Definitions(object):
             is found
         """
         try:
-            response = basic_soup.get_single_page_html(
-                f'https://www.synonym.com/synonyms/{self._word}')
-            if response.status_code == 404:
-                logger.info(f'Synonym.com had no definition reference for the word {self._word}')
-            else:
-                definition_list = []
-                soup = BeautifulSoup(response.text, "lxml")
-                status_tag = soup.find("meta", {"name": "pagetype"})
-                pattern = regex.compile(r'Oops, 404!')
-                if soup.find(text=pattern):
+            if self._proxies is None:
+                response = Query(f'https://www.synonym.com/synonyms/{self._word}').get_single_page_html()
+                if response.status_code == 404:
                     logger.info(f'Synonym.com had no definition reference for the word {self._word}')
-                elif status_tag.attrs['content'] == 'Term':
-                    dictionary_entries = soup.find('h3', {'class': 'section-title'})
-                    dictionary_entry = dictionary_entries.find_next('p').text
-                    remove_brackets = regex.sub(r'.*?\[.*?\]', '',  dictionary_entry)
-                    definition_list.append(remove_brackets.strip())
-                    definitions = sorted([x.lower() for x in definition_list])
-                    self._update_cache(definitions)
-                    return sorted(definitions)
+                else:
+                    definition_list = []
+                    soup = BeautifulSoup(response.text, "lxml")
+                    status_tag = soup.find("meta", {"name": "pagetype"})
+                    pattern = regex.compile(r'Oops, 404!')
+                    if soup.find(text=pattern):
+                        logger.info(f'Synonym.com had no definition reference for the word {self._word}')
+                    elif status_tag.attrs['content'] == 'Term':
+                        dictionary_entries = soup.find('h3', {'class': 'section-title'})
+                        dictionary_entry = dictionary_entries.find_next('p').text
+                        remove_brackets = regex.sub(r'.*?\[.*?\]', '', dictionary_entry)
+                        definition_list.append(remove_brackets.strip())
+                        definitions = sorted([x.lower() for x in definition_list])
+                        self._update_cache(definitions)
+                        return sorted(definitions)
+            elif self._proxies is not None:
+                response = Query(f'https://www.synonym.com/synonyms/{self._word}',
+                                 self._proxies).get_single_page_html()
+                if response.status_code == 404:
+                    logger.info(f'Synonym.com had no definition reference for the word {self._word}')
+                else:
+                    definition_list = []
+                    soup = BeautifulSoup(response.text, "lxml")
+                    status_tag = soup.find("meta", {"name": "pagetype"})
+                    pattern = regex.compile(r'Oops, 404!')
+                    if soup.find(text=pattern):
+                        logger.info(f'Synonym.com had no definition reference for the word {self._word}')
+                    elif status_tag.attrs['content'] == 'Term':
+                        dictionary_entries = soup.find('h3', {'class': 'section-title'})
+                        dictionary_entry = dictionary_entries.find_next('p').text
+                        remove_brackets = regex.sub(r'.*?\[.*?\]', '', dictionary_entry)
+                        definition_list.append(remove_brackets.strip())
+                        definitions = sorted([x.lower() for x in definition_list])
+                        self._update_cache(definitions)
+                        return sorted(definitions)
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))

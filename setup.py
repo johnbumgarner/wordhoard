@@ -5,7 +5,7 @@ with open("PYPI_description.md", "r") as fh:
 
 setuptools.setup(
     name="wordhoard",
-    version="1.4.9",
+    version="1.5.0",
     author="John Bumgarner",
     author_email="wordhoardproject@gmail.com",
     description="A comprehensive lexical discovery application that is useful for finding semantic relationships "
@@ -15,7 +15,8 @@ setuptools.setup(
     url="https://github.com/johnbumgarner/wordhoard",
     packages=setuptools.find_packages(),
     include_package_data=True,
-    package_data={'files': ['files/common_english_homophones.pkl',
+    package_data={'files': ['files/common_user_agents.pkl',
+                            'files/common_english_homophones.pkl',
                             'files/no_homophones_english.pkl']},
     license='LICENSE.txt',
     classifiers=["Development Status :: 5 - Production/Stable",
@@ -37,7 +38,7 @@ setuptools.setup(
     install_requires=['backoff',
                       'bs4',
                       'deckar01-ratelimit',
-                      'deep-translator',
+                      'deepl',
                       'lxml',
                       'requests',
                       'urllib3']

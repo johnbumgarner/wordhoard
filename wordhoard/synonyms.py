@@ -38,7 +38,8 @@ import re as regex
 from bs4 import BeautifulSoup
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
-from wordhoard.utilities import basic_soup, caching, cleansing, word_verification
+from wordhoard.utilities.basic_soup import Query
+from wordhoard.utilities import caching, cleansing, word_verification
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ class Synonyms(object):
     with a specific word.
     """
 
-    def __init__(self, search_string='', max_number_of_requests=30, rate_limit_timeout_period=60):
+    def __init__(self, search_string='', max_number_of_requests=30, rate_limit_timeout_period=60, proxies=None):
         """
         Usage Examples
         ----------
@@ -65,11 +66,14 @@ class Synonyms(object):
         :param search_string: string containing the variable to obtain synonyms for
         :param max_number_of_requests: maximum number of requests for a specific timeout_period
         :param rate_limit_timeout_period: the time period before a session is placed in a temporary hibernation mode
+        :param proxies: dictionary of proxies to use with Python Requests
         """
-        ratelimit_status = False
-        self._rate_limit_status = ratelimit_status
 
         self._word = search_string
+        self._proxies = proxies
+
+        ratelimit_status = False
+        self._rate_limit_status = ratelimit_status
 
         # Retries the requests after a certain time period has elapsed
         handler = on_exception(expo, RateLimitException, max_time=60, on_backoff=self._backoff_handler)
@@ -172,28 +176,52 @@ class Synonyms(object):
         """
         try:
             synonyms = []
-            response = basic_soup.get_single_page_html(
-                f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}')
-            if response.status_code == 404:
-                logger.info(f'Collins Dictionary had no synonym reference for the word {self._word}')
-            else:
-                soup = BeautifulSoup(response.text, 'lxml')
-                word_found = soup.find('h1', text=f'Sorry, no results for “{self._word}” in the English Thesaurus.')
-                if word_found:
+            if self._proxies is None:
+                response = Query(f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}').get_single_page_html()
+                if response.status_code == 404:
                     logger.info(f'Collins Dictionary had no synonym reference for the word {self._word}')
                 else:
-                    if soup.find('div', {'class': 'blockSyn'}):
-                        query_results = soup.find('div', {'class': 'blockSyn'})
-                        for primary_syn in query_results.find_all('div', {'class', 'form type-syn orth'}):
-                            synonyms.append(primary_syn.text)
+                    soup = BeautifulSoup(response.text, 'lxml')
+                    word_found = soup.find('h1', text=f'Sorry, no results for “{self._word}” in the English Thesaurus.')
+                    if word_found:
+                        logger.info(f'Collins Dictionary had no synonym reference for the word {self._word}')
+                    else:
+                        if soup.find('div', {'class': 'blockSyn'}):
+                            query_results = soup.find('div', {'class': 'blockSyn'})
+                            for primary_syn in query_results.find_all('div', {'class', 'form type-syn orth'}):
+                                synonyms.append(primary_syn.text)
 
-                        for sub_syn in query_results.find_all('div', {'class', 'form type-syn'}):
-                            child = sub_syn.findChild('span', {'class': 'orth'})
-                            synonyms.append(child.text)
+                            for sub_syn in query_results.find_all('div', {'class', 'form type-syn'}):
+                                child = sub_syn.findChild('span', {'class': 'orth'})
+                                synonyms.append(child.text)
 
-                    synonyms = sorted([x.lower() for x in synonyms])
-                    self._update_cache(synonyms)
-                    return sorted(synonyms)
+                        synonyms = sorted([x.lower() for x in synonyms])
+                        self._update_cache(synonyms)
+                        return sorted(synonyms)
+
+            elif self._proxies is not None:
+                response = Query(f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}',
+                                 self._proxies).get_single_page_html()
+                if response.status_code == 404:
+                    logger.info(f'Collins Dictionary had no synonym reference for the word {self._word}')
+                else:
+                    soup = BeautifulSoup(response.text, 'lxml')
+                    word_found = soup.find('h1', text=f'Sorry, no results for “{self._word}” in the English Thesaurus.')
+                    if word_found:
+                        logger.info(f'Collins Dictionary had no synonym reference for the word {self._word}')
+                    else:
+                        if soup.find('div', {'class': 'blockSyn'}):
+                            query_results = soup.find('div', {'class': 'blockSyn'})
+                            for primary_syn in query_results.find_all('div', {'class', 'form type-syn orth'}):
+                                synonyms.append(primary_syn.text)
+
+                            for sub_syn in query_results.find_all('div', {'class', 'form type-syn'}):
+                                child = sub_syn.findChild('span', {'class': 'orth'})
+                                synonyms.append(child.text)
+
+                        synonyms = sorted([x.lower() for x in synonyms])
+                        self._update_cache(synonyms)
+                        return sorted(synonyms)
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -234,31 +262,57 @@ class Synonyms(object):
         """
         try:
             synonyms_list = []
-            response = basic_soup.get_single_page_html(
-                f'https://www.merriam-webster.com/thesaurus/{self._word}')
-            if response.status_code == 404:
-                logger.info(f'Merriam-webster.com had no synonym reference for the word {self._word}')
-            else:
-                soup = BeautifulSoup(response.text, "lxml")
-                pattern = regex.compile(r'Words fail us')
-                if soup.find(text=pattern):
-                    logger.info(f'Merriam-webster.com had no synonym reference for the word {self._word}')
-                elif soup.find('h1', {'class': 'mispelled-word'}):
+            if self._proxies is None:
+                response = Query(f'https://www.merriam-webster.com/thesaurus/{self._word}').get_single_page_html()
+                if response.status_code == 404:
                     logger.info(f'Merriam-webster.com had no synonym reference for the word {self._word}')
                 else:
-                    synonyms = []
-                    if soup.find('p', {'class': 'function-label'}):
-                        label = soup.find('p', {'class': 'function-label'})
-                        if label.text.startswith('Synonyms for'):
-                            parent_tag = soup.find("span", {'class': 'thes-list syn-list'})
-                            word_container = parent_tag.find('div', {'class': 'thes-list-content synonyms_list'})
-                            for list_item in word_container.find_all("ul", {'class': 'mw-list'}):
-                                for link in list_item.find_all('a', href=True):
-                                    synonyms_list.append(link.text)
-                            synonyms = sorted([cleansing.normalize_space(i) for i in synonyms_list])
-                            synonyms = sorted([x.lower() for x in synonyms])
-                        self._update_cache(synonyms)
-                        return synonyms
+                    soup = BeautifulSoup(response.text, "lxml")
+                    pattern = regex.compile(r'Words fail us')
+                    if soup.find(text=pattern):
+                        logger.info(f'Merriam-webster.com had no synonym reference for the word {self._word}')
+                    elif soup.find('h1', {'class': 'mispelled-word'}):
+                        logger.info(f'Merriam-webster.com had no synonym reference for the word {self._word}')
+                    else:
+                        synonyms = []
+                        if soup.find('p', {'class': 'function-label'}):
+                            label = soup.find('p', {'class': 'function-label'})
+                            if label.text.startswith('Synonyms for'):
+                                parent_tag = soup.find("span", {'class': 'thes-list syn-list'})
+                                word_container = parent_tag.find('div', {'class': 'thes-list-content synonyms_list'})
+                                for list_item in word_container.find_all("ul", {'class': 'mw-list'}):
+                                    for link in list_item.find_all('a', href=True):
+                                        synonyms_list.append(link.text)
+                                synonyms = sorted([cleansing.normalize_space(i) for i in synonyms_list])
+                                synonyms = sorted([x.lower() for x in synonyms])
+                            self._update_cache(synonyms)
+                            return synonyms
+            elif self._proxies is not None:
+                response = Query(f'https://www.merriam-webster.com/thesaurus/{self._word}',
+                                 self._proxies).get_single_page_html()
+                if response.status_code == 404:
+                    logger.info(f'Merriam-webster.com had no synonym reference for the word {self._word}')
+                else:
+                    soup = BeautifulSoup(response.text, "lxml")
+                    pattern = regex.compile(r'Words fail us')
+                    if soup.find(text=pattern):
+                        logger.info(f'Merriam-webster.com had no synonym reference for the word {self._word}')
+                    elif soup.find('h1', {'class': 'mispelled-word'}):
+                        logger.info(f'Merriam-webster.com had no synonym reference for the word {self._word}')
+                    else:
+                        synonyms = []
+                        if soup.find('p', {'class': 'function-label'}):
+                            label = soup.find('p', {'class': 'function-label'})
+                            if label.text.startswith('Synonyms for'):
+                                parent_tag = soup.find("span", {'class': 'thes-list syn-list'})
+                                word_container = parent_tag.find('div', {'class': 'thes-list-content synonyms_list'})
+                                for list_item in word_container.find_all("ul", {'class': 'mw-list'}):
+                                    for link in list_item.find_all('a', href=True):
+                                        synonyms_list.append(link.text)
+                                synonyms = sorted([cleansing.normalize_space(i) for i in synonyms_list])
+                                synonyms = sorted([x.lower() for x in synonyms])
+                            self._update_cache(synonyms)
+                            return synonyms
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -298,26 +352,47 @@ class Synonyms(object):
             is found
         """
         try:
-            response = basic_soup.get_single_page_html(
-                f'https://www.synonym.com/synonyms/{self._word}')
-            if response.status_code == 404:
-                logger.info(f'Synonym.com had no synonym reference for the word {self._word}')
-            else:
-                soup = BeautifulSoup(response.text, "lxml")
-                status_tag = soup.find("meta", {"name": "pagetype"})
-                pattern = regex.compile(r'Oops, 404!')
-                if soup.find(text=pattern):
+            if self._proxies is None:
+                response = Query(f'https://www.synonym.com/synonyms/{self._word}').get_single_page_html()
+                if response.status_code == 404:
                     logger.info(f'Synonym.com had no synonym reference for the word {self._word}')
-                elif status_tag.attrs['content'] == 'Term':
-                    if soup.find('div', {'data-section': 'synonyms'}):
-                        synonyms_class = soup.find('div', {'data-section': 'synonyms'})
-                        synonyms = [word.text for word in synonyms_class.find('ul', {'class': 'section-list'}).find_all(
-                            'li')]
-                        synonyms = sorted([x.lower() for x in synonyms])
-                        self._update_cache(synonyms)
-                        return sorted(synonyms)
-                    else:
+                else:
+                    soup = BeautifulSoup(response.text, "lxml")
+                    status_tag = soup.find("meta", {"name": "pagetype"})
+                    pattern = regex.compile(r'Oops, 404!')
+                    if soup.find(text=pattern):
                         logger.info(f'Synonym.com had no synonym reference for the word {self._word}')
+                    elif status_tag.attrs['content'] == 'Term':
+                        if soup.find('div', {'data-section': 'synonyms'}):
+                            synonyms_class = soup.find('div', {'data-section': 'synonyms'})
+                            synonyms = [word.text for word in
+                                        synonyms_class.find('ul', {'class': 'section-list'}).find_all('li')]
+                            synonyms = sorted([x.lower() for x in synonyms])
+                            self._update_cache(synonyms)
+                            return sorted(synonyms)
+                        else:
+                            logger.info(f'Synonym.com had no synonym reference for the word {self._word}')
+            elif self._proxies is not None:
+                response = Query(f'https://www.synonym.com/synonyms/{self._word}',
+                                 self._proxies).get_single_page_html()
+                if response.status_code == 404:
+                    logger.info(f'Synonym.com had no synonym reference for the word {self._word}')
+                else:
+                    soup = BeautifulSoup(response.text, "lxml")
+                    status_tag = soup.find("meta", {"name": "pagetype"})
+                    pattern = regex.compile(r'Oops, 404!')
+                    if soup.find(text=pattern):
+                        logger.info(f'Synonym.com had no synonym reference for the word {self._word}')
+                    elif status_tag.attrs['content'] == 'Term':
+                        if soup.find('div', {'data-section': 'synonyms'}):
+                            synonyms_class = soup.find('div', {'data-section': 'synonyms'})
+                            synonyms = [word.text for word in
+                                        synonyms_class.find('ul', {'class': 'section-list'}).find_all('li')]
+                            synonyms = sorted([x.lower() for x in synonyms])
+                            self._update_cache(synonyms)
+                            return sorted(synonyms)
+                        else:
+                            logger.info(f'Synonym.com had no synonym reference for the word {self._word}')
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -361,25 +436,45 @@ class Synonyms(object):
         """
         try:
             synonyms_list = []
-            response = basic_soup.get_single_page_html(
-                f'https://www.thesaurus.com/browse/{self._word}')
-            if response.status_code == 404:
-                logger.info(f'Thesaurus.com had no synonym reference for the word {self._word}')
-            else:
-                soup = BeautifulSoup(response.text, "lxml")
-                status_tag = soup.find("h1")
-                if status_tag.text.startswith('0 results for'):
+            if self._proxies is None:
+                response = Query(f'https://www.thesaurus.com/browse/{self._word}').get_single_page_html()
+                if response.status_code == 404:
                     logger.info(f'Thesaurus.com had no synonym reference for the word {self._word}')
                 else:
-                    synonyms = []
-                    word_container = soup.find('div', {'data-testid': 'word-grid-container'})
-                    for list_item in word_container.find('ul').find_all('li'):
-                        for link in list_item.find_all('a', href=True):
-                            synonyms_list.append(link.text)
-                        synonyms = sorted([cleansing.normalize_space(i) for i in synonyms_list])
-                        synonyms = sorted([x.lower() for x in synonyms])
-                    self._update_cache(synonyms)
-                    return synonyms
+                    soup = BeautifulSoup(response.text, "lxml")
+                    status_tag = soup.find("h1")
+                    if status_tag.text.startswith('0 results for'):
+                        logger.info(f'Thesaurus.com had no synonym reference for the word {self._word}')
+                    else:
+                        synonyms = []
+                        word_container = soup.find('div', {'data-testid': 'word-grid-container'})
+                        for list_item in word_container.find('ul').find_all('li'):
+                            for link in list_item.find_all('a', href=True):
+                                synonyms_list.append(link.text)
+                            synonyms = sorted([cleansing.normalize_space(i) for i in synonyms_list])
+                            synonyms = sorted([x.lower() for x in synonyms])
+                        self._update_cache(synonyms)
+                        return synonyms
+            elif self._proxies is not None:
+                response = Query(f'https://www.thesaurus.com/browse/{self._word}',
+                                 self._proxies).get_single_page_html()
+                if response.status_code == 404:
+                    logger.info(f'Thesaurus.com had no synonym reference for the word {self._word}')
+                else:
+                    soup = BeautifulSoup(response.text, "lxml")
+                    status_tag = soup.find("h1")
+                    if status_tag.text.startswith('0 results for'):
+                        logger.info(f'Thesaurus.com had no synonym reference for the word {self._word}')
+                    else:
+                        synonyms = []
+                        word_container = soup.find('div', {'data-testid': 'word-grid-container'})
+                        for list_item in word_container.find('ul').find_all('li'):
+                            for link in list_item.find_all('a', href=True):
+                                synonyms_list.append(link.text)
+                            synonyms = sorted([cleansing.normalize_space(i) for i in synonyms_list])
+                            synonyms = sorted([x.lower() for x in synonyms])
+                        self._update_cache(synonyms)
+                        return synonyms
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -420,27 +515,49 @@ class Synonyms(object):
         """
         try:
             synonyms = []
-            response = basic_soup.get_single_page_html(f'http://wordnetweb.princeton.edu/perl/webwn?s={self._word}')
-            if response.status_code == 404:
-                logger.info(f'Wordnet had no synonym reference for the word {self._word}')
-            else:
-                soup = BeautifulSoup(response.text, "lxml")
-                pattern = regex.compile(r'Your search did not return any results')
-                if soup.find(text=pattern):
-                    print('here')
+            if self._proxies is None:
+                response = Query(f'http://wordnetweb.princeton.edu/perl/webwn?s={self._word}').get_single_page_html()
+                if response.status_code == 404:
                     logger.info(f'Wordnet had no synonym reference for the word {self._word}')
                 else:
-                    if soup.findAll('h3', text='Noun'):
-                        parent_node = soup.findAll("ul")[0].findAll('li')
-                        for children in parent_node:
-                            for child in children.find_all(href=True):
-                                if 'S:' not in child.contents[0]:
-                                    synonyms.append(child.contents[0])
-                        synonyms = sorted([x.lower() for x in synonyms])
-                        self._update_cache(synonyms)
-                        return synonyms
-                    else:
+                    soup = BeautifulSoup(response.text, "lxml")
+                    pattern = regex.compile(r'Your search did not return any results')
+                    if soup.find(text=pattern):
                         logger.info(f'Wordnet had no synonym reference for the word {self._word}')
+                    else:
+                        if soup.findAll('h3', text='Noun'):
+                            parent_node = soup.findAll("ul")[0].findAll('li')
+                            for children in parent_node:
+                                for child in children.find_all(href=True):
+                                    if 'S:' not in child.contents[0]:
+                                        synonyms.append(child.contents[0])
+                            synonyms = sorted([x.lower() for x in synonyms])
+                            self._update_cache(synonyms)
+                            return synonyms
+                        else:
+                            logger.info(f'Wordnet had no synonym reference for the word {self._word}')
+            elif self._proxies is not None:
+                response = Query(f'http://wordnetweb.princeton.edu/perl/webwn?s={self._word}',
+                                 self._proxies).get_single_page_html()
+                if response.status_code == 404:
+                    logger.info(f'Wordnet had no synonym reference for the word {self._word}')
+                else:
+                    soup = BeautifulSoup(response.text, "lxml")
+                    pattern = regex.compile(r'Your search did not return any results')
+                    if soup.find(text=pattern):
+                        logger.info(f'Wordnet had no synonym reference for the word {self._word}')
+                    else:
+                        if soup.findAll('h3', text='Noun'):
+                            parent_node = soup.findAll("ul")[0].findAll('li')
+                            for children in parent_node:
+                                for child in children.find_all(href=True):
+                                    if 'S:' not in child.contents[0]:
+                                        synonyms.append(child.contents[0])
+                            synonyms = sorted([x.lower() for x in synonyms])
+                            self._update_cache(synonyms)
+                            return synonyms
+                        else:
+                            logger.info(f'Wordnet had no synonym reference for the word {self._word}')
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))

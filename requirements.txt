@@ -1,5 +1,7 @@
+backoff>=1.11.1
 beautifulsoup4>=4.9.3
-deep-translator>=1.4.4
+deckar01-ratelimit>=3.0.1
+deepl>=1.1.2
 lxml>=4.6.1
 requests>=2.24.0
-urllib3>=1.25.11
+urllib3=1.25.11

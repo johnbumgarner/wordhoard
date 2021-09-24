@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: September 7, 2021
+# Date Last Revised: September 17, 2021
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -38,7 +38,8 @@ import re as regex
 from bs4 import BeautifulSoup
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
-from wordhoard.utilities import basic_soup, caching, cleansing, word_verification
+from wordhoard.utilities.basic_soup import Query
+from wordhoard.utilities import caching, cleansing, word_verification
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,11 @@ class Antonyms(object):
 
     """
 
-    def __init__(self, search_string='', max_number_of_requests=30, rate_limit_timeout_period=60):
+    def __init__(self, search_string='',
+                 output_format='list',
+                 max_number_of_requests=30,
+                 rate_limit_timeout_period=60,
+                 proxies=None):
         """
         Usage Examples
         ----------
@@ -63,14 +68,18 @@ class Antonyms(object):
 
         Parameters
         ----------
-        :param search_string: string containing the variable to obtain antonyms for
-        :param max_number_of_requests: maximum number of requests for a specific timeout_period
-        :param rate_limit_timeout_period: the time period before a session is placed in a temporary hibernation mode
+        :param search_string: String containing the variable to obtain antonyms for
+        :param output_format: Format to use for returned results. Default value: list; Acceptable values: dictionary or list
+        :param max_number_of_requests: Maximum number of requests for a specific timeout_period
+        :param rate_limit_timeout_period: The time period before a session is placed in a temporary hibernation mode
+        :param proxies: Dictionary of proxies to use with Python Requests
         """
+        self._word = search_string
+        self._output_format = output_format
+        self._proxies = proxies
+
         ratelimit_status = False
         self._rate_limit_status = ratelimit_status
-
-        self._word = search_string
 
         # Retries the requests after a certain time period has elapsed
         handler = on_exception(expo, RateLimitException, max_time=60, on_backoff=self._backoff_handler)
@@ -138,10 +147,18 @@ class Antonyms(object):
                 if not antonyms_results:
                     return f'No antonyms were found for the word: {self._word}'
                 else:
-                    return sorted(set(antonyms_results))
+                    if self._output_format == 'list':
+                        return sorted(set(antonyms_results))
+                    elif self._output_format == 'dictionary':
+                        output_dict = {self._word: sorted(set(antonyms_results))}
+                        return output_dict
             else:
                 antonyms = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
-                return sorted(set(antonyms))
+                if self._output_format == 'list':
+                    return sorted(set(antonyms))
+                elif self._output_format == 'dictionary':
+                    output_dict = {self._word: sorted(set(antonyms))}
+                    return output_dict
         else:
             return f'Please verify that the word {self._word} is spelled correctly.'
 
@@ -169,20 +186,37 @@ class Antonyms(object):
         """
         try:
             antonyms = []
-            response = basic_soup.get_single_page_html(f'https://www.thesaurus.com/browse/{self._word}')
-            if response.status_code == 404:
-                logger.info(f'Thesaurus.com had no antonym reference for the word {self._word}')
-            else:
-                soup = BeautifulSoup(response.text, "lxml")
-                if soup.find("div", {'id': 'antonyms'}):
-                    parent_tag = soup.find_all("div", {'data-testid': 'word-grid-container'})[1]
-                    for link in parent_tag.find_all('a', {'class': 'css-pc0050'}):
-                        antonyms.append(link.text.strip())
-                    antonyms = sorted([x.lower() for x in antonyms])
-                    self._update_cache(antonyms)
-                    return antonyms
-                else:
+            if self._proxies is None:
+                response = Query(f'https://www.thesaurus.com/browse/{self._word}').get_single_page_html()
+                if response.status_code == 404:
                     logger.info(f'Thesaurus.com had no antonym reference for the word {self._word}')
+                else:
+                    soup = BeautifulSoup(response.text, "lxml")
+                    if soup.find("div", {'id': 'antonyms'}):
+                        parent_tag = soup.find_all("div", {'data-testid': 'word-grid-container'})[1]
+                        for link in parent_tag.find_all('a', {'class': 'css-pc0050'}):
+                            antonyms.append(link.text.strip())
+                        antonyms = sorted([x.lower() for x in antonyms])
+                        self._update_cache(antonyms)
+                        return antonyms
+                    else:
+                        logger.info(f'Thesaurus.com had no antonym reference for the word {self._word}')
+            elif self._proxies is not None:
+                response = Query(f'https://www.thesaurus.com/browse/{self._word}', self._proxies).get_single_page_html()
+                if response.status_code == 404:
+                    logger.info(f'Thesaurus.com had no antonym reference for the word {self._word}')
+                else:
+                    soup = BeautifulSoup(response.text, "lxml")
+                    if soup.find("div", {'id': 'antonyms'}):
+                        parent_tag = soup.find_all("div", {'data-testid': 'word-grid-container'})[1]
+                        for link in parent_tag.find_all('a', {'class': 'css-pc0050'}):
+                            antonyms.append(link.text.strip())
+                        antonyms = sorted([x.lower() for x in antonyms])
+                        self._update_cache(antonyms)
+                        return antonyms
+                    else:
+                        logger.info(f'Thesaurus.com had no antonym reference for the word {self._word}')
+
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -223,23 +257,42 @@ class Antonyms(object):
         """
         try:
             antonyms = []
-            response = basic_soup.get_single_page_html(f'https://www.wordhippo.com/what-is/the-opposite-of/'
-                                                       f'{self._word}.html')
-            if response.status_code == 404:
-                logger.info(f'Wordhippo.com had no antonym reference for the word {self._word}')
-            else:
-                soup = BeautifulSoup(response.text, "lxml")
-                pattern = regex.compile(r'We do not currently know of any antonyms for')
-                if soup.find(text=pattern):
+            if self._proxies is None:
+                response = Query(f'https://www.wordhippo.com/what-is/the-opposite-of/{self._word}.html').get_single_page_html()
+                if response.status_code == 404:
                     logger.info(f'Wordhippo.com had no antonym reference for the word {self._word}')
                 else:
-                    related_tag = soup.find("div", {'class': 'relatedwords'})
-                    for list_item in related_tag.find_all("div", {'class': 'wb'}):
-                        for link in list_item.find_all('a', href=True):
-                            antonyms.append(link.text)
-                    antonyms = sorted([x.lower() for x in antonyms])
-                    self._update_cache(antonyms)
-                    return antonyms
+                    soup = BeautifulSoup(response.text, "lxml")
+                    pattern = regex.compile(r'We do not currently know of any antonyms for')
+                    if soup.find(text=pattern):
+                        logger.info(f'Wordhippo.com had no antonym reference for the word {self._word}')
+                    else:
+                        related_tag = soup.find("div", {'class': 'relatedwords'})
+                        for list_item in related_tag.find_all("div", {'class': 'wb'}):
+                            for link in list_item.find_all('a', href=True):
+                                antonyms.append(link.text)
+                        antonyms = sorted([x.lower() for x in antonyms])
+                        self._update_cache(antonyms)
+                        return antonyms
+            elif self._proxies is not None:
+                response = Query(
+                    f'https://www.wordhippo.com/what-is/the-opposite-of/{self._word}.html',
+                    self._proxies).get_single_page_html()
+                if response.status_code == 404:
+                    logger.info(f'Wordhippo.com had no antonym reference for the word {self._word}')
+                else:
+                    soup = BeautifulSoup(response.text, "lxml")
+                    pattern = regex.compile(r'We do not currently know of any antonyms for')
+                    if soup.find(text=pattern):
+                        logger.info(f'Wordhippo.com had no antonym reference for the word {self._word}')
+                    else:
+                        related_tag = soup.find("div", {'class': 'relatedwords'})
+                        for list_item in related_tag.find_all("div", {'class': 'wb'}):
+                            for link in list_item.find_all('a', href=True):
+                                antonyms.append(link.text)
+                        antonyms = sorted([x.lower() for x in antonyms])
+                        self._update_cache(antonyms)
+                        return antonyms
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
