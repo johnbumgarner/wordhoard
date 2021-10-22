@@ -10,7 +10,8 @@
 ![GitHub issues](https://img.shields.io/github/issues/johnbumgarner/wordhoard)&nbsp;
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/johnbumgarner/wordhoard)&nbsp;
 [![wordhoard](https://snyk.io/advisor/python/wordhoard/badge.svg)](https://snyk.io/advisor/python/wordhoard)&nbsp;
-![PyPI - Downloads](https://img.shields.io/pypi/dm/wordhoard)&nbsp;
+[![Downloads](https://static.pepy.tech/personalized-badge/wordhoard?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=Total%20Downloads)](https://pepy.tech/project/wordhoard)&nbsp;
+
 
 <p align="justify">
 The Oxford Dictionary defines <i>wordhoard</i> as a supply of words or a lexicon. <i>Wordhoard</i> is a <b>Python 3 module </b> that can be used to obtain antonyms, synonyms, hypernyms, hyponyms, homophones and definitions for words in the English language. 
