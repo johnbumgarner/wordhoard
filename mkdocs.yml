@@ -1,0 +1,82 @@
+# Project information
+site_name: WordHoard
+site_url: https://github.com/johnbumgarner/wordhoard
+site_author: John Bumgarner
+site_description: "WordHoard is a Python 3 module that can be used to obtain antonyms, synonyms, hypernyms, hyponyms, homophones and definitions."
+
+# Repository
+repo_name: johnbumgarner/wordhoard
+repo_url: https://github.com/johnbumgarner/wordhoard
+edit_uri: ""
+
+# Copyright
+copyright: Copyright &copy; 2020 John Bumgarner
+
+# Navigation Tree
+nav:
+    - Home: index.md
+    - Basic Usage: basic_usage.md
+    - Parameters: parameters.md
+    - Output Formats: output_formats.md
+    - Additional Features: features.md
+    - Language Translations: language_translation.md
+    - Dependencies: dependencies.md
+    - Limitations: limitations.md
+    # - Troubleshooting: troubleshooting.md
+    - Code of Conduct: code_of_conduct.md
+    - Contributing: contributing.md
+    - License: license.md
+    - Release Notes: release-notes.md
+   
+
+# Configuration
+theme:
+    name: 'material'
+    features:
+        - navigation.tracking
+        - navigation.expand
+        - search.suggest
+        - search.highlight
+        - announce.dismiss
+    palette: 
+        - scheme: default
+          primary: indigo
+          accent: deep orange
+          toggle:
+            icon: material/weather-sunny
+            name: Switch to dark mode
+        - scheme: slate 
+          primary: red
+          accent: indigo
+          toggle:
+            icon: material/weather-night
+            name: Switch to light mode
+    font:
+        text: Roboto
+        code: Roboto Mono
+    favicon: assets/favicon.png
+    icon:
+        logo: logo
+
+
+# Extensions
+markdown_extensions:
+    - pymdownx.highlight:
+        use_pygments: true
+    - pymdownx.superfences
+    - toc:
+        title: On this page
+        permalink: true
+        permalink: 🔗
+        permalink_title: Permalink to this headline
+
+
+# Extras 
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/johnbumgarner
+
+# Plugins
+plugins:
+  - git-revision-date-localized
