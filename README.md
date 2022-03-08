@@ -35,7 +35,7 @@ pip3 install wordhoard
 # General Package Utilization
 
 <p align="justify">
-Please reference the <a href="https://wordhoard.readthedocs.io/en/latest/">WordHoard Documentation</a> for package usage guidance and parameters.
+Please reference the <a href="https://wordhoard.readthedocs.io/en/latest/" target="_blank">WordHoard Documentation</a> for package usage guidance and parameters.
 </p>
 
 # Sources
@@ -67,13 +67,13 @@ This package has these core dependencies:
 </p>
 
 <p align="justify">
-Additional details on this package's dependencies can be found <a href="https://wordhoard.readthedocs.io/en/latest/dependencies/">here</a>.
+Additional details on this package's dependencies can be found <a href="https://wordhoard.readthedocs.io/en/latest/dependencies/" target="_blank">here</a>.
 </p>
 
 # Development
 
 <p align="justify">
-If you would like to contribute to the <i>Wordhoard</i> project please read the <a href="https://wordhoard.readthedocs.io/en/latest/contributing/">contributing guidelines</a>.
+If you would like to contribute to the <i>Wordhoard</i> project please read the <a href="https://wordhoard.readthedocs.io/en/latest/contributing/" target="_blank">contributing guidelines</a>.
    
 Items currently under development:
    - English language word verification using the Python package `pyenchant` 
