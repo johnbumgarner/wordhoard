@@ -24,7 +24,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: September 17, 2021
+# Date Last Revised: March 09, 2022
 # Revised by: John Bumgarner
 #
 ##################################################################################
@@ -68,7 +68,7 @@ class Query(object):
     @staticmethod
     def _requests_retry_session(retries=5,
                                 backoff_factor=0.5,
-                                status_forcelist=(500, 502, 504),
+                                status_force_list=(500, 502, 504),
                                 session=None,
                                 ):
         session = session or requests.Session()
@@ -77,7 +77,7 @@ class Query(object):
             read=retries,
             connect=retries,
             backoff_factor=backoff_factor,
-            status_forcelist=status_forcelist,
+            status_forcelist=status_force_list,
         )
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)
@@ -106,45 +106,68 @@ class Query(object):
                                                                   verify=True
                                                                   )
 
+                cloudflare_protected = bool([value for (key, value) in response.headers.items()
+                                             if key == 'Server'
+                                             and value == 'cloudflare'])
 
                 if response.status_code == 403:
-                    logger.error(f'Response Status Code: {response.status_code}')
-                    logger.error('HTTP 403 is an HTTP status code meaning access to the requested '
-                                 'resource is forbidden.')
-                    logger.error(f'Associated URL: {self._url_to_scrape}')
+                    if cloudflare_protected is True:
+                        logger.info('-' * 80)
+                        logger.info("The requested URL is protected by Cloudflare's DDoS mitigation service.")
+                        logger.info(f'Requested URL: {self._url_to_scrape}')
+                        logger.info('-' * 80)
+                    elif cloudflare_protected is False:
+                        logger.info('-' * 80)
+                        logger.error(f'Response Status Code: {response.status_code}')
+                        logger.info('HTTP 403 is an HTTP status code meaning access to the requested '
+                                    'resource is forbidden.')
+                        logger.info(f'Requested URL: {self._url_to_scrape}')
+                        logger.info('-' * 80)
                 elif response.status_code == 404:
+                    logger.info('-' * 80)
                     logger.error(f'Response Status Code: {response.status_code}')
-                    logger.error(
+                    logger.info(
                         'The HTTP 404 Not Found status code means that the file or page that the was requested '
                         'was not found on the server')
-                    logger.error(f'Associated URL: {self._url_to_scrape}')
+                    logger.info(f'Requested URL: {self._url_to_scrape}')
+                    logger.info('-' * 80)
                 elif response.status_code == 500:
+                    logger.info('-' * 80)
                     logger.error(f'Response Status Code: {response.status_code}')
-                    logger.error(
+                    logger.info(
                         "The HTTP 500 Internal Server Error status code indicates that the server encountered "
                         "an unexpected condition that prevented it from fulfilling the request.")
+                    logger.info(f'Requested URL: {self._url_to_scrape}')
+                    logger.info('-' * 80)
                 elif response.status_code == 503:
+                    logger.info('-' * 80)
                     logger.error(f'Response Status Code: {response.status_code}')
-                    logger.error(
+                    logger.info(
                         "The 503 Service Unavailable status code indicates that the server is temporarily unable "
                         "to handle the request")
-                    logger.error(f'Associated URL: {self._url_to_scrape}')
+                    logger.error(f'Requested URL: {self._url_to_scrape}')
+                    logger.info('-' * 80)
                 elif response.status_code == 504:
+                    logger.info('-' * 80)
                     logger.error(f'Response Status Code: {response.status_code}')
-                    logger.error(
+                    logger.info(
                         "The HTTP 504 Gateway Timeout Error status code indicating that a server, which is "
                         "currently acting as a gateway or proxy, did not receive a timely response "
                         "from another server")
-                    logger.error(f'Associated URL: {self._url_to_scrape}')
+                    logger.error(f'Requested URL: {self._url_to_scrape}')
+                    logger.info('-' * 80)
                 elif response.status_code == 521:
+                    logger.info('-' * 80)
                     logger.error(f'Response Status Code: {response.status_code}')
-                    logger.error("This status code is not specified in any RFCs, but is used by CloudFlare's"
-                                 "reverse proxies to indicate that the origin webserver refused the connection")
-                    logger.error(f'Associated URL: {self._url_to_scrape}')
+                    logger.info("This status code is not specified in any RFCs, but is used by CloudFlare's"
+                                "reverse proxies to indicate that the origin webserver refused the connection")
+                    logger.info(f'Requested URL: {self._url_to_scrape}')
+                    logger.info('-' * 80)
                 else:
                     if response.status_code != 200:
                         logger.error(f'Response Status Code: {response.status_code}')
-                        logger.error(f'Associated URL: {self._url_to_scrape}')
+                        logger.info(f'Requested URL: {self._url_to_scrape}')
+                        logger.info('-' * 80)
 
             except requests.HTTPError as e:
                 logger.error(f'A HTTPError has occurred when requesting {self._url_to_scrape}')

@@ -25,7 +25,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: July 4, 2021
+# Date Last Revised: March 12, 2022
 # Revised by: John Bumgarner
 #
 ##################################################################################
@@ -39,10 +39,10 @@ temporary_dict_antonyms = {}
 def cache_antonyms(word):
     item_to_check = f'{word}'
     if item_to_check in temporary_dict_antonyms.keys():
-        new_dict = {key: val for (key, val) in temporary_dict_antonyms.items() if key == item_to_check}
-        return new_dict
+        values = temporary_dict_antonyms.get(item_to_check)
+        return True, values
     else:
-        return False
+        return False, None
 
 
 def insert_word_cache_antonyms(word, values):
@@ -61,10 +61,10 @@ temporary_dict_synonyms = {}
 def cache_synonyms(word):
     item_to_check = f'{word}'
     if item_to_check in temporary_dict_synonyms.keys():
-        new_dict = {key: val for (key, val) in temporary_dict_synonyms.items() if key == word}
-        return new_dict
+        values = temporary_dict_synonyms.get(item_to_check)
+        return True, values
     else:
-        return False
+        return False, None
 
 
 def insert_word_cache_synonyms(word, values):
@@ -83,10 +83,10 @@ temporary_dict_definition = {}
 def cache_definition(word):
     item_to_check = f'{word}'
     if item_to_check in temporary_dict_definition.keys():
-        new_dict = {key: val for (key, val) in temporary_dict_synonyms.items() if key == word}
-        return new_dict
+        values = temporary_dict_definition.get(item_to_check)
+        return True, values
     else:
-        return False
+        return False, None
 
 
 def insert_word_cache_definition(word, values):
@@ -105,10 +105,10 @@ temporary_dict_hypernyms = {}
 def cache_hypernyms(word):
     item_to_check = f'{word}'
     if item_to_check in temporary_dict_hypernyms.keys():
-        new_dict = {key: val for (key, val) in temporary_dict_hypernyms.items() if key == word}
-        return new_dict
+        values = temporary_dict_hypernyms.get(item_to_check)
+        return True, values
     else:
-        return False
+        return False, None
 
 
 def insert_word_cache_hypernyms(word, values):
@@ -127,10 +127,10 @@ temporary_dict_hyponyms = {}
 def cache_hyponyms(word):
     item_to_check = f'{word}'
     if item_to_check in temporary_dict_hyponyms.keys():
-        new_dict = {key: val for (key, val) in temporary_dict_hyponyms.items() if key == word}
-        return new_dict
+        values = temporary_dict_hyponyms.get(item_to_check)
+        return True, values
     else:
-        return False
+        return False, None
 
 
 def insert_word_cache_hyponyms(word, values):

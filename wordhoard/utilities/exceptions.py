@@ -68,6 +68,7 @@ class TranslationNotFound(BaseError):
                  message='No translation was found using the current translator. Try another translator?'):
         super(TranslationNotFound, self).__init__(val, message)
 
+
 class RequestError(Exception):
     """
     exception thrown if an error occurred during the request call, e.g a connection problem.
