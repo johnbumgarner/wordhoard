@@ -35,12 +35,12 @@ setuptools.setup(
               'information retrieval', 'lexicon', 'semantic relationships', 'synonyms',
               'natural language processing'],
     python_requires='>=3.6',
-    install_requires=['backoff',
-                      'bs4',
-                      'deckar01-ratelimit',
-                      'deepl',
-                      'lxml',
-                      'requests',
-                      'urllib3']
+    install_requires=['backoff>=1.11.1',
+                      'beautifulsoup4>=4.10.0',
+                      'deckar01-ratelimit>=3.0.2',
+                      'deepl>=1.5.0',
+                      'lxml>=4.8.0',
+                      'requests>=2.27.1',
+                      'urllib3==1.25.11']
 )
 
