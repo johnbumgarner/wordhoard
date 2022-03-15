@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: June 11, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: September 7, 2021
+# Date Last Revised: March 14, 2022
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -76,15 +76,21 @@ except OSError as error:
     sys.exit(1)
 
 
+def _colorized_text(r, g, b, text):
+    return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
+
+
 class Homophones(object):
-    """
-    This class is used to query internal files containing
-    English language homophones associated with a specific word.
 
-    """
+    def __init__(self,
+                 search_string=''):
 
-    def __init__(self, search_string=''):
         """
+        Purpose
+        ----------
+        This Python class is used to query internal files containing
+        English language homophones associated with a specific word.
+
         Usage Examples
         ----------
 
@@ -98,6 +104,7 @@ class Homophones(object):
         ----------
         :param search_string: string containing the variable to obtain homophones for
         """
+
         self._word = search_string
 
     def _validate_word(self):
@@ -120,9 +127,7 @@ class Homophones(object):
         This function iterates through a list of known
         English language homophones.
 
-        :return:
-            homophones: list of homophones
-
+        :return: list of homophones
         :rtype: list
         """
         global _known_homophones_list
@@ -147,13 +152,14 @@ class Homophones(object):
         global _no_homophones_list
         match = bool(self._word in _no_homophones_list)
         if match:
-            return f'no homophones for {self._word}'
+            return _colorized_text(255, 0, 255,
+                                   f'No homophones for {self._word}')
 
     def find_homophones(self):
         """
         Purpose
         ----------
-        This function queries multiple lists to find an
+        This function queries multiple lists to find
         English language homophones associated with the
         specific word provided to the Class Homophones.
 

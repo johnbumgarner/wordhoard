@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: September 17, 2021
+# Date Last Revised: March 14, 2022
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -32,6 +32,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Python imports required for basic operations
 ##################################################################################
 import bs4
+import json
 import logging
 import traceback
 import re as regex
@@ -40,23 +41,31 @@ from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
 from wordhoard.utilities.basic_soup import Query
 from wordhoard.utilities import caching, cleansing, word_verification
+from wordhoard.utilities.cloudflare_checker import CloudflareVerification
+
 
 logger = logging.getLogger(__name__)
 
 
+def _colorized_text(r, g, b, text):
+    return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
+
+
 class Antonyms(object):
-    """
-    This class is used to query multiple online repositories for the antonyms associated
-    with a specific word.
 
-    """
-
-    def __init__(self, search_string='',
+    def __init__(self,
+                 search_string='',
                  output_format='list',
                  max_number_of_requests=30,
                  rate_limit_timeout_period=60,
                  proxies=None):
         """
+        Purpose
+        ----------
+
+        This Python class is used to query multiple online repositories for the antonyms
+        associated with a specific word.
+
         Usage Examples
         ----------
 
@@ -69,17 +78,23 @@ class Antonyms(object):
         Parameters
         ----------
         :param search_string: String containing the variable to obtain antonyms for
-        :param output_format: Format to use for returned results. Default value: list; Acceptable values: dictionary or list
+
+        :param output_format: Format to use for returned results.
+               Default value: list; Acceptable values: dictionary or list
+
         :param max_number_of_requests: Maximum number of requests for a specific timeout_period
+
         :param rate_limit_timeout_period: The time period before a session is placed in a temporary hibernation mode
+
         :param proxies: Dictionary of proxies to use with Python Requests
         """
+
         self._word = search_string
         self._output_format = output_format
         self._proxies = proxies
 
-        ratelimit_status = False
-        self._rate_limit_status = ratelimit_status
+        rate_limit_status = False
+        self._rate_limit_status = rate_limit_status
 
         # Retries the requests after a certain time period has elapsed
         handler = on_exception(expo, RateLimitException, max_time=60, on_backoff=self._backoff_handler)
@@ -87,14 +102,11 @@ class Antonyms(object):
         limiter = limits(calls=max_number_of_requests, period=rate_limit_timeout_period)
         self.find_antonyms = handler(limiter(self.find_antonyms))
 
-    def _colorized_text(self, r, g, b, text):
-        return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
-
-    def _backoff_handler(self, details):
+    def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(self._colorized_text(255, 0, 0,
-                                       'The antonyms query rate Limit was reached. The querying process is entering a '
-                                       'temporary hibernation mode.'))
+            print(_colorized_text(255, 0, 0,
+                                  'The antonyms query rate limit was reached. The querying process is entering a '
+                                  'temporary hibernation mode.'))
             logger.info('The antonyms query rate limit was reached.')
             self._rate_limit_status = True
 
@@ -139,28 +151,39 @@ class Antonyms(object):
         valid_word = self._validate_word()
         if valid_word:
             check_cache = self._check_cache()
-            if check_cache is False:
-                antonyms_01 = self._query_thesaurus_com()
-                antonyms_02 = self._query_wordhippo()
-                antonyms = ([x for x in [antonyms_01, antonyms_02] if x is not None])
-                antonyms_results = cleansing.flatten_multidimensional_list(antonyms)
-                if not antonyms_results:
-                    return f'No antonyms were found for the word: {self._word}'
-                else:
-                    if self._output_format == 'list':
-                        return sorted(set(antonyms_results))
-                    elif self._output_format == 'dictionary':
-                        output_dict = {self._word: sorted(set(antonyms_results))}
-                        return output_dict
-            else:
-                antonyms = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
+            if check_cache[0] is True:
+                antonyms = cleansing.flatten_multidimensional_list(check_cache[1])
                 if self._output_format == 'list':
                     return sorted(set(antonyms))
                 elif self._output_format == 'dictionary':
                     output_dict = {self._word: sorted(set(antonyms))}
                     return output_dict
+                elif self._output_format == 'json':
+                    json_object = json.dumps({'antonyms': {self._word: sorted(set(antonyms))}},
+                                             indent=4, ensure_ascii=False)
+                    return json_object
+
+            elif check_cache[0] is False:
+                antonyms_01 = self._query_thesaurus_com()
+                antonyms_02 = self._query_wordhippo()
+                antonyms = ([x for x in [antonyms_01, antonyms_02] if x is not None])
+                antonyms_results = cleansing.flatten_multidimensional_list(antonyms)
+                if len(antonyms_results) != 0:
+                    if self._output_format == 'list':
+                        return sorted(set(antonyms_results))
+                    elif self._output_format == 'dictionary':
+                        output_dict = {self._word: sorted(set(antonyms_results))}
+                        return output_dict
+                    elif self._output_format == 'json':
+                        json_object = json.dumps({'antonyms': {self._word: sorted(set(antonyms_results))}},
+                                                 indent=4, ensure_ascii=False)
+                        return json_object
+                else:
+                    return _colorized_text(255, 0, 255,
+                                           f'antonyms were found for the word: {self._word} \n'
+                                           f'Please verify that the word is spelled correctly.')
         else:
-            return f'Please verify that the word {self._word} is spelled correctly.'
+            return _colorized_text(255, 0, 255, f'Please verify that the word {self._word} is spelled correctly.')
 
     def _query_thesaurus_com(self):
         """
@@ -192,31 +215,48 @@ class Antonyms(object):
                     logger.info(f'Thesaurus.com had no antonym reference for the word {self._word}')
                 else:
                     soup = BeautifulSoup(response.text, "lxml")
-                    if soup.find("div", {'id': 'antonyms'}):
-                        parent_tag = soup.find_all("div", {'data-testid': 'word-grid-container'})[1]
-                        for link in parent_tag.find_all('a', {'class': 'css-pc0050'}):
-                            antonyms.append(link.text.strip())
-                        antonyms = sorted([x.lower() for x in antonyms])
-                        self._update_cache(antonyms)
-                        return antonyms
-                    else:
-                        logger.info(f'Thesaurus.com had no antonym reference for the word {self._word}')
+                    cloudflare_protection = CloudflareVerification('https://www.thesaurus.com',
+                                                                   soup).cloudflare_protected_url()
+                    if cloudflare_protection is False:
+                        if soup.find("div", {'id': 'antonyms'}):
+                            parent_tag = soup.find_all("div", {'data-testid': 'word-grid-container'})[1]
+                            for link in parent_tag.find_all('a', {'class': 'css-pc0050'}):
+                                antonyms.append(link.text.strip())
+                            antonyms = sorted([x.lower() for x in antonyms])
+                            self._update_cache(antonyms)
+                            return antonyms
+                        else:
+                            logger.info(f'Thesaurus.com had no antonym reference for the word {self._word}')
+                    elif cloudflare_protection is True:
+                        logger.info('-' * 80)
+                        logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
+                        logger.info('https://www.thesaurus.com')
+                        logger.info('-' * 80)
+                        return None
             elif self._proxies is not None:
                 response = Query(f'https://www.thesaurus.com/browse/{self._word}', self._proxies).get_single_page_html()
                 if response.status_code == 404:
                     logger.info(f'Thesaurus.com had no antonym reference for the word {self._word}')
                 else:
                     soup = BeautifulSoup(response.text, "lxml")
-                    if soup.find("div", {'id': 'antonyms'}):
-                        parent_tag = soup.find_all("div", {'data-testid': 'word-grid-container'})[1]
-                        for link in parent_tag.find_all('a', {'class': 'css-pc0050'}):
-                            antonyms.append(link.text.strip())
-                        antonyms = sorted([x.lower() for x in antonyms])
-                        self._update_cache(antonyms)
-                        return antonyms
-                    else:
-                        logger.info(f'Thesaurus.com had no antonym reference for the word {self._word}')
-
+                    cloudflare_protection = CloudflareVerification('https://www.thesaurus.com',
+                                                                   soup).cloudflare_protected_url()
+                    if cloudflare_protection is False:
+                        if soup.find("div", {'id': 'antonyms'}):
+                            parent_tag = soup.find_all("div", {'data-testid': 'word-grid-container'})[1]
+                            for link in parent_tag.find_all('a', {'class': 'css-pc0050'}):
+                                antonyms.append(link.text.strip())
+                            antonyms = sorted([x.lower() for x in antonyms])
+                            self._update_cache(antonyms)
+                            return antonyms
+                        else:
+                            logger.info(f'Thesaurus.com had no antonym reference for the word {self._word}')
+                    elif cloudflare_protection is True:
+                        logger.info('-' * 80)
+                        logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
+                        logger.info('https://www.thesaurus.com')
+                        logger.info('-' * 80)
+                        return None
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -258,22 +298,32 @@ class Antonyms(object):
         try:
             antonyms = []
             if self._proxies is None:
-                response = Query(f'https://www.wordhippo.com/what-is/the-opposite-of/{self._word}.html').get_single_page_html()
+                response = Query(
+                    f'https://www.wordhippo.com/what-is/the-opposite-of/{self._word}.html').get_single_page_html()
                 if response.status_code == 404:
                     logger.info(f'Wordhippo.com had no antonym reference for the word {self._word}')
                 else:
                     soup = BeautifulSoup(response.text, "lxml")
-                    pattern = regex.compile(r'We do not currently know of any antonyms for')
-                    if soup.find(text=pattern):
-                        logger.info(f'Wordhippo.com had no antonym reference for the word {self._word}')
-                    else:
-                        related_tag = soup.find("div", {'class': 'relatedwords'})
-                        for list_item in related_tag.find_all("div", {'class': 'wb'}):
-                            for link in list_item.find_all('a', href=True):
-                                antonyms.append(link.text)
-                        antonyms = sorted([x.lower() for x in antonyms])
-                        self._update_cache(antonyms)
-                        return antonyms
+                    cloudflare_protection = CloudflareVerification('https://www.wordhippo.com',
+                                                                   soup).cloudflare_protected_url()
+                    if cloudflare_protection is False:
+                        pattern = regex.compile(r'We do not currently know of any antonyms for')
+                        if soup.find(text=pattern):
+                            logger.info(f'Wordhippo.com had no antonym reference for the word {self._word}')
+                        else:
+                            related_tag = soup.find("div", {'class': 'relatedwords'})
+                            for list_item in related_tag.find_all("div", {'class': 'wb'}):
+                                for link in list_item.find_all('a', href=True):
+                                    antonyms.append(link.text)
+                            antonyms = sorted([x.lower() for x in antonyms])
+                            self._update_cache(antonyms)
+                            return antonyms
+                    elif cloudflare_protection is True:
+                        logger.info('-' * 80)
+                        logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
+                        logger.info('https://www.wordhippo.com')
+                        logger.info('-' * 80)
+                        return None
             elif self._proxies is not None:
                 response = Query(
                     f'https://www.wordhippo.com/what-is/the-opposite-of/{self._word}.html',
@@ -282,17 +332,26 @@ class Antonyms(object):
                     logger.info(f'Wordhippo.com had no antonym reference for the word {self._word}')
                 else:
                     soup = BeautifulSoup(response.text, "lxml")
-                    pattern = regex.compile(r'We do not currently know of any antonyms for')
-                    if soup.find(text=pattern):
-                        logger.info(f'Wordhippo.com had no antonym reference for the word {self._word}')
-                    else:
-                        related_tag = soup.find("div", {'class': 'relatedwords'})
-                        for list_item in related_tag.find_all("div", {'class': 'wb'}):
-                            for link in list_item.find_all('a', href=True):
-                                antonyms.append(link.text)
-                        antonyms = sorted([x.lower() for x in antonyms])
-                        self._update_cache(antonyms)
-                        return antonyms
+                    cloudflare_protection = CloudflareVerification('https://www.wordhippo.com',
+                                                                   soup).cloudflare_protected_url()
+                    if cloudflare_protection is False:
+                        pattern = regex.compile(r'We do not currently know of any antonyms for')
+                        if soup.find(text=pattern):
+                            logger.info(f'Wordhippo.com had no antonym reference for the word {self._word}')
+                        else:
+                            related_tag = soup.find("div", {'class': 'relatedwords'})
+                            for list_item in related_tag.find_all("div", {'class': 'wb'}):
+                                for link in list_item.find_all('a', href=True):
+                                    antonyms.append(link.text)
+                            antonyms = sorted([x.lower() for x in antonyms])
+                            self._update_cache(antonyms)
+                            return antonyms
+                    elif cloudflare_protection is True:
+                        logger.info('-' * 80)
+                        logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
+                        logger.info('https://www.wordhippo.com')
+                        logger.info('-' * 80)
+                        return None
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))

@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: September 17, 2021
+# Date Last Revised: March 14, 2022
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -32,6 +32,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Python imports required for basic operations
 ##################################################################################
 import bs4
+import json
 import logging
 import traceback
 import re as regex
@@ -40,19 +41,29 @@ from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
 from wordhoard.utilities.basic_soup import Query
 from wordhoard.utilities import caching, cleansing, word_verification
+from wordhoard.utilities.cloudflare_checker import CloudflareVerification
 
 logger = logging.getLogger(__name__)
 
 
+def _colorized_text(r, g, b, text):
+    return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
+
+
 class Definitions(object):
-    """
-    This class is used to query multiple online repositories for the
-    definition associated with a specific word.
 
-    """
-
-    def __init__(self, search_string='', max_number_of_requests=30, rate_limit_timeout_period=60, proxies=None):
+    def __init__(self,
+                 search_string='',
+                 output_format='list',
+                 max_number_of_requests=30,
+                 rate_limit_timeout_period=60,
+                 proxies=None):
         """
+        Purpose
+        ----------
+        This Python class is used to query multiple online repositories for the definition
+        associated with a specific word.
+
         Usage Examples
         ----------
 
@@ -65,16 +76,23 @@ class Definitions(object):
         Parameters
         ----------
         :param search_string: string containing the variable to obtain definition for
+
+        :param output_format: Format to use for returned results.
+               Default value: list; Acceptable values: dictionary or list
+
         :param max_number_of_requests: maximum number of requests for a specific timeout_period
+
         :param rate_limit_timeout_period: the time period before a session is placed in a temporary hibernation mode
+
         :param proxies: dictionary of proxies to use with Python Requests
         """
 
         self._word = search_string
+        self._output_format = output_format
         self._proxies = proxies
 
-        ratelimit_status = False
-        self._rate_limit_status = ratelimit_status
+        rate_limit_status = False
+        self._rate_limit_status = rate_limit_status
 
         # Retries the requests after a certain time period has elapsed
         handler = on_exception(expo, RateLimitException, max_time=60, on_backoff=self._backoff_handler)
@@ -82,14 +100,11 @@ class Definitions(object):
         limiter = limits(calls=max_number_of_requests, period=rate_limit_timeout_period)
         self.find_definitions = handler(limiter(self.find_definitions))
 
-    def _colorized_text(self, r, g, b, text):
-        return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
-
-    def _backoff_handler(self, details):
+    def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(self._colorized_text(255, 0, 0,
-                                       'The definition query rate Limit was reached. The querying process is entering '
-                                       'a temporary hibernation mode.'))
+            print(_colorized_text(255, 0, 0,
+                                  'The definition query rate limit was reached. The querying process is entering '
+                                  'a temporary hibernation mode.'))
             logger.info('The definition query rate limit was reached.')
             self._rate_limit_status = True
 
@@ -123,26 +138,47 @@ class Definitions(object):
         Returns
         ----------
         :return: list of definitions
+
         :rtype: list
         """
         valid_word = self._validate_word()
         if valid_word:
             check_cache = caching.cache_antonyms(self._word)
-            if check_cache is False:
+            if check_cache[0] is True:
+                definitions = cleansing.flatten_multidimensional_list(check_cache[1])
+                if self._output_format == 'list':
+                    return sorted(set(definitions))
+                elif self._output_format == 'dictionary':
+                    output_dict = {self._word: sorted(set(definitions))}
+                    return output_dict
+                elif self._output_format == 'json':
+                    json_object = json.dumps({'definitions': {self._word: sorted(set(definitions))}},
+                                             indent=4, ensure_ascii=False)
+                    return json_object
+
+            elif check_cache[0] is False:
                 definition_01 = self._query_collins_dictionary()
                 definition_02 = self._query_merriam_webster()
                 definition_03 = self._query_synonym_com()
                 definitions = ([x for x in [definition_01, definition_02, definition_03] if x is not None])
                 definitions = cleansing.flatten_multidimensional_list(definitions)
                 if not definitions:
-                    return f'No definitions were found for the word: {self._word}'
+                    return _colorized_text(255, 0, 255,
+                                           f'No definitions were found for the word: {self._word} \n'
+                                           f'Please verify that the word is spelled correctly.')
                 else:
-                    return sorted(set(definitions))
-            else:
-                definitions = cleansing.flatten_multidimensional_list([val for val in check_cache.values()])
-                return sorted(set(definitions))
+                    if self._output_format == 'list':
+                        return sorted(set(definitions))
+                    elif self._output_format == 'dictionary':
+                        output_dict = {self._word: sorted(set(definitions))}
+                        return output_dict
+                    elif self._output_format == 'json':
+                        json_object = json.dumps({'definitions': {self._word: sorted(set(definitions))}},
+                                                 indent=4, ensure_ascii=False)
+                        return json_object
         else:
-            return f'Please verify that the word {self._word} is spelled correctly.'
+            return _colorized_text(255, 0, 255,
+                                   f'Please verify that the word {self._word} is spelled correctly.')
 
     def _query_collins_dictionary(self):
         """
@@ -174,13 +210,22 @@ class Definitions(object):
                     logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
                 else:
                     soup = BeautifulSoup(response.text, "lxml")
-                    query_results = soup.find('div', {'class': 'form type-def titleTypeSubContainer'})
-                    if query_results is not None:
-                        definition = query_results.findNext('div', {'class': 'def'})
-                        self._update_cache(definition.text)
-                        return definition.text
-                    else:
-                        logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
+                    cloudflare_protection = CloudflareVerification('https://www.collinsdictionary.com',
+                                                                   soup).cloudflare_protected_url()
+                    if cloudflare_protection is False:
+                        query_results = soup.find('div', {'class': 'form type-def titleTypeSubContainer'})
+                        if query_results is not None:
+                            definition = query_results.findNext('div', {'class': 'def'})
+                            self._update_cache(definition.text)
+                            return definition.text
+                        else:
+                            logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
+                    elif cloudflare_protection is True:
+                        logger.info('-' * 80)
+                        logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
+                        logger.info('https://www.collinsdictionary.com')
+                        logger.info('-' * 80)
+                        return None
             elif self._proxies is not None:
                 response = Query(f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}',
                                  self._proxies).get_single_page_html()
@@ -188,13 +233,22 @@ class Definitions(object):
                     logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
                 else:
                     soup = BeautifulSoup(response.text, "lxml")
-                    query_results = soup.find('div', {'class': 'form type-def titleTypeSubContainer'})
-                    if query_results is not None:
-                        definition = query_results.findNext('div', {'class': 'def'})
-                        self._update_cache(definition.text)
-                        return definition.text
-                    else:
-                        logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
+                    cloudflare_protection = CloudflareVerification('https://www.collinsdictionary.com',
+                                                                   soup).cloudflare_protected_url()
+                    if cloudflare_protection is False:
+                        query_results = soup.find('div', {'class': 'form type-def titleTypeSubContainer'})
+                        if query_results is not None:
+                            definition = query_results.findNext('div', {'class': 'def'})
+                            self._update_cache(definition.text)
+                            return definition.text
+                        else:
+                            logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
+                    elif cloudflare_protection is True:
+                        logger.info('-' * 80)
+                        logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
+                        logger.info('https://www.collinsdictionary.com')
+                        logger.info('-' * 80)
+                        return None
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -241,20 +295,29 @@ class Definitions(object):
                 else:
                     definition_list = []
                     soup = BeautifulSoup(response.text, "lxml")
-                    pattern = regex.compile(r'Words fail us')
-                    if soup.find(text=pattern):
-                        logger.info(f'Merriam-webster.com has no reference for the word {self._word}')
-                    elif soup.find('h1', {'class': 'mispelled-word'}):
-                        logger.info(f'Merriam-webster.com has no definition reference for the word {self._word}')
-                    else:
-                        dictionary_entry = soup.find('div', {'id': 'dictionary-entry-1'})
-                        definition_container = dictionary_entry.find('div', {'class': 'vg'})
-                        definition_entries = definition_container.find_all('span', {'class': 'sb-0'})[0]
-                        for definition_entry in definition_entries.find_all('span', {'class': 'dtText'}):
-                            definition_list.append(definition_entry.text.lower().replace(':', '').strip())
-                        definitions = sorted([cleansing.normalize_space(i) for i in definition_list])
-                        self._update_cache(definitions)
-                        return definitions
+                    cloudflare_protection = CloudflareVerification('https://www.merriam-webster.com',
+                                                                   soup).cloudflare_protected_url()
+                    if cloudflare_protection is False:
+                        pattern = regex.compile(r'Words fail us')
+                        if soup.find(text=pattern):
+                            logger.info(f'Merriam-webster.com has no reference for the word {self._word}')
+                        elif soup.find('h1', {'class': 'mispelled-word'}):
+                            logger.info(f'Merriam-webster.com has no definition reference for the word {self._word}')
+                        else:
+                            dictionary_entry = soup.find('div', {'id': 'dictionary-entry-1'})
+                            definition_container = dictionary_entry.find('div', {'class': 'vg'})
+                            definition_entries = definition_container.find_all('span', {'class': 'sb-0'})[0]
+                            for definition_entry in definition_entries.find_all('span', {'class': 'dtText'}):
+                                definition_list.append(definition_entry.text.lower().replace(':', '').strip())
+                            definitions = sorted([cleansing.normalize_space(i) for i in definition_list])
+                            self._update_cache(definitions)
+                            return definitions
+                    elif cloudflare_protection is True:
+                        logger.info('-' * 80)
+                        logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
+                        logger.info('https://www.merriam-webster.com')
+                        logger.info('-' * 80)
+                        return None
             elif self._proxies is not None:
                 response = Query(f'https://www.merriam-webster.com/dictionary/{self._word}',
                                  self._proxies).get_single_page_html()
@@ -263,20 +326,30 @@ class Definitions(object):
                 else:
                     definition_list = []
                     soup = BeautifulSoup(response.text, "lxml")
-                    pattern = regex.compile(r'Words fail us')
-                    if soup.find(text=pattern):
-                        logger.info(f'Merriam-webster.com has no reference for the word {self._word}')
-                    elif soup.find('h1', {'class': 'mispelled-word'}):
-                        logger.info(f'Merriam-webster.com has no definition reference for the word {self._word}')
-                    else:
-                        dictionary_entry = soup.find('div', {'id': 'dictionary-entry-1'})
-                        definition_container = dictionary_entry.find('div', {'class': 'vg'})
-                        definition_entries = definition_container.find_all('span', {'class': 'sb-0'})[0]
-                        for definition_entry in definition_entries.find_all('span', {'class': 'dtText'}):
-                            definition_list.append(definition_entry.text.lower().replace(':', '').strip())
-                        definitions = sorted([cleansing.normalize_space(i) for i in definition_list])
-                        self._update_cache(definitions)
-                        return definitions
+                    cloudflare_protection = CloudflareVerification('https://www.merriam-webster.com',
+                                                                   soup).cloudflare_protected_url()
+                    if cloudflare_protection is False:
+                        pattern = regex.compile(r'Words fail us')
+                        if soup.find(text=pattern):
+                            logger.info(f'Merriam-webster.com has no reference for the word {self._word}')
+                        elif soup.find('h1', {'class': 'mispelled-word'}):
+                            logger.info(
+                                f'Merriam-webster.com has no definition reference for the word {self._word}')
+                        else:
+                            dictionary_entry = soup.find('div', {'id': 'dictionary-entry-1'})
+                            definition_container = dictionary_entry.find('div', {'class': 'vg'})
+                            definition_entries = definition_container.find_all('span', {'class': 'sb-0'})[0]
+                            for definition_entry in definition_entries.find_all('span', {'class': 'dtText'}):
+                                definition_list.append(definition_entry.text.lower().replace(':', '').strip())
+                            definitions = sorted([cleansing.normalize_space(i) for i in definition_list])
+                            self._update_cache(definitions)
+                            return definitions
+                    elif cloudflare_protection is True:
+                        logger.info('-' * 80)
+                        logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
+                        logger.info('https://www.merriam-webster.com')
+                        logger.info('-' * 80)
+                        return None
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -323,18 +396,27 @@ class Definitions(object):
                 else:
                     definition_list = []
                     soup = BeautifulSoup(response.text, "lxml")
-                    status_tag = soup.find("meta", {"name": "pagetype"})
-                    pattern = regex.compile(r'Oops, 404!')
-                    if soup.find(text=pattern):
-                        logger.info(f'Synonym.com had no definition reference for the word {self._word}')
-                    elif status_tag.attrs['content'] == 'Term':
-                        dictionary_entries = soup.find('h3', {'class': 'section-title'})
-                        dictionary_entry = dictionary_entries.find_next('p').text
-                        remove_brackets = regex.sub(r'.*?\[.*?\]', '', dictionary_entry)
-                        definition_list.append(remove_brackets.strip())
-                        definitions = sorted([x.lower() for x in definition_list])
-                        self._update_cache(definitions)
-                        return sorted(definitions)
+                    cloudflare_protection = CloudflareVerification('https://www.synonym.com',
+                                                                   soup).cloudflare_protected_url()
+                    if cloudflare_protection is False:
+                        status_tag = soup.find("meta", {"name": "pagetype"})
+                        pattern = regex.compile(r'Oops, 404!')
+                        if soup.find(text=pattern):
+                            logger.info(f'Synonym.com had no definition reference for the word {self._word}')
+                        elif status_tag.attrs['content'] == 'Term':
+                            dictionary_entries = soup.find('h3', {'class': 'section-title'})
+                            dictionary_entry = dictionary_entries.find_next('p').text
+                            remove_brackets = regex.sub(r'.*?\[.*?\]', '', dictionary_entry)
+                            definition_list.append(remove_brackets.strip())
+                            definitions = sorted([x.lower() for x in definition_list])
+                            self._update_cache(definitions)
+                            return sorted(definitions)
+                    elif cloudflare_protection is True:
+                        logger.info('-' * 80)
+                        logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
+                        logger.info('https://www.synonym.com')
+                        logger.info('-' * 80)
+                        return None
             elif self._proxies is not None:
                 response = Query(f'https://www.synonym.com/synonyms/{self._word}',
                                  self._proxies).get_single_page_html()
@@ -343,18 +425,27 @@ class Definitions(object):
                 else:
                     definition_list = []
                     soup = BeautifulSoup(response.text, "lxml")
-                    status_tag = soup.find("meta", {"name": "pagetype"})
-                    pattern = regex.compile(r'Oops, 404!')
-                    if soup.find(text=pattern):
-                        logger.info(f'Synonym.com had no definition reference for the word {self._word}')
-                    elif status_tag.attrs['content'] == 'Term':
-                        dictionary_entries = soup.find('h3', {'class': 'section-title'})
-                        dictionary_entry = dictionary_entries.find_next('p').text
-                        remove_brackets = regex.sub(r'.*?\[.*?\]', '', dictionary_entry)
-                        definition_list.append(remove_brackets.strip())
-                        definitions = sorted([x.lower() for x in definition_list])
-                        self._update_cache(definitions)
-                        return sorted(definitions)
+                    cloudflare_protection = CloudflareVerification('https://www.synonym.com',
+                                                                   soup).cloudflare_protected_url()
+                    if cloudflare_protection is False:
+                        status_tag = soup.find("meta", {"name": "pagetype"})
+                        pattern = regex.compile(r'Oops, 404!')
+                        if soup.find(text=pattern):
+                            logger.info(f'Synonym.com had no definition reference for the word {self._word}')
+                        elif status_tag.attrs['content'] == 'Term':
+                            dictionary_entries = soup.find('h3', {'class': 'section-title'})
+                            dictionary_entry = dictionary_entries.find_next('p').text
+                            remove_brackets = regex.sub(r'.*?\[.*?\]', '', dictionary_entry)
+                            definition_list.append(remove_brackets.strip())
+                            definitions = sorted([x.lower() for x in definition_list])
+                            self._update_cache(definitions)
+                            return sorted(definitions)
+                    elif cloudflare_protection is True:
+                        logger.info('-' * 80)
+                        logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
+                        logger.info('https://www.synonym.com')
+                        logger.info('-' * 80)
+                        return None
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
