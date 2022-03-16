@@ -10,8 +10,10 @@
 ![GitHub issues](https://img.shields.io/github/issues/johnbumgarner/wordhoard)&nbsp;
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/johnbumgarner/wordhoard)&nbsp;
 [![wordhoard](https://snyk.io/advisor/python/wordhoard/badge.svg)](https://snyk.io/advisor/python/wordhoard)&nbsp;
-[![Downloads](https://static.pepy.tech/personalized-badge/wordhoard?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=Total%20Downloads)](https://pepy.tech/project/wordhoard)&nbsp;
+[![Downloads](https://static.pepy.tech/personalized-badge/wordhoard?period=month&units=international_system&left_color=grey&right_color=brightgreen&left_text=Downloads)](https://pepy.tech/project/wordhoard)
 
+
+ 
 
 # Primary Use Case
 <p align="justify"> 
