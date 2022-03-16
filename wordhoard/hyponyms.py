@@ -313,7 +313,8 @@ class Hyponyms(object):
                                 hyponym = _get_hyponyms(soup)
                                 if 'no hyponyms found' in hyponym:
                                     return _colorized_text(255, 0, 255,
-                                                           f'No hyponyms were found for the word: {self._word}')
+                                                           f'No hyponyms were found for the word: {self._word} \n'
+                                                           f'Please verify that the word is spelled correctly.')
                                 else:
                                     number_of_pages = _get_number_of_pages(soup)
                                     if number_of_pages >= 2:

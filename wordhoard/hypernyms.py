@@ -265,7 +265,8 @@ class Hypernyms(object):
                                 hypernym = _get_hypernyms(soup)
                                 if 'no hypernyms found' in hypernym:
                                     return _colorized_text(255, 0, 255,
-                                                           f'No hypernyms were found for the word: {self._word}')
+                                                           f'No hypernyms were found for the word: {self._word} \n'
+                                                           f'Please verify that the word is spelled correctly.')
                                 else:
                                     number_of_pages = _get_number_of_pages(soup)
                                     if number_of_pages >= 2:
@@ -286,8 +287,10 @@ class Hypernyms(object):
                                                                  indent=4, ensure_ascii=False)
                                         return json_object
                             elif cloudflare_protection is True:
+                                logger.info('-' * 80)
                                 logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
                                 logger.info('https://www.classicthesaurus.com')
+                                logger.info('-' * 80)
                                 return None
                     elif self._proxies is not None:
                         response = Query(f'https://www.classicthesaurus.com/{self._word}/broader',
@@ -302,7 +305,8 @@ class Hypernyms(object):
                                 hypernym = _get_hypernyms(soup)
                                 if 'no hypernyms found' in hypernym:
                                     return _colorized_text(255, 0, 255,
-                                                           f'No hypernyms were found for the word: {self._word}')
+                                                           f'No hypernyms were found for the word: {self._word} \n'
+                                                           f'Please verify that the word is spelled correctly.')
                                 else:
                                     number_of_pages = _get_number_of_pages(soup)
                                     if number_of_pages >= 2:
