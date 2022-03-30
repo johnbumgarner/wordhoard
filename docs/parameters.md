@@ -12,11 +12,11 @@ The default parameters in the <i>Antonyms</i>, <i>Synonyms</i> and <i>Definition
 ```python
 from wordhoard import Synonyms
 synonym = Synonyms(search_string='',
-	           output_format='list',
+                   output_format='list',
                    max_number_of_requests=30,
-                   rate_limit_timeout_period=60,
+		   rate_limit_timeout_period=60,
 		   user_agent=None,
-                   proxies=None)
+		   proxies=None)
 ```
 
 
@@ -29,9 +29,9 @@ The default parameters in the <i>Hypernyms</i> and <i>Hyponyms</i> modules are.
 from wordhoard import Hypernyms
 hypernyms = Hypernyms(search_string='',
                       max_number_of_requests=30,
-                      rate_limit_timeout_period=60,
+		      rate_limit_timeout_period=60,
 		      user_agent=None,
-                      proxies=None)
+		      proxies=None)
 ```
 
 <ul>
