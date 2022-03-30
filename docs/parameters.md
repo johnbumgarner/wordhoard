@@ -72,8 +72,8 @@ hypernyms = Hypernyms(search_string='',
 	<ul>
 		<li>type: string</li> 
 		<li>default value: None</li> 
-		<li>By default user agents are randomly selected from a Python Dictionary.</li> 
-		<li>End-users can request specific user agents by modifying the user_agent string.</li> 
+		<li>By default user agents are randomly selected from a Python Dictionary.  
+			End-users can request specific user agents by modifying the user_agent string.</li> 
 		<ul>
 		    <li>Available agents types:</li> 
 			<ul>
