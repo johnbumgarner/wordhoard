@@ -16,7 +16,7 @@ synonym = Synonyms(search_string='',
                    max_number_of_requests=30,
                    rate_limit_timeout_period=60,
 		   user_agent=None,
-                   proxies=None
+                   proxies=None)
 ```
 
 
@@ -31,7 +31,7 @@ hypernyms = Hypernyms(search_string='',
                       max_number_of_requests=30,
                       rate_limit_timeout_period=60,
 		      user_agent=None,
-                      proxies=None
+                      proxies=None)
 ```
 
 <ul>
