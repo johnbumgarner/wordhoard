@@ -82,7 +82,17 @@ def get_random_user_agent():
 def get_specific_user_agent(requested_key):
     """
     This function obtains a specific user agent type from a
-    dictionary of available agents.
+    dictionary of available agents. The available agents types
+    are listed below:
+
+    - android
+    - chrome macOS
+    - chrome windows
+    - firefox macOS
+    - firefox windows
+    - safari ipad
+    - safari iphone
+    - safari macOS
 
     :param requested_key:
     :return: random user agent

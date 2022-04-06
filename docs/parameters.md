@@ -6,30 +6,18 @@ Most of the modules within <strong>WordHoard</strong> have several parameters th
 </p>
 
 <p align="justify"> 
-The default parameters in the <i>Antonyms</i>, <i>Synonyms</i> and <i>Definitions</i> modules are.
+The default parameters in the <i>Antonyms</i>, <i>Definitions</i>, <i>Hypernyms</i>, <i>Hyponyms</i> and <i>Synonyms</i> modules are.
 </p>
 
 ```python
 from wordhoard import Synonyms
+
 synonym = Synonyms(search_string='',
 	               output_format='list',
                    max_number_of_requests=30,
                    rate_limit_timeout_period=60,
+                   user_agent=None,
                    proxies=None
-```
-
-
-<p align="justify"> 
-The default parameters in the <i>Hypernyms</i> and <i>Hyponyms</i> modules are.
-</p>
-
-
-```python
-from wordhoard import Hypernyms
-hypernyms = Hypernyms(search_string='',
-                      max_number_of_requests=30,
-                      rate_limit_timeout_period=60,
-                      proxies=None
 ```
 
 <ul>
@@ -40,6 +28,8 @@ hypernyms = Hypernyms(search_string='',
 		<li>String containing the variable to search for</li>  
 </ul>
 </li>
+
+
 
 <li><strong>output_format:</strong>
 	<ul>
@@ -61,17 +51,26 @@ hypernyms = Hypernyms(search_string='',
 <li><strong>rate_limit_timeout_period:</strong>
 	<ul>
 		<li>type: int</li> 
-		<li>The time period in seconds before a session is placed in a temporary hibernation mode</li>
+		<li>The time period in seconds before a session is placed in a temporary hibernation mode</li> 
 		<li>default value: 60</li> 
 </ul>
 </li>
 
+<ul>
+<li><strong>user_agent:</strong>
+	<ul>
+		<li>type: string</li> 
+		<li>default value: None</li> 
+</li>
+</ul>
 
 <li><strong>proxies:</strong>
 	<ul>
 		<li>type: dictionary</li> 
 		<li>Dictionary of proxies to use with Python Requests</li> 
+		<li>default value: None</li> 
 </ul>
 </li>
 
 </ul>
+

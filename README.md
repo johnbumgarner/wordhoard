@@ -19,7 +19,7 @@ Textual analysis is a broad term for various research methodologies used to qual
    
 Word frequency is the technique used in textual analysis to measure the frequency of a specific word or word grouping within unstructured data. Measuring the number of word occurrences in a corpus allows a researcher to garner interesting insights about the text. A subset of word frequency is the correlation between a given word and that word's relationship to either antonyms and synonyms within the specific corpus being analyzed. Knowing these relationships is critical to improving word frequencies and topic modeling.
 
-<strong>Wordhoard</strong> was designed to assist researchers performing textual analysis to build more comprehensive lists of antonyms, synonyms, hypernyms, hyponyms and homophones.
+<strong>WordHoard</strong> was designed to assist researchers performing textual analysis to build more comprehensive lists of antonyms, synonyms, hypernyms, hyponyms and homophones.
 </p>
 
 # Installation
@@ -44,12 +44,11 @@ Please reference the <a href="https://wordhoard.readthedocs.io/en/latest" target
 This package is designed to query these online sources for antonyms, synonyms, hypernyms, hyponyms and definitions:
 
 1. classicthesaurus.com
-2. collinsdictionary.com
-3. merriam-webster.com
-4. synonym.com
-5. thesaurus.com
-6. wordhippo.com
-7. wordnet.princeton.edu
+2. merriam-webster.com
+3. synonym.com
+4. thesaurus.com
+5. wordhippo.com
+6. wordnet.princeton.edu
 </p>
   
 # Dependencies
@@ -57,23 +56,23 @@ This package is designed to query these online sources for antonyms, synonyms, h
 <p align="justify">
 This package has these core dependencies:
   
-1. <b>backoff</b>
-2. <b>BeautifulSoup</b>
-3. <b>deckar01-ratelimit</b>
-4. <b>deepl</b>
-5. <b>lxml</b>
-6. <b>requests</b>
-7. <b>urllib3</b>
+1. backoff
+2. BeautifulSoup
+3. deckar01-ratelimit
+4. deepl
+5. lxml
+6. requests
+7. urllib3
 </p>
 
 <p align="justify">
 Additional details on this package's dependencies can be found <a href="https://wordhoard.readthedocs.io/en/latest/dependencies" target="_blank">here</a>.
 </p>
 
-# Development
+# Development Roadmap
 
 <p align="justify">
-If you would like to contribute to the <i>Wordhoard</i> project please read the <a href="https://wordhoard.readthedocs.io/en/latest/contributing" target="_blank">contributing guidelines</a>.
+If you would like to contribute to the <strong>WordHoard</strong> project please read the <a href="https://wordhoard.readthedocs.io/en/latest/contributing" target="_blank">contributing guidelines</a>.
    
 Items currently under development:
    - English language word verification using the Python package `pyenchant` 
@@ -92,7 +91,7 @@ You can also contact me at [John Bumgarner](mailto:wordhoardproject@gmail.com?su
 
 # Sponsorship
    
-If you would like to contribute financially to the development and maintenance of the <i>Wordhoard</i> project please read the <a href="https://github.com/johnbumgarner/wordhoard/blob/master/SPONSOR.md">sponsorship information</a>.
+If you would like to contribute financially to the development and maintenance of the <strong>WordHoard</strong> project please read the <a href="https://github.com/johnbumgarner/wordhoard/blob/master/SPONSOR.md">sponsorship information</a>.
 
 # License
 
@@ -100,3 +99,8 @@ If you would like to contribute financially to the development and maintenance o
 The MIT License (MIT).  Please see <a href="https://wordhoard.readthedocs.io/en/latest/license" target="_blank">License File</a> for more information.
 </p>
 
+# Author
+
+<p align="justify">
+  Copyright (c) 2020 John Bumgarner
+</p>

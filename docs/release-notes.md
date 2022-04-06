@@ -5,6 +5,42 @@
 This page provides information on all the <strong>WordHoard</strong> releases since inception.
 </p>
 
+## Version 1.5.1
+
+<strong>Date of Release: 04.06.2022</strong><br>
+<strong>Purpose: Code enhancements (proxy and user agents)</strong>
+
+---
+
+<p align="justify"> 
+Proxy enhancements were added to these modules:
+</p>
+
+<ul>
+	<li>antonyms</li>
+	<li>dictionary</li>
+	<li>hypernyms</li>
+	<li>hyponyms</li>
+	<li>synonyms</li>
+</ul>
+
+<p align="justify"> 
+Selectable user agents capacities were added to these modules:
+</p>
+
+<ul>
+	<li>antonyms</li>
+	<li>dictionary</li>
+	<li>hypernyms</li>
+	<li>hyponyms</li>
+	<li>synonyms</li>
+</ul>
+
+<p align="justify"> 
+	The source <a href="https://www.collinsdictionary.com">Collins Dictionary</a> was disabled in <strong>WordHoard</strong>, because Cloudflare DDoS mitigation service protection was recently added. 
+</p>
+
+
 ## Version 1.5.0
 
 <strong>Date of Release: 09.24.2021</strong><br>

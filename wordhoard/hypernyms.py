@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Initially Completed: June 12, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: March 14, 2022
+# Date Last Revised: April 04, 2022
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -135,6 +135,7 @@ class Hypernyms(object):
                  output_format='list',
                  max_number_of_requests=30,
                  rate_limit_timeout_period=60,
+                 user_agent=None,
                  proxies=None):
 
         """
@@ -160,12 +161,15 @@ class Hypernyms(object):
 
         :param rate_limit_timeout_period: the time period before a session is placed in a temporary hibernation mode
 
+        :param user_agent: string containing either a global user agent type or a specific user agent
+
         :param proxies: dictionary of proxies to use with Python Requests
         """
 
-        self._word = search_string
-        self._output_format = output_format
         self._proxies = proxies
+        self._word = search_string
+        self._user_agent = user_agent
+        self._output_format = output_format
 
         rate_limit_status = False
         self._rate_limit_status = rate_limit_status
@@ -225,13 +229,13 @@ class Hypernyms(object):
         Raises
         ----------
         :raises
-            AttributeError: Raised when an attribute reference or assignment fails.
+            AttributeError: Raised when an attribute reference or assignment fails
 
             IndexError: Raised when a sequence subscript is out of range
 
-            KeyError: Raised when a mapping (dictionary) key is not found in the set of existing keys.
+            KeyError: Raised when a mapping (dictionary) key is not found in the set of existing keys
 
-            TypeError: Raised when an operation or function is applied to an object of inappropriate type.
+            TypeError: Raised when an operation or function is applied to an object of inappropriate type
 
             bs4.FeatureNotFound: raised by the BeautifulSoup constructor if no parser with the requested features
             is found
@@ -253,86 +257,80 @@ class Hypernyms(object):
 
             elif check_cache[0] is False:
                 try:
+                    response = ''
                     if self._proxies is None:
-                        response = Query(f'https://www.classicthesaurus.com/{self._word}/broader').get_single_page_html()
-                        if response.status_code == 404:
-                            logger.info(f'Classic Thesaurus had no hypernyms reference for the word {self._word}')
-                        else:
-                            soup = BeautifulSoup(response.text, "lxml")
-                            cloudflare_protection = CloudflareVerification('https://www.classicthesaurus.com',
-                                                                           soup).cloudflare_protected_url()
-                            if cloudflare_protection is False:
-                                hypernym = _get_hypernyms(soup)
-                                if 'no hypernyms found' in hypernym:
-                                    return _colorized_text(255, 0, 255,
-                                                           f'No hypernyms were found for the word: {self._word} \n'
-                                                           f'Please verify that the word is spelled correctly.')
-                                else:
-                                    number_of_pages = _get_number_of_pages(soup)
-                                    if number_of_pages >= 2:
-                                        for page in range(2, number_of_pages):
-                                            sub_html = Query(f'https://www.classicthesaurus.com/{self._word}/broader/{page}').get_single_page_html()
-                                            sub_soup = BeautifulSoup(sub_html.text, 'lxml')
-                                            additional_hypernym = _get_hypernyms(sub_soup)
-                                            if additional_hypernym:
-                                                hypernym.union(additional_hypernym)
-                                    self._update_cache(hypernym)
-                                    if self._output_format == 'list':
-                                        return sorted(set(hypernym))
-                                    elif self._output_format == 'dictionary':
-                                        output_dict = {self._word: sorted(set(hypernym))}
-                                        return output_dict
-                                    elif self._output_format == 'json':
-                                        json_object = json.dumps({'hypernyms': {self._word: sorted(set(hypernym))}},
-                                                                 indent=4, ensure_ascii=False)
-                                        return json_object
-                            elif cloudflare_protection is True:
-                                logger.info('-' * 80)
-                                logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
-                                logger.info('https://www.classicthesaurus.com')
-                                logger.info('-' * 80)
-                                return None
+                        if self._user_agent is None:
+                            response = Query(
+                                f'https://www.classicthesaurus.com/{self._word}/broader').get_single_page_html()
+                        elif self._user_agent is not None:
+                            response = Query(f'https://www.classicthesaurus.com/{self._word}/broader',
+                                             user_agent=self._user_agent).get_single_page_html()
+
                     elif self._proxies is not None:
-                        response = Query(f'https://www.classicthesaurus.com/{self._word}/broader',
-                                         self._proxies).get_single_page_html()
-                        if response.status_code == 404:
-                            logger.info(f'Classic Thesaurus had no hypernyms reference for the word {self._word}')
-                        else:
-                            soup = BeautifulSoup(response.text, "lxml")
-                            cloudflare_protection = CloudflareVerification('https://www.classicthesaurus.com',
-                                                                           soup).cloudflare_protected_url()
-                            if cloudflare_protection is False:
-                                hypernym = _get_hypernyms(soup)
-                                if 'no hypernyms found' in hypernym:
-                                    return _colorized_text(255, 0, 255,
-                                                           f'No hypernyms were found for the word: {self._word} \n'
-                                                           f'Please verify that the word is spelled correctly.')
-                                else:
-                                    number_of_pages = _get_number_of_pages(soup)
-                                    if number_of_pages >= 2:
-                                        for page in range(2, number_of_pages):
-                                            sub_html = Query(f'https://www.classicthesaurus.com/{self._word}/broader/'
-                                                             f'{page}', self._proxies).get_single_page_html()
-                                            sub_soup = BeautifulSoup(sub_html.text, 'lxml')
-                                            additional_hypernym = _get_hypernyms(sub_soup)
-                                            if additional_hypernym:
-                                                hypernym.union(additional_hypernym)
-                                    self._update_cache(hypernym)
-                                    if self._output_format == 'list':
-                                        return sorted(set(hypernym))
-                                    elif self._output_format == 'dictionary':
-                                        output_dict = {self._word: sorted(set(hypernym))}
-                                        return output_dict
-                                    elif self._output_format == 'json':
-                                        json_object = json.dumps({'hypernyms': {self._word: sorted(set(hypernym))}},
-                                                                 indent=4, ensure_ascii=False)
-                                        return json_object
-                            elif cloudflare_protection is True:
-                                logger.info('-' * 80)
-                                logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
-                                logger.info('https://www.classicthesaurus.com')
-                                logger.info('-' * 80)
-                                return None
+                        if self._user_agent is None:
+                            response = Query(f'https://www.classicthesaurus.com/{self._word}/broader',
+                                             proxies=self._proxies).get_single_page_html()
+                        elif self._user_agent is not None:
+                            response = Query(f'https://www.classicthesaurus.com/{self._word}/broader',
+                                             user_agent=self._user_agent, proxies=self._proxies).get_single_page_html()
+
+                    if response.status_code == 404:
+                        logger.info(f'Classic Thesaurus had no hypernyms reference for the word {self._word}')
+                    else:
+                        soup = BeautifulSoup(response.text, "lxml")
+                        cloudflare_protection = CloudflareVerification('https://www.classicthesaurus.com',
+                                                                       soup).cloudflare_protected_url()
+                        if cloudflare_protection is False:
+                            hypernym = _get_hypernyms(soup)
+                            if 'no hypernyms found' in hypernym:
+                                return _colorized_text(255, 0, 255,
+                                                       f'No hypernyms were found for the word: {self._word} \n'
+                                                       f'Please verify that the word is spelled correctly.')
+                            else:
+                                number_of_pages = _get_number_of_pages(soup)
+                                if number_of_pages >= 2:
+                                    for page in range(2, number_of_pages):
+                                        sub_html = ''
+                                        if self._proxies is None:
+                                            if self._user_agent is None:
+                                                sub_html = Query(
+                                                    f'https://www.classicthesaurus.com/{self._word}/broader/{page}').get_single_page_html()
+                                            elif self._user_agent is not None:
+                                                sub_html = Query(
+                                                    f'https://www.classicthesaurus.com/{self._word}/broader/{page}',
+                                                    user_agent=self._user_agent).get_single_page_html()
+                                        elif self._proxies is not None:
+                                            if self._user_agent is None:
+                                                sub_html = Query(
+                                                    f'https://www.classicthesaurus.com/{self._word}/broader/{page}',
+                                                    proxies=self._proxies).get_single_page_html()
+                                            elif self._user_agent is not None:
+                                                sub_html = Query(
+                                                    f'https://www.classicthesaurus.com/{self._word}/broader/{page}',
+                                                    user_agent=self._user_agent,
+                                                    proxies=self._proxies).get_single_page_html()
+
+                                        sub_soup = BeautifulSoup(sub_html.text, 'lxml')
+                                        additional_hypernym = _get_hypernyms(sub_soup)
+                                        if additional_hypernym:
+                                            hypernym.union(additional_hypernym)
+                                self._update_cache(hypernym)
+                                if self._output_format == 'list':
+                                    return sorted(set(hypernym))
+                                elif self._output_format == 'dictionary':
+                                    output_dict = {self._word: sorted(set(hypernym))}
+                                    return output_dict
+                                elif self._output_format == 'json':
+                                    json_object = json.dumps({'hypernyms': {self._word: sorted(set(hypernym))}},
+                                                             indent=4, ensure_ascii=False)
+                                    return json_object
+                        elif cloudflare_protection is True:
+                            logger.info('-' * 80)
+                            logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
+                            logger.info('https://www.classicthesaurus.com')
+                            logger.info('-' * 80)
+                            return None
+
                 except bs4.FeatureNotFound as error:
                     logger.error('An error occurred in the following code segment:')
                     logger.error(''.join(traceback.format_tb(error.__traceback__)))

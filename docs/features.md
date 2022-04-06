@@ -41,9 +41,11 @@ These parameters are currently set to 30 requests every 60 seconds.
 
 ```python 
 from wordhoard import Synonyms
+
 synonym = Synonyms(search_string='mother', 
 	               max_number_of_requests=30, 
 	               rate_limit_timeout_period=60)
+
 results = synonym.find_synonyms()   
 ```
 
@@ -60,16 +62,17 @@ When a rate limit is triggered a warning message is written to both the console 
 
 ```python 
 from wordhoard import Synonyms
+
 proxies_example = {
-    "http": "your http proxy if available" # example: http://149.28.94.152:8080
-    "https": "your https proxy"  # example: https://128.230.60.178:3128
+    "http": "your http proxy if available", # example: http://149.28.94.152:8080
+    "https": "your https proxy",  # example: https://128.230.60.178:3128
 }
 
 synonym = Synonyms(search_string='mother', proxies=proxies_example)
 results = synonym.find_synonyms()  
 ```
 <p align="justify">
-There is a known bug in <i>urllib3</i> between versions 1.26.0 and 1.26.7, which will raise different errors. <strong>WordHoard</strong> will be using <i>urllib3</i> version 1.25.11 until the bug is fixed in a future release.  
+There is a known bug in <i>urllib3</i> between versions 1.26.x, which will raise different proxy errors. <strong>WordHoard</strong>will be using <i>urllib3</i> version 1.25.11 until the bug is fixed in a future release.  
 </p>
 
 
@@ -90,7 +93,36 @@ user_agent_keys = {'chrome macOS': 'chrome_mac_os_x',
                    'android': 'samsung_browser_android'}
 
 ```
+<p align="justify">
+Without any intervention <strong>WordHoard</strong> is designed to randomly selected one of these user agents when a module (e.g. Synonyms) is being called.  An end user can override this global randomness by passing a string to the variable <i>user_agent</i>. 
+</p>
 
 <p align="justify">
-One of these user agent types is randomly selected when calling one the modules within <strong>WordHoard</strong>.  A future enhancement of <strong>WordHoard</strong> will allow an end user to select a class of user agents to use when querying and parsing online content. 
+For example an end user wanting to use only Safari iPhone user agents would do the following.  The example below would randomly select a Safari iPhone user agent with each Class call. 
 </p>
+
+
+```python 
+from wordhoard import Synonyms
+from wordhoard.utilities.user_agents import get_specific_user_agent
+
+user_agent = get_specific_user_agent('safari iphone')
+
+synonym = Synonyms(search_string='mother', user_agent=user_agent)
+results = synonym.find_synonyms() 
+
+```
+
+<p align="justify">
+If an end user wants to pass a specific user agent they would do the following.
+</p>
+
+```python 
+from wordhoard import Synonyms
+
+synonym = Synonyms(search_string='mother', user_agent='Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.1 Mobile/15E148 Safari/604.1')
+results = synonym.find_synonyms() 
+
+```
+
+

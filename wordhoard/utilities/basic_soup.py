@@ -20,11 +20,10 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 ##################################################################################
 
 ##################################################################################
-#
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: March 09, 2022
+# Date Last Revised: April 04, 2022
 # Revised by: John Bumgarner
 #
 ##################################################################################
@@ -33,6 +32,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Python imports required for basic operations
 ##################################################################################
 import sys
+import urllib3
 import logging
 import requests
 import warnings
@@ -59,19 +59,22 @@ http_headers = {'user-agent': rand_user_agent}
 
 class Query(object):
 
-    def __init__(self, url_to_scrape='', proxies=None):
+    def __init__(self, url_to_scrape='', user_agent=None, proxies=None):
 
         self._url_to_scrape = url_to_scrape
         self._proxies = proxies
+        self._user_agent = user_agent
 
     # reference: https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html#module-urllib3.util.retry
     @staticmethod
     def _requests_retry_session(retries=5,
                                 backoff_factor=0.5,
-                                status_force_list=(500, 502, 504),
+                                status_force_list=(500, 502, 503, 504),
                                 session=None,
                                 ):
+
         session = session or requests.Session()
+
         retry = Retry(
             total=retries,
             read=retries,
@@ -89,112 +92,127 @@ class Query(object):
     ###################################################################
     def get_single_page_html(self):
         response = ''
-        with requests.Session() as session:
-            try:
-                if self._proxies is None:
+        try:
+            if self._proxies is None:
+                if self._user_agent is None:
                     response = self._requests_retry_session().get(self._url_to_scrape,
                                                                   headers=http_headers,
                                                                   allow_redirects=True,
-                                                                  verify=True
-                                                                  )
+                                                                  verify=True,
+                                                                  timeout=(30, 45))
 
-                elif self._proxies is not None:
-                    session.proxies.update(self._proxies)
+                elif self._user_agent is not None:
+                    response = self._requests_retry_session().get(self._url_to_scrape,
+                                                                  headers={'user-agent': self._user_agent},
+                                                                  allow_redirects=True,
+                                                                  verify=True,
+                                                                  timeout=(30, 45))
+            elif self._proxies is not None:
+                if self._user_agent is None:
                     response = self._requests_retry_session().get(self._url_to_scrape,
                                                                   headers=http_headers,
                                                                   allow_redirects=True,
-                                                                  verify=True
-                                                                  )
+                                                                  verify=True,
+                                                                  timeout=(30, 45),
+                                                                  proxies=self._proxies)
+                elif self._user_agent is not None:
+                    response = self._requests_retry_session().get(self._url_to_scrape,
+                                                                  headers={'user-agent': self._user_agent},
+                                                                  allow_redirects=True,
+                                                                  verify=True,
+                                                                  timeout=(30, 45),
+                                                                  proxies=self._proxies)
 
-                cloudflare_protected = bool([value for (key, value) in response.headers.items()
-                                             if key == 'Server'
-                                             and value == 'cloudflare'])
+            cloudflare_protected = bool([value for (key, value) in response.headers.items()
+                                         if key == 'Server'
+                                         and value == 'cloudflare'])
 
-                if response.status_code == 403:
-                    if cloudflare_protected is True:
-                        logger.info('-' * 80)
-                        logger.info("The requested URL is protected by Cloudflare's DDoS mitigation service.")
-                        logger.info(f'Requested URL: {self._url_to_scrape}')
-                        logger.info('-' * 80)
-                    elif cloudflare_protected is False:
-                        logger.info('-' * 80)
-                        logger.error(f'Response Status Code: {response.status_code}')
-                        logger.info('HTTP 403 is an HTTP status code meaning access to the requested '
-                                    'resource is forbidden.')
-                        logger.info(f'Requested URL: {self._url_to_scrape}')
-                        logger.info('-' * 80)
-                elif response.status_code == 404:
+            if response.status_code == 403:
+                if cloudflare_protected is True:
                     logger.info('-' * 80)
-                    logger.error(f'Response Status Code: {response.status_code}')
-                    logger.info(
-                        'The HTTP 404 Not Found status code means that the file or page that the was requested '
-                        'was not found on the server')
+                    logger.info("The requested URL is protected by Cloudflare's DDoS mitigation service.")
                     logger.info(f'Requested URL: {self._url_to_scrape}')
                     logger.info('-' * 80)
-                elif response.status_code == 500:
+                elif cloudflare_protected is False:
                     logger.info('-' * 80)
                     logger.error(f'Response Status Code: {response.status_code}')
-                    logger.info(
-                        "The HTTP 500 Internal Server Error status code indicates that the server encountered "
-                        "an unexpected condition that prevented it from fulfilling the request.")
+                    logger.info('HTTP 403 is an HTTP status code meaning access to the requested '
+                                'resource is forbidden.')
                     logger.info(f'Requested URL: {self._url_to_scrape}')
                     logger.info('-' * 80)
-                elif response.status_code == 503:
-                    logger.info('-' * 80)
+            elif response.status_code == 404:
+                logger.info('-' * 80)
+                logger.error(f'Response Status Code: {response.status_code}')
+                logger.info(
+                    'The HTTP 404 Not Found status code means that the file or page that the was requested '
+                    'was not found on the server')
+                logger.info(f'Requested URL: {self._url_to_scrape}')
+                logger.info('-' * 80)
+            elif response.status_code == 500:
+                logger.info('-' * 80)
+                logger.error(f'Response Status Code: {response.status_code}')
+                logger.info(
+                    "The HTTP 500 Internal Server Error status code indicates that the server encountered "
+                    "an unexpected condition that prevented it from fulfilling the request.")
+                logger.info(f'Requested URL: {self._url_to_scrape}')
+                logger.info('-' * 80)
+            elif response.status_code == 503:
+                logger.info('-' * 80)
+                logger.error(f'Response Status Code: {response.status_code}')
+                logger.info(
+                    "The 503 Service Unavailable status code indicates that the server is temporarily unable "
+                    "to handle the request")
+                logger.error(f'Requested URL: {self._url_to_scrape}')
+                logger.info('-' * 80)
+            elif response.status_code == 504:
+                logger.info('-' * 80)
+                logger.error(f'Response Status Code: {response.status_code}')
+                logger.info(
+                    "The HTTP 504 Gateway Timeout Error status code indicating that a server, which is "
+                    "currently acting as a gateway or proxy, did not receive a timely response "
+                    "from another server")
+                logger.error(f'Requested URL: {self._url_to_scrape}')
+                logger.info('-' * 80)
+            elif response.status_code == 521:
+                logger.info('-' * 80)
+                logger.error(f'Response Status Code: {response.status_code}')
+                logger.info("This status code is not specified in any RFCs, but is used by CloudFlare's"
+                            "reverse proxies to indicate that the origin webserver refused the connection")
+                logger.info(f'Requested URL: {self._url_to_scrape}')
+                logger.info('-' * 80)
+            else:
+                if response.status_code != 200:
                     logger.error(f'Response Status Code: {response.status_code}')
-                    logger.info(
-                        "The 503 Service Unavailable status code indicates that the server is temporarily unable "
-                        "to handle the request")
-                    logger.error(f'Requested URL: {self._url_to_scrape}')
-                    logger.info('-' * 80)
-                elif response.status_code == 504:
-                    logger.info('-' * 80)
-                    logger.error(f'Response Status Code: {response.status_code}')
-                    logger.info(
-                        "The HTTP 504 Gateway Timeout Error status code indicating that a server, which is "
-                        "currently acting as a gateway or proxy, did not receive a timely response "
-                        "from another server")
-                    logger.error(f'Requested URL: {self._url_to_scrape}')
-                    logger.info('-' * 80)
-                elif response.status_code == 521:
-                    logger.info('-' * 80)
-                    logger.error(f'Response Status Code: {response.status_code}')
-                    logger.info("This status code is not specified in any RFCs, but is used by CloudFlare's"
-                                "reverse proxies to indicate that the origin webserver refused the connection")
                     logger.info(f'Requested URL: {self._url_to_scrape}')
                     logger.info('-' * 80)
-                else:
-                    if response.status_code != 200:
-                        logger.error(f'Response Status Code: {response.status_code}')
-                        logger.info(f'Requested URL: {self._url_to_scrape}')
-                        logger.info('-' * 80)
 
-            except requests.HTTPError as e:
-                logger.error(f'A HTTPError has occurred when requesting {self._url_to_scrape}')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-                sys.exit(1)
-            except requests.URLRequired as e:
-                logger.error(f'A URLRequired has occurred when requesting {self._url_to_scrape}')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-                sys.exit(1)
-            except requests.exceptions.ProxyError as e:
-                logger.error(f'A ProxyError has occurred when requesting {self._url_to_scrape}')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-                sys.exit(1)
-            except requests.ConnectionError as e:
-                if requests.codes: 'Failed to establish a new connection'
-                logger.error(f'A ConnectionError has occurred when requesting {self._url_to_scrape}')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-                sys.exit(1)
-            except requests.Timeout as e:
-                logger.error(f'A Timeout has occurred when requesting {self._url_to_scrape}')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-                sys.exit(1)
-            except requests.RequestException as e:
-                logger.error(f'A RequestException has occurred when requesting {self._url_to_scrape}')
-                logger.error(''.join(traceback.format_tb(e.__traceback__)))
-                sys.exit(1)
-            return response
+        except requests.HTTPError as e:
+            logger.error(f'A HTTPError has occurred when requesting {self._url_to_scrape}')
+            logger.error(''.join(traceback.format_tb(e.__traceback__)))
+            sys.exit(1)
+        except requests.URLRequired as e:
+            logger.error(f'A URLRequired has occurred when requesting {self._url_to_scrape}')
+            logger.error(''.join(traceback.format_tb(e.__traceback__)))
+            sys.exit(1)
+        except requests.exceptions.ProxyError as e:
+            logger.error(f'A ProxyError has occurred when requesting {self._url_to_scrape}')
+            logger.error(''.join(traceback.format_tb(e.__traceback__)))
+        except urllib3.exceptions.MaxRetryError as e:
+            logger.error(f'A MaxRetryError has occurred when requesting {self._url_to_scrape}')
+            logger.error(''.join(traceback.format_tb(e.__traceback__)))
+        except requests.ConnectionError as e:
+            if requests.codes: 'Failed to establish a new connection'
+            logger.error(f'A ConnectionError has occurred when requesting {self._url_to_scrape}')
+            logger.error(''.join(traceback.format_tb(e.__traceback__)))
+        except requests.Timeout as e:
+            logger.error(f'A Timeout has occurred when requesting {self._url_to_scrape}')
+            logger.error(''.join(traceback.format_tb(e.__traceback__)))
+            sys.exit(1)
+        except requests.RequestException as e:
+            logger.error(f'A RequestException has occurred when requesting {self._url_to_scrape}')
+            logger.error(''.join(traceback.format_tb(e.__traceback__)))
+            sys.exit(1)
+        return response
 
     @staticmethod
     def query_html(raw_html, tag_type, tag_attribute, attribute_text):
