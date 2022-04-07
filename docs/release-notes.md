@@ -25,7 +25,7 @@ Proxy enhancements were added to these modules:
 </ul>
 
 <p align="justify"> 
-Selectable user agents capacities were added to these modules:
+Selectable user agents capabilities were added to these modules:
 </p>
 
 <ul>
