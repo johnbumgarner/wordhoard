@@ -90,8 +90,8 @@ There is a known bug in <i>urllib3</i> between versions 1.26.x, which will raise
 ```python
 user_agent_keys = {'chrome macOS': 'chrome_mac_os_x', 
                    'chrome windows': 'chrome_windows_10',
-				   'firefox macOS': 'firefox_mac_os_x', 
-				   'firefox windows': 'firefox_windows_10',
+                   'firefox macOS': 'firefox_mac_os_x', 
+                   'firefox windows': 'firefox_windows_10',
                    'safari macOS': 'safari_mac_os_x', 
                    'safari iphone': 'safari_iphone',
                    'safari ipad': 'safari_ipad', 
