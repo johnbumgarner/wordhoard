@@ -25,8 +25,8 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: September 24, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised:
-# Revised by:
+# Date Last Revised: February 09, 2023
+# Revised by: John Bumgarner
 #
 ##################################################################################
 
@@ -38,15 +38,18 @@ import logging
 import requests
 import traceback
 from string import punctuation
+from requests.adapters import Retry
 from backoff import on_exception, expo
 from requests.adapters import HTTPAdapter
 from ratelimit import limits, RateLimitException
-from requests.packages.urllib3.util.retry import Retry
-from wordhoard.utilities.exceptions import RequestError
-from wordhoard.utilities.exceptions import NotValidLength
-from wordhoard.utilities.exceptions import TooManyRequests
+from wordhoard.utilities.exceptions import RequestException
+from wordhoard.utilities.colorized_text import colorized_text
 from wordhoard.utilities.user_agents import get_random_user_agent
+from wordhoard.utilities.exceptions import InvalidLengthException
+from wordhoard.utilities.exceptions import TooManyRequestsException
+from wordhoard.utilities.exceptions import InvalidEmailAddressException
 from wordhoard.utilities.exceptions import LanguageNotSupportedException
+from wordhoard.utilities.email_address_verification import validate_address
 
 logger = logging.getLogger(__name__)
 
@@ -78,14 +81,11 @@ class Translator(object):
         self.translate_word = handler(limiter(self.translate_word))
         self.reverse_translate = handler(limiter(self.reverse_translate))
 
-    def _colorized_text(self, r, g, b, text):
-        return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
-
-    def _backoff_handler(self, details):
+    def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(self._colorized_text(255, 0, 0,
-                                       'The MyMemory translation service query rate Limit was reached. The querying '
-                                       'process is entering a temporary hibernation mode.'))
+            print(colorized_text(255, 0, 0,
+                                 'The MyMemory translation service query rate Limit was reached. The querying '
+                                 'process is entering a temporary hibernation mode.'))
             logger.info('The MyMemory translation service query rate limit was reached.')
             self._rate_limit_status = True
 
@@ -97,32 +97,53 @@ class Translator(object):
         :return: language
         :rtype: string
         """
-        # MyMemory Translator supported languages as of 09-03-2021
+        # MyMemory Translator supported languages as of 02-09-2023
         supported_languages = {'af': 'afrikaans',
                                'sq': 'albanian',
                                'am': 'amharic',
                                'ar': 'arabic',
                                'hy': 'armenian',
                                'az': 'azerbaijani',
+                               'bjs': 'bajan',
+                               'rm': 'balkan gipsy',
                                'eu': 'basque',
-                               'be': 'belarusian',
+                               'be': 'bielarus',
+                               'bem': 'bemba',
                                'bn': 'bengali',
+                               'bi': 'bislama',
                                'bs': 'bosnian',
+                               'br': 'breton',
                                'bg': 'bulgarian',
                                'ca': 'catalan',
-                               'ceb': 'cebuano',
+                               'cb': 'cebuano',
                                'ny': 'chichewa',
+                               'ch': 'chamorro',
                                'zh-CN': 'chinese (simplified)',
                                'zh-TW': 'chinese (traditional)',
+                               'zdj': 'comorian',
+                               'cop': 'coptic',
+                               'aig': 'creole english (antigua and barbuda)',
+                               'bah': 'creole english (bahamas)',
+                               'gcl': 'creole english (grenadian)',
+                               'gyn': 'creole english (guyanese)',
+                               'jam': 'creole english (jamaican)',
+                               'svc': 'creole english (vincentian)',
+                               'vic': 'creole english (virgin islands)',
+                               'ht': 'creole french (haitian)',
+                               'acf': 'creole french (saint lucian)',
+                               'crs': 'creole french (seselwa)',
+                               'pov': 'creole portuguese (upper guinea)',
                                'co': 'corsican',
                                'hr': 'croatian',
                                'cs': 'czech',
                                'da': 'danish',
                                'nl': 'dutch',
+                               'dz': 'dzongkha',
                                'en': 'english',
                                'eo': 'esperanto',
-                               'et': 'estonian',
-                               'tl': 'filipino',
+                               'et-EE': 'estonian',
+                               'fn': 'fanagalo',
+                               'fo': 'faroese',
                                'fi': 'finnish',
                                'fr': 'french',
                                'fy': 'frisian',
@@ -131,26 +152,30 @@ class Translator(object):
                                'de': 'german',
                                'el': 'greek',
                                'gu': 'gujarati',
-                               'ht': 'haitian creole',
                                'ha': 'hausa',
                                'haw': 'hawaiian',
-                               'iw': 'hebrew',
+                               'he': 'hebrew',
                                'hi': 'hindi',
                                'hmn': 'hmong',
                                'hu': 'hungarian',
                                'is': 'icelandic',
                                'ig': 'igbo',
                                'id': 'indonesian',
+                               'kl': 'inuktitut',
                                'ga': 'irish',
                                'it': 'italian',
                                'ja': 'japanese',
-                               'jw': 'javanese',
+                               'jv': 'javanese',
+                               'kea': 'kabuverdianu',
+                               'kab': 'kabylian',
                                'kn': 'kannada',
                                'kk': 'kazakh',
                                'km': 'khmer',
                                'rw': 'kinyarwanda',
+                               'rn': 'kirundi',
                                'ko': 'korean',
                                'ku': 'kurdish',
+                               'ckb': 'kurdish sorani',
                                'ky': 'kyrgyz',
                                'lo': 'lao',
                                'la': 'latin',
@@ -161,19 +186,28 @@ class Translator(object):
                                'mg': 'malagasy',
                                'ms': 'malay',
                                'ml': 'malayalam',
+                               'dv': 'maldivian',
                                'mt': 'maltese',
+                               'gv': 'manx gaelic',
                                'mi': 'maori',
                                'mr': 'marathi',
+                               'mh': 'marshallese',
+                               'men': 'mende',
                                'mn': 'mongolian',
                                'my': 'myanmar',
                                'ne': 'nepali',
+                               'niu': 'niuean',
                                'no': 'norwegian',
                                'or': 'odia',
+                               'pau': 'palauan',
+                               'pa': 'panjabi',
+                               'pap': 'papiamentu',
                                'ps': 'pashto',
+                               'pis': 'pijin',
                                'fa': 'persian',
                                'pl': 'polish',
                                'pt': 'portuguese',
-                               'pa': 'punjabi',
+                               'qu': 'quechua',
                                'ro': 'romanian',
                                'ru': 'russian',
                                'sm': 'samoan',
@@ -190,19 +224,33 @@ class Translator(object):
                                'su': 'sundanese',
                                'sw': 'swahili',
                                'sv': 'swedish',
+                               'de-ch': 'swiss german',
+                               'tl': 'tagalog',
                                'tg': 'tajik',
+                               'tmh': 'tamashek',
                                'ta': 'tamil',
                                'tt': 'tatar',
                                'te': 'telugu',
+                               'tet': 'tetum',
                                'th': 'thai',
+                               'bo': 'tibetan',
+                               'ti': 'tigrinya',
+                               'tpi': 'tok pisin',
+                               'tkl': 'tokelauan',
+                               'to': 'tongan',
+                               'tn': 'tswana',
                                'tr': 'turkish',
                                'tk': 'turkmen',
+                               'tvl': 'tuvaluan',
                                'uk': 'ukrainian',
+                               'ppk': 'uma',
                                'ur': 'urdu',
                                'ug': 'uyghur',
                                'uz': 'uzbek',
                                'vi': 'vietnamese',
+                               'wls': 'wallisian',
                                'cy': 'welsh',
+                               'wo': 'wolof',
                                'xh': 'xhosa',
                                'yi': 'yiddish',
                                'yo': 'yoruba',
@@ -216,7 +264,8 @@ class Translator(object):
                 return None
         except LanguageNotSupportedException as error:
             """
-            An exception is thrown if the user uses a language that is not supported by the translator
+             An exception is thrown if the user uses a language that is not supported by the MyMemory Translation 
+             service.
             """
             logger.info(f'The language provided is not one of the supported languages of the MyMemory '
                         f'translation service.')
@@ -227,7 +276,7 @@ class Translator(object):
     @staticmethod
     def _requests_retry_session(retries=5,
                                 backoff_factor=0.5,
-                                status_forcelist=(500, 502, 504),
+                                status_forcelist=(500, 502, 503, 504),
                                 session=None,
                                 ):
         session = session or requests.Session()
@@ -245,20 +294,19 @@ class Translator(object):
 
     def _mymemory_translate(self, original_language):
         """
-        This function is used to translated a word from it source language, such as Spanish
-        into American English.
+        This function is used to translate a word from it source language, such as Spanish into American English.
 
         :param original_language: language to translated from
         :return: translated word
         :rtype: string
         """
         try:
-            if self._email_address is None:
-                print(self._colorized_text(255, 0, 0,
-                                           'A valid email address is required to use the MyMemory translation '
-                                           'service.'))
+            if validate_address(self._email_address) is False:
+                print(colorized_text(255, 0, 0,
+                                     'A valid email address is required to use the MyMemory translation '
+                                     'service.'))
                 sys.exit(1)
-            else:
+            elif validate_address(self._email_address) is True:
                 response = self._requests_retry_session().get(self._url_to_query,
                                                               params={'langpair': f'{original_language}|en-us',
                                                                       'q': self._str_to_translate,
@@ -266,47 +314,81 @@ class Translator(object):
                                                               headers=self._headers)
 
                 if response.status_code == 429:
-                    raise TooManyRequests()
+                    raise TooManyRequestsException()
                 elif response.status_code != 200:
-                    raise RequestError()
+                    raise RequestException()
                 else:
                     data = response.json()
                     if not data:
                         return f'MyMemory could not translate the word {self._str_to_translate}.'
 
                     translation = data.get('responseData').get('translatedText')
-                    if translation:
+                    if translation == 'INVALID EMAIL PROVIDED':
+                        raise InvalidEmailAddressException()
+                    elif translation:
                         return str(translation).lower().rstrip(punctuation)
 
-        except NotValidLength as error:
+        except InvalidEmailAddressException as error:
             """
-            The exception is thrown if the provided text exceed the length limit of the translator
+            This exception is thrown when the email address provided for authentication to the MyMemory Translation 
+            service is invalid. 
+            
+            Please note that the MyMemory Translation service only validates the format of the email address and 
+            not the validity of the address provided.
             """
-            logger.error(f'The text length for the word: {self._str_to_translate} exceed the length limit of '
-                         f'the MyMemory translation service.')
-            logger.error(''.join(traceback.format_tb(error.__traceback__)))
-        except TooManyRequests as error:
-            """
-            The exception is thrown if an error occurred during the request call, e.g a connection problem.
-            """
-            logger.error('Server Error: There has been too many requests to the server.')
+            print(colorized_text(255, 0, 0, 'The email address provided for authentication to the MyMemory '
+                                            'Translation MyMemory is invalid.'))
+            logger.error('Invalid Email Address Error:')
+            logger.error('The email address provided for authentication to the MyMemory Translation MyMemory '
+                         'is invalid.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
-    def _mymemory_translate_reverse(self, return_all=False):
+        except InvalidLengthException as error:
+            """
+            This exception is thrown if the provided text exceed the length limit of the MyMemory Translator service.
+            """
+            logger.error(f'The text length for the word: {self._str_to_translate} exceed the length limit of '
+                         f'MyMemory translation service.')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+
+        except TooManyRequestsException as error:
+            """
+            This exception is thrown when the maximum number of connection requests have been exceeded for a 
+            specific time for the MyMemory Translation service.
+            """
+            print(colorized_text(255, 0, 0, 'There has been too many connection requests to the MyMemory '
+                                            'Translation service.'))
+            logger.error('Connection Request Error:')
+            logger.error('There has been too many connection requests to the MyMemory Translation service.')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+
+        except RequestException as error:
+            """
+            This exception is thrown when an ambiguous exception occurs during a connection to the 
+            MyMemory Translation service.
+            """
+            print(colorized_text(255, 0, 0, 'An ambiguous connection exception has occurred when contacting the'
+                                            'MyMemory Translation service.  Please check the WordHoard log file '
+                                            'for additional information.'))
+            logger.error('Connection Exception:')
+            logger.error('An ambiguous connection exception has occurred when communicating with the '
+                         'MyMemory Translation service.')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+
+    def _mymemory_translate_reverse(self):
         """
-        This function is used to translated a word from it source language, such as Spanish
-        into American English.
+        This function is used to translate a word from it source language, such as Spanish into American English.
 
         :return: translated word
         :rtype: string
         """
         try:
-            if self._email_address is None:
-                print(self._colorized_text(255, 0, 0,
-                                           'A valid email address is required to use the MyMemory translation '
-                                           'service.'))
+            if validate_address(self._email_address) is False:
+                print(colorized_text(255, 0, 0,
+                                     'A valid email address is required to use the MyMemory translation '
+                                     'service.'))
                 sys.exit(1)
-            else:
+            elif validate_address(self._email_address) is True:
                 response = self._requests_retry_session().get(self._url_to_query,
                                                               params={'langpair': f'en-us|{self._source_language}',
                                                                       'q': self._str_to_translate,
@@ -314,37 +396,71 @@ class Translator(object):
                                                               headers=self._headers)
 
                 if response.status_code == 429:
-                    raise TooManyRequests()
+                    raise TooManyRequestsException()
                 elif response.status_code != 200:
-                    raise RequestError()
+                    raise RequestException()
                 else:
                     data = response.json()
                     if not data:
                         return f'MyMemory could not translate the word {self._str_to_translate}.'
 
                     translation = data.get('responseData').get('translatedText')
+                    if translation == 'INVALID EMAIL PROVIDED':
+                        raise InvalidEmailAddressException()
+                    elif translation:
+                        return str(translation).lower().rstrip(punctuation)
 
-                    if translation:
-                        return str(translation).lower().strip(punctuation)
-
-        except NotValidLength as error:
+        except InvalidEmailAddressException as error:
             """
-            The exception is thrown if the provided text exceed the length limit of the translator
+            This exception is thrown when the email address provided for authentication to the MyMemory Translation 
+            service is invalid. 
+            
+            Please note that the MyMemory Translation service only validates the format of the email address and 
+            not the validity of the address provided.
+            """
+            print(colorized_text(255, 0, 0, 'The email address provided for authentication to the MyMemory '
+                                            'Translation MyMemory is invalid.'))
+            logger.error('Invalid Email Address Error:')
+            logger.error('The email address provided for authentication to the MyMemory Translation MyMemory '
+                         'is invalid.')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+            sys.exit(1)
+
+        except InvalidLengthException as error:
+            """
+            This exception is thrown if the provided text exceed the length limit of the MyMemory Translator service.
             """
             logger.error(f'The text length for the word: {self._str_to_translate} exceed the length limit of '
-                         f'the MyMemory translation service.')
+                         f'MyMemory translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
-        except TooManyRequests as error:
+
+        except TooManyRequestsException as error:
             """
-            The exception is thrown if an error occurred during the request call, e.g a connection problem.
+            This exception is thrown when the maximum number of connection requests have been exceeded for a 
+            specific time for the MyMemory Translation service.
             """
-            logger.error('Server Error: There has been too many requests to the server.')
+            print(colorized_text(255, 0, 0, 'There has been too many connection requests to the MyMemory '
+                                            'Translation service.'))
+            logger.error('Connection Request Error:')
+            logger.error('There has been too many connection requests to the MyMemory Translation service.')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+
+        except RequestException as error:
+            """
+            This exception is thrown when an ambiguous exception occurs during a connection to the 
+            MyMemory Translation service.
+            """
+            print(colorized_text(255, 0, 0, 'An ambiguous connection exception has occurred when contacting the'
+                                            'MyMemory Translation service.  Please check the WordHoard log file '
+                                            'for additional information.'))
+            logger.error('Connection Exception:')
+            logger.error('An ambiguous connection exception has occurred when communicating with the '
+                         'MyMemoryTranslation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
     def translate_word(self):
         """
-        This function is used to translated a word from it source language, such as Spanish
-        into American English.
+        This function is used to translate a word from it source language, such as Spanish into American English.
 
         :return: translated word
         :rtype: string
@@ -353,15 +469,14 @@ class Translator(object):
         if supported_language:
             return self._mymemory_translate(supported_language)
         elif not supported_language:
-            logger.info(f'The language provided is not one of the supported languages for the MyMemory '
-                        f'translation service.')
-            logger.info(f'Requested language: {self._source_language}')
+            print(colorized_text(255, 0, 0, f'The language provided is not one of the supported languages '
+                                            f'for the MyMemory Translation service.'))
+            print(colorized_text(255, 0, 0, f'Requested language: {self._source_language}'))
             return None
 
     def reverse_translate(self):
         """
-        This function is used to translated a word from American English into
-        another language, such as Spanish.
+        This function is used to translate a word from American English into another language, such as Spanish.
 
         :return: translated word
         :rtype: string

@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: April 04, 2022
+# Date Last Revised: February 04, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -40,14 +40,11 @@ from bs4 import BeautifulSoup
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
 from wordhoard.utilities.basic_soup import Query
+from wordhoard.utilities.colorized_text import colorized_text
 from wordhoard.utilities import caching, cleansing, word_verification
 from wordhoard.utilities.cloudflare_checker import CloudflareVerification
 
 logger = logging.getLogger(__name__)
-
-
-def _colorized_text(r, g, b, text):
-    return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
 
 
 class Synonyms(object):
@@ -103,9 +100,9 @@ class Synonyms(object):
 
     def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(_colorized_text(255, 0, 0,
-                                  'The synonyms query rate limit was reached. The querying process is '
-                                  'entering a temporary hibernation mode.'))
+            print(colorized_text(255, 0, 0,
+                                 'The synonyms query rate limit was reached. The querying process is '
+                                 'entering a temporary hibernation mode.'))
             logger.info('The synonyms query rate limit was reached.')
             self._rate_limit_status = True
 
@@ -173,10 +170,12 @@ class Synonyms(object):
                 synonyms = ([x for x in [synonyms_02, synonyms_03, synonyms_04, synonyms_05]
                              if x is not None])
                 synonyms_results = cleansing.flatten_multidimensional_list(synonyms)
+                # remove excess white spaces from the strings in the list
+                synonyms_results = [x.lstrip().rstrip() for x in synonyms_results]
                 if not synonyms_results:
-                    return _colorized_text(255, 0, 255,
-                                           f'No synonyms were found for the word: {self._word} \n'
-                                           f'Please verify that the word is spelled correctly.')
+                    return colorized_text(255, 0, 255,
+                                          f'No synonyms were found for the word: {self._word} \n'
+                                          f'Please verify that the word is spelled correctly.')
                 else:
                     if self._output_format == 'list':
                         return sorted(set([word.lower() for word in synonyms_results]))
@@ -190,8 +189,8 @@ class Synonyms(object):
                                                  indent=4, ensure_ascii=False)
                         return json_object
         else:
-            return _colorized_text(255, 0, 255,
-                                   f'Please verify that the word {self._word} is spelled correctly.')
+            return colorized_text(255, 0, 255,
+                                  f'Please verify that the word {self._word} is spelled correctly.')
 
     def _query_collins_dictionary(self):
         """

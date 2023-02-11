@@ -154,7 +154,7 @@ As a rule of thumb, changes are obvious fixes if they do not introduce any new f
     <li> Adding logging messages or debugging output. </li>
     <li> Changes to 'metadata' files like .gitignore, build scripts, etc. </li>
     <li> Moving source files from one directory or package to another. </li>
-<ul>
+</ul>
 
 <p>
 Whenever you invoke the "obvious fix" rule, please say so in your commit message: 

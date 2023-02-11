@@ -1,86 +1,82 @@
-class BaseError(Exception):
+#!/usr/bin/env python3
+
+"""
+This Python script provides various Exceptions, which are used in the WordHoard Translation Classes.
+"""
+__author__ = 'John Bumgarner'
+__date__ = 'February 04, 2023'
+__status__ = 'Production'
+__license__ = 'MIT'
+__copyright__ = "Copyright (C) 2023 John Bumgarner"
+
+##################################################################################
+# “AS-IS” Clause
+#
+# Except as represented in this agreement, all work produced by Developer is
+# provided “AS IS”. Other than as provided in this agreement, Developer makes no
+# other warranties, express or implied, and hereby disclaims all implied warranties,
+# including any warranty of merchantability and warranty of fitness for a particular
+# purpose.
+##################################################################################
+
+##################################################################################
+# Date Completed: February 04, 2023
+# Author: John Bumgarner
+#
+# Date Last Revised:
+# Revised by:
+##################################################################################
+
+
+class ElementNotFoundException(Exception):
     """
-    base error structure class
+    The exception is thrown if the requested HTML element was not found in the body element being
+    parsed by BeautifulSoup.
     """
-
-    def __init__(self, val, message):
-        """
-        @param val: actual value
-        @param message: message shown to the user
-        """
-        self.val = val
-        self.message = message
-        super().__init__()
-
-    def __str__(self):
-        return "{} --> {}".format(self.val, self.message)
+    pass
 
 
-class ElementNotFoundInGetRequest(BaseError):
+class InvalidEmailAddressException(Exception):
     """
-    exception thrown if the html element was not found in the body parsed by beautifulsoup
+    This exception is thrown when the email address provided for authentication to the MyMemory Translation
+    service is invalid.
     """
-
-    def __init__(self,
-                 val,
-                 message='Required element was not found in the API response'):
-        super(ElementNotFoundInGetRequest, self).__init__(val, message)
+    pass
 
 
-class LanguageNotSupportedException(BaseError):
+class InvalidLengthException(Exception):
     """
-    exception thrown if the user uses a language that is not supported by the deep_translator
+    This exception is thrown if the provided text exceed the length limit of the the Translator service being used.
     """
-
-    def __init__(self, val, message="There is no support for the chosen language"):
-        super().__init__(val, message)
+    pass
 
 
-class NotValidLength(BaseError):
+class LanguageNotSupportedException(Exception):
     """
-    exception thrown if the provided text exceed the length limit of the translator
+    This exception is thrown when the requested langauge is not supported by the Translator service being used.
     """
-
-    def __init__(self, val, min_chars, max_chars):
-        message = "Text length need to be between {} and {} characters".format(min_chars, max_chars)
-        super(NotValidLength, self).__init__(val, message)
+    pass
 
 
-class TooManyRequests(Exception):
+class QuotaExceededException(Exception):
     """
-    exception thrown if an error occured during the request call, e.g a connection problem.
+    This exception is thrown when the translation quota for a specific time period for the Translator service
+    being used has been exceeded.
     """
-
-    def __init__(self, message="Server Error: You made too many requests to the server. According to google, you are allowed to make 5 requests per second and up to 200k requests per day. You can wait and try again later or you can try the translate_batch function"):
-        self.message = message
-
-    def __str__(self):
-        return self.message
+    pass
 
 
-class TranslationNotFound(BaseError):
+class TooManyRequestsException(Exception):
     """
-    exception thrown if no translation was found for the text provided by the user
+    This exception is thrown when the maximum number of connection requests have been exceeded for a specific time
+    period for the Translator service being used.
     """
-
-    def __init__(self,
-                 val,
-                 message='No translation was found using the current translator. Try another translator?'):
-        super(TranslationNotFound, self).__init__(val, message)
+    pass
 
 
-class RequestError(Exception):
+class RequestException(Exception):
     """
-    exception thrown if an error occurred during the request call, e.g a connection problem.
+    This exception is thrown when an ambiguous exception occurs during a connection to the Translator service
+    being used.
     """
-
-    def __init__(self, message="Request exception can happen due to an api connection error. "
-                               "Please check your connection and try again"):
-        self.message = message
-
-    def __str__(self):
-        return self.message
-
-
-
-
+    pass

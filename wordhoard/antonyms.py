@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: April 04, 2022
+# Date Last Revised: February 04, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -40,14 +40,11 @@ from bs4 import BeautifulSoup
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
 from wordhoard.utilities.basic_soup import Query
+from wordhoard.utilities.colorized_text import colorized_text
 from wordhoard.utilities import caching, cleansing, word_verification
 from wordhoard.utilities.cloudflare_checker import CloudflareVerification
 
 logger = logging.getLogger(__name__)
-
-
-def _colorized_text(r, g, b, text):
-    return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
 
 
 class Antonyms(object):
@@ -107,16 +104,15 @@ class Antonyms(object):
 
     def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(_colorized_text(255, 0, 0,
-                                  'The antonyms query rate limit was reached. The querying process is entering a '
-                                  'temporary hibernation mode.'))
+            print(colorized_text(255, 0, 0,
+                                 'The antonyms query rate limit was reached. The querying process is entering a '
+                                 'temporary hibernation mode.'))
             logger.info('The antonyms query rate limit was reached.')
             self._rate_limit_status = True
 
     def _validate_word(self):
         """
-        This function is designed to validate that the syntax for
-        a string variable is in an acceptable format.
+        This function is designed to validate that the syntax for a string variable is in an acceptable format.
 
         :return: True or False
         :rtype: boolean
@@ -171,6 +167,8 @@ class Antonyms(object):
                 antonyms_02 = self._query_wordhippo()
                 antonyms = ([x for x in [antonyms_01, antonyms_02] if x is not None])
                 antonyms_results = cleansing.flatten_multidimensional_list(antonyms)
+                # remove excess white spaces from the strings in the list
+                antonyms_results = [x.lstrip().rstrip() for x in antonyms_results]
                 if len(antonyms_results) != 0:
                     if self._output_format == 'list':
                         return sorted(set(antonyms_results))
@@ -182,11 +180,11 @@ class Antonyms(object):
                                                  indent=4, ensure_ascii=False)
                         return json_object
                 else:
-                    return _colorized_text(255, 0, 255,
-                                           f'antonyms were found for the word: {self._word} \n'
-                                           f'Please verify that the word is spelled correctly.')
+                    return colorized_text(255, 0, 255,
+                                          f'antonyms were found for the word: {self._word} \n'
+                                          f'Please verify that the word is spelled correctly.')
         else:
-            return _colorized_text(255, 0, 255, f'Please verify that the word {self._word} is spelled correctly.')
+            return colorized_text(255, 0, 255, f'Please verify that the word {self._word} is spelled correctly.')
 
     def _query_thesaurus_com(self):
         """
@@ -268,8 +266,8 @@ class Antonyms(object):
 
     def _query_wordhippo(self):
         """
-        This function queries wordhippo.com for antonyms associated
-        with the specific word provided to the Class Antonyms.
+        This function queries wordhippo.com for antonyms associated with the specific word provided
+        to the Class Antonyms.
 
         :returns:
             antonyms: list of antonyms

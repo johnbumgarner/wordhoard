@@ -50,7 +50,8 @@ class CloudflareVerification(object):
         """
         if self._raw_soup.find(name='p', attrs={'data-translate': 'why_captcha_detail'}):
             p_tag = self._raw_soup.find(name='p', attrs={'data-translate': 'why_captcha_detail'})
-            if p_tag.text == 'Completing the CAPTCHA proves you are a human and gives you temporary access to the web property.':
+            if p_tag.text == 'Completing the CAPTCHA proves you are a human and gives you temporary access to ' \
+                             'the web property.':
                 return True
             else:
                 return False

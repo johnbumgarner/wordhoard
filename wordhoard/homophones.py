@@ -37,6 +37,7 @@ import pickle
 import logging
 import traceback
 from wordhoard.utilities import word_verification
+from wordhoard.utilities.colorized_text import colorized_text
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,6 @@ except OSError as error:
     logger.error(''.join(traceback.format_tb(error.__traceback__)))
     sys.exit(1)
 
-
 # Opening the pickle file that contains a nested list of English
 # language words that have no known homophones.
 try:
@@ -74,10 +74,6 @@ except OSError as error:
     logger.error(f"An OS error occurred when trying to open the file no_homophones_english.pkl")
     logger.error(''.join(traceback.format_tb(error.__traceback__)))
     sys.exit(1)
-
-
-def _colorized_text(r, g, b, text):
-    return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
 
 
 class Homophones(object):
@@ -152,8 +148,8 @@ class Homophones(object):
         global _no_homophones_list
         match = bool(self._word in _no_homophones_list)
         if match:
-            return _colorized_text(255, 0, 255,
-                                   f'No homophones for {self._word}')
+            return colorized_text(255, 0, 255,
+                                  f'No homophones for {self._word}')
 
     def find_homophones(self):
         """

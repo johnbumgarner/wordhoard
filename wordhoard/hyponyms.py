@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Initially Completed: June 12, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: April 04, 2022
+# Date Last Revised: February 04, 2023
 # Revised by: John Bumgarner
 ###################################################################################
 
@@ -39,20 +39,16 @@ from bs4 import BeautifulSoup
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
 from wordhoard.utilities.basic_soup import Query
+from wordhoard.utilities.colorized_text import colorized_text
 from wordhoard.utilities import caching, cleansing, word_verification
 from wordhoard.utilities.cloudflare_checker import CloudflareVerification
 
 logger = logging.getLogger(__name__)
 
 
-def _colorized_text(r, g, b, text):
-    return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
-
-
 def _get_number_of_pages(soup):
     """
-    This function determines the number of pages
-    that contain hyponyms for a specific word.
+    This function determines the number of pages that contain hyponyms for a specific word.
 
     :param soup: BeautifulSoup lxml
 
@@ -145,8 +141,7 @@ class Hyponyms(object):
         """
         Purpose
         ----------
-        This Python class is used to query online repositories for the hyponyms
-        associated with a specific word.
+        This Python class is used to query online repositories for the hyponyms associated with a specific word.
 
         Usage Examples
         ----------
@@ -186,16 +181,15 @@ class Hyponyms(object):
 
     def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(_colorized_text(255, 0, 0,
-                                  'The hyponyms query rate limit was reached. The querying process is entering '
-                                  'a temporary hibernation mode.'))
+            print(colorized_text(255, 0, 0,
+                                 'The hyponyms query rate limit was reached. The querying process is entering '
+                                 'a temporary hibernation mode.'))
             logger.info('The hyponyms query rate limit was reached.')
             self._rate_limit_status = True
 
     def _validate_word(self):
         """
-        This function is designed to validate that the syntax for
-        a string variable is in an acceptable format.
+        This function is designed to validate that the syntax for a string variable is in an acceptable format.
 
         :return: True or False
         :rtype: bool
@@ -287,9 +281,9 @@ class Hyponyms(object):
                         if cloudflare_protection is False:
                             hyponym = _get_hyponyms(soup)
                             if 'no hyponyms found' in hyponym:
-                                return _colorized_text(255, 0, 255,
-                                                       f'No hyponyms were found for the word: {self._word} \n'
-                                                       f'Please verify that the word is spelled correctly.')
+                                return colorized_text(255, 0, 255,
+                                                      f'No hyponyms were found for the word: {self._word} \n'
+                                                      f'Please verify that the word is spelled correctly.')
                             else:
                                 number_of_pages = _get_number_of_pages(soup)
                                 if number_of_pages >= 2:
@@ -327,7 +321,7 @@ class Hyponyms(object):
                                     return output_dict
                                 elif self._output_format == 'json':
                                     json_object = json.dumps({'hyponyms': {self._word: sorted(set([word.lower() for
-                                                                                                  word in hyponym]))}},
+                                                                                                   word in hyponym]))}},
                                                              indent=4, ensure_ascii=False)
                                     return json_object
                         elif cloudflare_protection is True:

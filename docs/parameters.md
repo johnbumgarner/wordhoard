@@ -17,7 +17,7 @@ synonym = Synonyms(search_string='',
                    max_number_of_requests=30,
                    rate_limit_timeout_period=60,
                    user_agent=None,
-                   proxies=None
+                   proxies=None)
 ```
 
 <ul>
@@ -57,11 +57,12 @@ synonym = Synonyms(search_string='',
 </li>
 
 <ul>
-<li><strong>user_agent:</strong>
-	<ul>
-		<li>type: string</li> 
-		<li>default value: None</li> 
-</li>
+    <li><strong>user_agent:</strong>
+	    <ul>
+		    <li>type: string</li> 
+		    <li>default value: None</li> 
+        </ul>
+    </li>
 </ul>
 
 <li><strong>proxies:</strong>
@@ -69,7 +70,7 @@ synonym = Synonyms(search_string='',
 		<li>type: dictionary</li> 
 		<li>Dictionary of proxies to use with Python Requests</li> 
 		<li>default value: None</li> 
-</ul>
+    </ul>
 </li>
 
 </ul>

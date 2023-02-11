@@ -25,8 +25,8 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: September 24, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised:
-# Revised by:
+# Date Last Revised: February 04, 2023
+# Revised by: John Bumgarner
 #
 ##################################################################################
 
@@ -38,8 +38,10 @@ import logging
 import traceback
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
+from deepl.exceptions import AuthorizationException
 from deepl.exceptions import QuotaExceededException
 from deepl.exceptions import TooManyRequestsException
+from wordhoard.utilities.colorized_text import colorized_text
 from wordhoard.utilities.exceptions import LanguageNotSupportedException
 
 logger = logging.getLogger(__name__)
@@ -67,14 +69,11 @@ class Translator(object):
         self.translate_word = handler(limiter(self.translate_word))
         self.reverse_translate = handler(limiter(self.reverse_translate))
 
-    def _colorized_text(self, r, g, b, text):
-        return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
-
-    def _backoff_handler(self, details):
+    def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(self._colorized_text(255, 0, 0,
-                                       'The Deep translation service query rate Limit was reached. The querying '
-                                       'process is entering a temporary hibernation mode.'))
+            print(colorized_text(255, 0, 0,
+                                 'The Deep translation service query rate Limit was reached. The querying '
+                                 'process is entering a temporary hibernation mode.'))
             logger.info('The Deep translation service query rate limit was reached.')
             self._rate_limit_status = True
 
@@ -86,7 +85,7 @@ class Translator(object):
         :return: language
         :rtype: string
         """
-        # Deep Translator supported languages listed in as of 09-22-2021
+        # Deep Translator supported languages listed in as of 02-04-2023
         supported_languages = {'bg': 'bulgarian',
                                'zh': 'chinese',
                                'cs': 'czech',
@@ -99,11 +98,13 @@ class Translator(object):
                                'de': 'german',
                                'el': 'greek',
                                'hu': 'hungarian',
+                               'id': 'indonesian',
                                'it': 'italian',
                                'ja': 'japanese',
-                               'lo': 'laotian',
+                               'ko': 'korean',
                                'lv': 'latvian',
-                               'mt': 'maltese',
+                               'lt': 'lithuanian',
+                               'nb': 'norwegian',
                                'pl': 'polish',
                                'pt': 'portuguese',
                                'ro': 'romanian',
@@ -111,7 +112,9 @@ class Translator(object):
                                'sk': 'slovakian',
                                'sl': 'slovenian',
                                'es': 'spanish',
-                               'sv': 'swedish'}
+                               'sv': 'swedish',
+                               'tr': 'turkish',
+                               'uk': 'ukrainian'}
         try:
             if self._source_language in supported_languages.keys():
                 return self._source_language
@@ -121,15 +124,16 @@ class Translator(object):
                 return None
         except LanguageNotSupportedException as error:
             """
-            An exception is thrown if the user uses a language that is not supported by the translator
+            An exception is thrown if the user uses a language that is not supported by the Deep Translation service.
             """
-            logger.info(f'The language provided is not one of the supported languages for the Deep translation service')
+            logger.info(f'The language provided is not one of the supported languages for the Deep Translation '
+                        f'service.')
             logger.info(f'Requested language: {self._source_language}')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
     def _deep_translate(self, original_language):
         """
-        This function is used to translated a word from it source language, such as Spanish
+        This function is used to translate a word from it source language, such as Spanish
         into American English.
 
         :param original_language: language to translated from
@@ -144,20 +148,35 @@ class Translator(object):
             translated_text = result.text
             return translated_text
 
+        except AuthorizationException as error:
+            """
+            The exception is thrown when the authentication key is not valid for the Deep Translation service.
+            """
+            print(colorized_text(255, 0, 0, 'The authentication key used for Deep Translation service is '
+                                            'invalid.\nPlease verify that the authentication key used is valid.'))
+            logger.error('Authorization Error:')
+            logger.error('An authorization error has occurred when using the Deep Translation service.')
+            logger.error('Please verify that the authentication key used is valid.')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+
         except QuotaExceededException as error:
             """
-            The exception is thrown when the Quota for this billing period has been exceeded.
+            The exception is thrown when the translation quota for this billing period has been exceeded.
             """
-            print(self._colorized_text(255, 0, 0, 'The quota for the the Deep translation service for this billing '
-                                                  'period has been exceeded.'))
-            logger.error('The quota for the the Deep translation service for this billing period has been exceeded.')
+            print(colorized_text(255, 0, 0, 'The quota for the Deep Translation service for this billing '
+                                            'period has been exceeded.'))
+            logger.error('The quota for the the Deep Translation service for this billing period has been exceeded.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
         except TooManyRequestsException as error:
             """
-            The exception is thrown if an error occurred during the request call, e.g a connection problem.
+            This exception is thrown when the maximum number of connection requests have been exceeded for a 
+            specific time for the Deep Translation service.
             """
-            logger.error('Server Error: There has been too many requests to the server.')
+            print(colorized_text(255, 0, 0, 'There has been too many connection requests to the Deep '
+                                            'Translation service.'))
+            logger.error('Connection Request Error:')
+            logger.error('There has been too many connection requests to the Deep Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
         except TypeError as error:
@@ -173,12 +192,12 @@ class Translator(object):
             has the right type but an inappropriate value.
             """
             if str(error) == "auth_key must not be empty":
-                print(self._colorized_text(255, 0, 0, 'An Authorization failure has occurred when using the Deep '
-                                                      'translation service.  Please verify your authentication key'))
+                print(colorized_text(255, 0, 0, 'An Authorization failure has occurred when using the Deep '
+                                                'translation service.  Please verify your authentication key'))
                 logger.error('An Authorization key cannot be empty when using the Deep translation service.')
                 logger.error(''.join(traceback.format_tb(error.__traceback__)))
             elif str(error) == 'text must not be empty':
-                print(self._colorized_text(255, 0, 0, 'An empty string was passed to the Deep translation service.'))
+                print(colorized_text(255, 0, 0, 'An empty string was passed to the Deep translation service.'))
                 logger.error('An empty string was passed to the Deep translation service.')
                 logger.error(''.join(traceback.format_tb(error.__traceback__)))
             else:
@@ -188,8 +207,7 @@ class Translator(object):
 
     def _deep_translate_reverse(self):
         """
-        This function is used to translated a word from it source language, such as Spanish
-        into American English.
+        This function is used to translate a word from it source language, such as Spanish into American English.
 
         :return: translated word
         :rtype: string
@@ -202,20 +220,36 @@ class Translator(object):
             translated_text = result.text
             return translated_text
 
+        except AuthorizationException as error:
+            """
+            The exception is thrown when the authentication key is not valid for the Deep Translation service.
+            """
+            print(colorized_text(255, 0, 0, 'The authentication key used for Deep Translation service is '
+                                            'invalid.\nPlease verify that the authentication key used is '
+                                            'valid.'))
+            logger.error('Authorization Error:')
+            logger.error('An authorization error has occurred when using the Deep Translation service.')
+            logger.error('Please verify that the authentication key used is valid.')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+
         except QuotaExceededException as error:
             """
-            The exception is thrown when the Quota for this billing period has been exceeded.
+            The exception is thrown when the translation quota for this billing period has been exceeded.
             """
-            print(self._colorized_text(255, 0, 0, 'The quota for the the Deep translation service for this billing '
-                                                  'period has been exceeded.'))
-            logger.error('The quota for the the Deep translation service for this billing period has been exceeded.')
+            print(colorized_text(255, 0, 0, 'The quota for the Deep Translation service for this billing '
+                                            'period has been exceeded.'))
+            logger.error('The quota for the Deep Translation service for this billing period has been exceeded.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
         except TooManyRequestsException as error:
             """
-            The exception is thrown if an error occurred during the request call, e.g a connection problem.
+            This exception is thrown when the maximum number of connection requests have been exceeded for a 
+            specific time for the Deep Translation service.
             """
-            logger.error('Server Error: There has been too many requests to the server.')
+            print(colorized_text(255, 0, 0, 'There has been too many connection requests to the Deep '
+                                            'Translation service.'))
+            logger.error('Connection Request Error:')
+            logger.error('There has been too many connection requests to the Deep Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
         except TypeError as error:
@@ -231,12 +265,12 @@ class Translator(object):
             has the right type but an inappropriate value.
             """
             if str(error) == "auth_key must not be empty":
-                print(self._colorized_text(255, 0, 0, 'An Authorization failure has occurred when using the Deep '
-                                                      'translation service.  Please verify your authentication key'))
-                logger.error('An Authorization key cannot be empty when using the Deep translation service.')
+                print(colorized_text(255, 0, 0, 'An Authorization failure has occurred when using the Deep '
+                                                'Translation service.  Please verify your authentication key'))
+                logger.error('An Authorization key cannot be empty when using the Deep Translation service.')
                 logger.error(''.join(traceback.format_tb(error.__traceback__)))
             elif str(error) == 'text must not be empty':
-                print(self._colorized_text(255, 0, 0, 'An empty string was passed to the Deep translation service.'))
+                print(colorized_text(255, 0, 0, 'An empty string was passed to the Deep Translation service.'))
                 logger.error('An empty string was passed to the Deep translation service.')
                 logger.error(''.join(traceback.format_tb(error.__traceback__)))
             else:
@@ -246,8 +280,7 @@ class Translator(object):
 
     def translate_word(self):
         """
-        This function is used to translated a word from it source language, such as Spanish
-        into American English.
+        This function is used to translate a word from it source language, such as Spanish into American English.
 
         :return: translated word
         :rtype: string
@@ -256,17 +289,14 @@ class Translator(object):
         if supported_language:
             return self._deep_translate(supported_language)
         elif not supported_language:
-            print(self._colorized_text(255, 0, 0, f'The language provided is not one of the supported languages '
-                                                  f'for the Deep translation service'))
-            logger.info(f'The language provided is not one of the supported languages for the Deep translation '
-                        f'service.')
-            logger.info(f'Requested language: {self._source_language}')
+            print(colorized_text(255, 0, 0, f'The language provided is not one of the supported languages '
+                                            f'for the Deep Translation service.'))
+            print(colorized_text(255, 0, 0, f'Requested language: {self._source_language}'))
             return None
 
     def reverse_translate(self):
         """
-        This function is used to translated a word from American English into
-        another language, such as Spanish.
+        This function is used to translate a word from American English into another language, such as Spanish.
 
         :return: translated word
         :rtype: string

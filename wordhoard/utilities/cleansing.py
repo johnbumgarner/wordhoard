@@ -35,6 +35,7 @@ def normalize_space(list_of_words):
     This function is designed to remove all leading and
     trailing whitespace surrounding words contained in
     a list.
+
     :param list_of_words: list of words
     :return: list of words
     """
@@ -43,8 +44,7 @@ def normalize_space(list_of_words):
 
 def flatten_multidimensional_list(list_of_lists):
     """
-    This function is used to flatten a multidimensional list into
-    a single list.
+    This function is used to flatten a multidimensional list into a single list.
 
     :return: a multidimensional list that has been flattened
     :rtype: list

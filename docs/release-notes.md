@@ -5,6 +5,48 @@
 This page provides information on all the <strong>WordHoard</strong> releases since inception.
 </p>
 
+## Version 1.5.2
+
+<strong>Date of Release: 02.10.2023</strong><br>
+<strong>Purpose: Code enhancements of the Translator classes and bug fix in the dictionary module</strong>
+
+---
+
+<p align="justify"> 
+Fixed the bug identified in the Issue 14: &nbsp <a href="https://github.com/johnbumgarner/wordhoard/issues/14">find_definitions can returns antonyms</a>
+</p>
+
+<p align="justify"> 
+Redesigned the <i>Expections</i> in these modules:
+</p>
+
+<ul>
+	<li>deep_translator.py/li>
+	<li>google_translator.py</li>
+	<li>mymemory_translator.py</li>
+</ul>
+
+<p align="justify"> 
+Updated the available languages for translations in these modules:
+</p>
+
+<ul>
+	<li>deep_translator.py/li>
+	<li>google_translator.py</li>
+	<li>mymemory_translator.py</li>
+</ul>
+
+<p align="justify"> 
+Added a module for email address verification and one for colorized text for specific 
+error messages sent to the console/terminal. 
+</p>
+
+<p align="justify"> 
+Updated and tested the <a href="https://wordhoard.readthedocs.io/en/latest/dependencies/">dependencies</a> for 
+WordHoard.
+</p>
+
+
 ## Version 1.5.1
 
 <strong>Date of Release: 04.06.2022</strong><br>
@@ -99,7 +141,7 @@ Rate limiting was added to all modules that query online repositories. Additiona
 
 <p align="justify"> 
 One of the original sources being queried was providing questionable synonyms and antonyms. That source was 
-<a href="https://thesaurus.plus">thesaurus.plus</a>, which was remvoed from the query pool.
+<a href="https://thesaurus.plus">thesaurus.plus</a>, which was removed from the query pool.
 </p>
 
 

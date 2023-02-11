@@ -73,7 +73,7 @@ results = synonym.find_synonyms()
 ```
 
 <p align="justify">
-	It is highly recommended that a reliable commercial proxy service is used over the any of the free ones, such as <a href="http://free-proxy.cz">free-proxy.cz</a> or <a href="https://free-proxy-list.net/">Free Proxy List.</a>. 	
+	It is highly recommended that a reliable commercial proxy service is used over free ones, such as <a href="http://free-proxy.cz">free-proxy.cz</a> or <a href="https://free-proxy-list.net/">Free Proxy List.</a>. 	
 </p>
 
 <p align="justify">

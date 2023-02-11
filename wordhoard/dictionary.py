@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: April 04, 2022
+# Date Last Revised: February 04, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -40,14 +40,11 @@ from bs4 import BeautifulSoup
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
 from wordhoard.utilities.basic_soup import Query
+from wordhoard.utilities.colorized_text import colorized_text
 from wordhoard.utilities import caching, cleansing, word_verification
 from wordhoard.utilities.cloudflare_checker import CloudflareVerification
 
 logger = logging.getLogger(__name__)
-
-
-def _colorized_text(r, g, b, text):
-    return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
 
 
 class Definitions(object):
@@ -100,22 +97,21 @@ class Definitions(object):
 
         # Retries the requests after a certain time period has elapsed
         handler = on_exception(expo, RateLimitException, max_time=60, on_backoff=self._backoff_handler)
-        # Establishes a rate limit for making requests to the antonyms repositories
+        # Establishes a rate limit for making requests to the definition repositories
         limiter = limits(calls=max_number_of_requests, period=rate_limit_timeout_period)
         self.find_definitions = handler(limiter(self.find_definitions))
 
     def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(_colorized_text(255, 0, 0,
-                                  'The definition query rate limit was reached. The querying process is entering '
-                                  'a temporary hibernation mode.'))
+            print(colorized_text(255, 0, 0,
+                                 'The definition query rate limit was reached. The querying process is entering '
+                                 'a temporary hibernation mode.'))
             logger.info('The definition query rate limit was reached.')
             self._rate_limit_status = True
 
     def _validate_word(self):
         """
-        This function is designed to validate that the syntax for
-        a string variable is in an acceptable format.
+        This function is designed to validate that the syntax for a string variable is in an acceptable format.
 
         :return: True or False
         :rtype: bool
@@ -147,7 +143,7 @@ class Definitions(object):
         """
         valid_word = self._validate_word()
         if valid_word:
-            check_cache = caching.cache_antonyms(self._word)
+            check_cache = caching.cache_definition(self._word)
             if check_cache[0] is True:
                 definitions = cleansing.flatten_multidimensional_list(check_cache[1])
                 if self._output_format == 'list':
@@ -168,10 +164,12 @@ class Definitions(object):
                 definition_03 = self._query_synonym_com()
                 definitions = ([x for x in [definition_02, definition_03] if x is not None])
                 definitions = cleansing.flatten_multidimensional_list(definitions)
+                # remove excess white spaces from the strings in the list
+                definitions = [regex.sub(' +', " ", x) for x in definitions]
                 if not definitions:
-                    return _colorized_text(255, 0, 255,
-                                           f'No definitions were found for the word: {self._word} \n'
-                                           f'Please verify that the word is spelled correctly.')
+                    return colorized_text(255, 0, 255,
+                                          f'No definitions were found for the word: {self._word} \n'
+                                          f'Please verify that the word is spelled correctly.')
                 else:
                     if self._output_format == 'list':
                         return sorted(set(definitions))
@@ -183,8 +181,8 @@ class Definitions(object):
                                                  indent=4, ensure_ascii=False)
                         return json_object
         else:
-            return _colorized_text(255, 0, 255,
-                                   f'Please verify that the word {self._word} is spelled correctly.')
+            return colorized_text(255, 0, 255,
+                                  f'Please verify that the word {self._word} is spelled correctly.')
 
     def _query_collins_dictionary(self):
         """

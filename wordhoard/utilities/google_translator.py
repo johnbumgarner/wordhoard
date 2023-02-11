@@ -25,8 +25,8 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: September 24, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised:
-# Revised by:
+# Date Last Revised: February 10, 2023
+# Revised by: John Bumgarner
 #
 ##################################################################################
 
@@ -37,17 +37,17 @@ import logging
 import requests
 import traceback
 from bs4 import BeautifulSoup
+from requests.adapters import Retry
 from backoff import on_exception, expo
 from requests.adapters import HTTPAdapter
 from ratelimit import limits, RateLimitException
-from requests.packages.urllib3.util.retry import Retry
-from wordhoard.utilities.exceptions import RequestError
-from wordhoard.utilities.exceptions import NotValidLength
-from wordhoard.utilities.exceptions import TooManyRequests
+from wordhoard.utilities.exceptions import RequestException
+from wordhoard.utilities.colorized_text import colorized_text
 from wordhoard.utilities.user_agents import get_random_user_agent
-from wordhoard.utilities.exceptions import ElementNotFoundInGetRequest
+from wordhoard.utilities.exceptions import InvalidLengthException
+from wordhoard.utilities.exceptions import ElementNotFoundException
+from wordhoard.utilities.exceptions import TooManyRequestsException
 from wordhoard.utilities.exceptions import LanguageNotSupportedException
-
 
 logger = logging.getLogger(__name__)
 
@@ -78,15 +78,15 @@ class Translator(object):
         self.translate_word = handler(limiter(self.translate_word))
         self.reverse_translate = handler(limiter(self.reverse_translate))
 
-    def _colorized_text(self, r, g, b, text):
-        return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
+    # def _colorized_text(self, r, g, b, text):
+    #     return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
 
-    def _backoff_handler(self, details):
+    def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(self._colorized_text(255, 0, 0,
-                                       'The Google translation service query rate Limit was reached. The querying '
-                                       'process is entering a temporary hibernation mode.'))
-            logger.info('The Google translation service query rate limit was reached.')
+            print(colorized_text(255, 0, 0,
+                                 'The Google Translation service query rate Limit was reached. The querying '
+                                 'process is entering a temporary hibernation mode.'))
+            logger.info('The Google Translation service query rate limit was reached.')
             self._rate_limit_status = True
 
     def _google_supported_languages(self):
@@ -97,16 +97,20 @@ class Translator(object):
         :return: language
         :rtype: string
         """
-        # Google Translator supported languages listed as of 09-03-2021
+        # Google Translator supported languages listed as of 02-10-2023
         supported_languages = {'af': 'afrikaans',
                                'sq': 'albanian',
                                'am': 'amharic',
                                'ar': 'arabic',
                                'hy': 'armenian',
+                               'as': 'assamese',
+                               'ay': 'aymara',
                                'az': 'azerbaijani',
+                               'bm': 'bambara',
                                'eu': 'basque',
                                'be': 'belarusian',
                                'bn': 'bengali',
+                               'bho': 'bhojpuri',
                                'bs': 'bosnian',
                                'bg': 'bulgarian',
                                'ca': 'catalan',
@@ -118,11 +122,14 @@ class Translator(object):
                                'hr': 'croatian',
                                'cs': 'czech',
                                'da': 'danish',
+                               'dv': 'dhiveh',
+                               'doi': 'dogri',
                                'nl': 'dutch',
                                'en': 'english',
                                'eo': 'esperanto',
                                'et': 'estonian',
-                               'tl': 'filipino',
+                               'ee': 'ewe',
+                               'fil': 'filipino',
                                'fi': 'finnish',
                                'fr': 'french',
                                'fy': 'frisian',
@@ -130,6 +137,7 @@ class Translator(object):
                                'ka': 'georgian',
                                'de': 'german',
                                'el': 'greek',
+                               'gn': 'guarani',
                                'gu': 'gujarati',
                                'ht': 'haitian creole',
                                'ha': 'hausa',
@@ -140,6 +148,7 @@ class Translator(object):
                                'hu': 'hungarian',
                                'is': 'icelandic',
                                'ig': 'igbo',
+                               'ilo': 'ilocano',
                                'id': 'indonesian',
                                'ga': 'irish',
                                'it': 'italian',
@@ -149,35 +158,47 @@ class Translator(object):
                                'kk': 'kazakh',
                                'km': 'khmer',
                                'rw': 'kinyarwanda',
+                               'gom': 'konkani',
                                'ko': 'korean',
+                               'kri': 'krio',
                                'ku': 'kurdish',
+                               'ckb': 'kurdish (sorani)',
                                'ky': 'kyrgyz',
                                'lo': 'lao',
                                'la': 'latin',
                                'lv': 'latvian',
+                               'ln': 'lingala',
                                'lt': 'lithuanian',
+                               'lg': 'luganda',
                                'lb': 'luxembourgish',
                                'mk': 'macedonian',
+                               'mai': 'maithili',
                                'mg': 'malagasy',
                                'ms': 'malay',
                                'ml': 'malayalam',
                                'mt': 'maltese',
                                'mi': 'maori',
                                'mr': 'marathi',
+                               'mni': 'meiteilon',
+                               'lus': 'mizo',
                                'mn': 'mongolian',
                                'my': 'myanmar',
                                'ne': 'nepali',
                                'no': 'norwegian',
                                'or': 'odia',
+                               'om': 'oromo',
                                'ps': 'pashto',
                                'fa': 'persian',
                                'pl': 'polish',
                                'pt': 'portuguese',
                                'pa': 'punjabi',
+                               'qu': 'quechua',
                                'ro': 'romanian',
                                'ru': 'russian',
                                'sm': 'samoan',
+                               'sa': 'sanskrit',
                                'gd': 'scots gaelic',
+                               'nso': 'sepedi',
                                'sr': 'serbian',
                                'st': 'sesotho',
                                'sn': 'shona',
@@ -190,13 +211,17 @@ class Translator(object):
                                'su': 'sundanese',
                                'sw': 'swahili',
                                'sv': 'swedish',
+                               'tl': 'tagalog',
                                'tg': 'tajik',
                                'ta': 'tamil',
                                'tt': 'tatar',
                                'te': 'telugu',
                                'th': 'thai',
+                               'ti': 'tigrinya',
+                               'ts': 'tsonga',
                                'tr': 'turkish',
                                'tk': 'turkmen',
+                               'ak': 'twi',
                                'uk': 'ukrainian',
                                'ur': 'urdu',
                                'ug': 'uyghur',
@@ -216,10 +241,10 @@ class Translator(object):
                 return None
         except LanguageNotSupportedException as error:
             """
-            The exception is thrown if the user uses a language that is not supported by the translator
+            An exception is thrown if the user uses a language that is not supported by the Google Translation service.
             """
-            logger.info(f'The language provided is not one of the supported languages for the Google '
-                        f'translation service.')
+            logger.info(f'The language provided is not one of the supported languages for the Google Translation '
+                        f'service.')
             logger.info(f'Requested language: {self._source_language}')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
@@ -227,7 +252,7 @@ class Translator(object):
     @staticmethod
     def _requests_retry_session(retries=5,
                                 backoff_factor=0.5,
-                                status_forcelist=(500, 502, 504),
+                                status_forcelist=(500, 502, 503, 504),
                                 session=None,
                                 ):
         session = session or requests.Session()
@@ -245,7 +270,7 @@ class Translator(object):
 
     def _google_translate(self, original_language):
         """
-        This function is used to translated a word from it source language, such as Spanish
+        This function is used to translate a word from it source language, such as Spanish
         into American English.
 
         :param original_language: language to translated from
@@ -261,9 +286,9 @@ class Translator(object):
                                                           proxies=self._proxies)
 
             if response.status_code == 429:
-                raise TooManyRequests()
+                raise TooManyRequestsException()
             elif response.status_code != 200:
-                raise RequestError()
+                raise RequestException()
             else:
                 soup = BeautifulSoup(response.text, 'html.parser')
                 if soup.find('div', {"class": "result-container"}):
@@ -272,30 +297,49 @@ class Translator(object):
                 else:
                     return f'Google could not translate the word {self._str_to_translate}'
 
-        except ElementNotFoundInGetRequest as error:
+        except ElementNotFoundException as error:
             """
-            The exception is thrown if the html element was not found in the body parsed by BeautifulSoup.
+            The exception is thrown if the requested HTML element was not found in the body element being 
+            parsed by BeautifulSoup.
             """
-            logger.error('The required element was not found in the API response')
+            logger.error('The required HTML element was not found in the response parsed by BeautifulSoup.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
-        except NotValidLength as error:
+
+        except InvalidLengthException as error:
             """
-            The exception is thrown if the provided text exceed the length limit of the translator.
+            The exception is thrown if the provided text exceeds the length limit of the Google Translation service.
             """
             logger.error(f'The text length for the word: {self._str_to_translate} exceed the length limit of '
-                         f'Google translation service.')
+                         f'Google Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
-        except TooManyRequests as error:
+
+        except TooManyRequestsException as error:
             """
-            The exception is thrown if an error occurred during the request call, e.g a connection problem.
+            This exception is thrown when the maximum number of connection requests have been exceeded for a 
+            specific time for the Google Translation service.
             """
-            logger.error('Server Error: There has been too many requests to the server.')
+            print(colorized_text(255, 0, 0, 'There has been too many connection requests to the Google '
+                                            'Translation service.'))
+            logger.error('Connection Request Error:')
+            logger.error('There has been too many connection requests to the Google Translation service.')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+
+        except RequestException as error:
+            """
+            This exception is thrown when an ambiguous exception occurs during a connection to the 
+            Google Translation service. Translator service.
+            """
+            print(colorized_text(255, 0, 0, 'An ambiguous connection exception has occurred when contacting the'
+                                            'Google Translation service.  Please check the WordHoard log file '
+                                            'for additional information.'))
+            logger.error('Connection Exception:')
+            logger.error('An ambiguous connection exception has occurred when communicating with the '
+                         'Google Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
     def _google_translate_reverse(self):
         """
-        This function is used to translated a word from American English into
-        another language, such as Spanish.
+        This function is used to translate a word from American English into another language, such as Spanish.
 
         :return: translated word
         :rtype: string
@@ -310,9 +354,9 @@ class Translator(object):
                                                           )
 
             if response.status_code == 429:
-                raise TooManyRequests()
+                raise TooManyRequestsException()
             elif response.status_code != 200:
-                raise RequestError()
+                raise RequestException()
             else:
                 soup = BeautifulSoup(response.text, 'html.parser')
                 if soup.find('div', {"class": "result-container"}):
@@ -320,29 +364,49 @@ class Translator(object):
                     return translated_word.text
                 else:
                     return f'Google could not translate the word {self._str_to_translate}'
-        except ElementNotFoundInGetRequest as error:
+        except ElementNotFoundException as error:
             """
-            The exception is thrown if the html element was not found in the body parsed by BeautifulSoup.
+            This exception is thrown if the requested HTML element was not found in the body element being 
+            parsed by BeautifulSoup.
             """
             logger.error('The required element was not found in the API response')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
-        except NotValidLength as error:
+
+        except InvalidLengthException as error:
             """
-            The exception is thrown if the provided text exceed the length limit of the translator.
+            This exception is thrown if the provided text exceed the length limit of the Google Translator service.
             """
             logger.error(f'The text length for the word: {self._str_to_translate} exceed the length limit of '
                          f'Google translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
-        except TooManyRequests as error:
+
+        except TooManyRequestsException as error:
             """
-            The exception is thrown if an error occurred during the request call, e.g. a connection problem.
+            This exception is thrown when the maximum number of connection requests have been exceeded for a 
+            specific time for the Google Translation service.
             """
-            logger.error('Server Error: There has been too many requests to the server.')
+            print(colorized_text(255, 0, 0, 'There has been too many connection requests to the Google '
+                                            'Translation service.'))
+            logger.error('Connection Request Error:')
+            logger.error('There has been too many connection requests to the Google Translation service.')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+
+        except RequestException as error:
+            """
+            This exception is thrown when an ambiguous exception occurs during a connection to the 
+            Google Translation service. Translator service.
+            """
+            print(colorized_text(255, 0, 0, 'An ambiguous connection exception has occurred when contacting the'
+                                            'Google Translation service.  Please check the WordHoard log file '
+                                            'for additional information.'))
+            logger.error('Connection Exception:')
+            logger.error('An ambiguous connection exception has occurred when communicating with the '
+                         'Google Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
     def translate_word(self):
         """
-        This function is used to translated a word from it source language, such as Spanish
+        This function is used to translate a word from it source language, such as Spanish
         into American English.
 
         :return: translated word
@@ -352,14 +416,14 @@ class Translator(object):
         if supported_language:
             return self._google_translate(supported_language)
         elif not supported_language:
-            logger.info(f'The language provided is not one of the supported languages for the Google '
-                        f'translation service.')
-            logger.info(f'Requested language: {self._source_language}')
+            print(colorized_text(255, 0, 0, f'The language provided is not one of the supported languages '
+                                            f'for the Google Translation service.'))
+            print(colorized_text(255, 0, 0, f'Requested language: {self._source_language}'))
             return None
 
     def reverse_translate(self):
         """
-        This function is used to translated a word from American English into
+        This function is used to translate a word from American English into
         another language, such as Spanish.
 
         :return: translated word

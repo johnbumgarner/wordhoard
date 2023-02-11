@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 """
-This Python script is to validate the syntax of words to query.
+This Python script is used to validate the format of an email address.
 """
 __author__ = 'John Bumgarner'
-__date__ = 'October 15, 2020'
+__date__ = 'February 09, 2023'
 __status__ = 'Production'
 __license__ = 'MIT'
-__copyright__ = "Copyright (C) 2020 John Bumgarner"
+__copyright__ = "Copyright (C) 2023 John Bumgarner"
 
 ##################################################################################
 # “AS-IS” Clause
@@ -21,13 +21,14 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 
 ##################################################################################
 #
-# Date Completed: October 15, 2020
+# Date Completed: February 09, 2023
 # Author: John Bumgarner
 #
-# Date Revised:
+# Date Last Revised:
 # Revised by:
 #
 ##################################################################################
+
 
 ##################################################################################
 # Python imports required for basic operations
@@ -35,22 +36,15 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 import re as regex
 
 
-def validate_word_syntax(word):
+def validate_address(email_address):
     """
-    This function is designed to validate that the syntax for
-    a string variable is acceptable.
+    This function is designed to validate the format of email address provided by
+    an end user.
 
-    English words that only contain alpha characters and hyphens is
-    the acceptable format.
-
-    :param word: string to validate
-    :return: boolean true or false
+    :param email_address: input string
+    :return: boolean
     """
-    if len(word) == 0:
-        return False
+    if regex.fullmatch(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+', email_address):
+        return True
     else:
-        temp = regex.match(r'^[a-zA-Z-\s]*$', word.strip())
-        if temp:
-            return True
-        else:
-            return False
+        return False
