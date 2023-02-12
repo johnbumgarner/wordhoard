@@ -7,7 +7,7 @@
 Below are the languages supported by the <i>DeepL Translate</i> service:
 </p>
 
-<b>Date last updated: 02-04-2023</b>
+<b>Date last updated: 02-12-2023</b>
 
 <style type="text/css">
 
