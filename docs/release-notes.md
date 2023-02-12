@@ -7,7 +7,7 @@ This page provides information on all the <strong>WordHoard</strong> releases si
 
 ## Version 1.5.2
 
-<strong>Date of Release: 02.10.2023</strong><br>
+<strong>Date of Release: 02.12.2023</strong><br>
 <strong>Purpose: Code enhancements of the Translator classes and bug fix in the dictionary module</strong>
 
 ---

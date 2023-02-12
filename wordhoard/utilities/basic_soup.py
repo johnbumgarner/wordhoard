@@ -69,7 +69,7 @@ class Query(object):
     @staticmethod
     def _requests_retry_session(retries=5,
                                 backoff_factor=0.5,
-                                status_force_list=(500, 502, 503, 504),
+                                status_forcelist=(500, 502, 503, 504),
                                 session=None,
                                 ):
 
@@ -80,7 +80,7 @@ class Query(object):
             read=retries,
             connect=retries,
             backoff_factor=backoff_factor,
-            status_forcelist=status_force_list,
+            status_forcelist=status_forcelist,
         )
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)

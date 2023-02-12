@@ -25,7 +25,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: September 24, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: February 09, 2023
+# Date Last Revised: February 12, 2023
 # Revised by: John Bumgarner
 #
 ##################################################################################
@@ -44,6 +44,7 @@ from requests.adapters import HTTPAdapter
 from ratelimit import limits, RateLimitException
 from wordhoard.utilities.exceptions import RequestException
 from wordhoard.utilities.colorized_text import colorized_text
+from wordhoard.utilities.translator_languages import Languages
 from wordhoard.utilities.user_agents import get_random_user_agent
 from wordhoard.utilities.exceptions import InvalidLengthException
 from wordhoard.utilities.exceptions import TooManyRequestsException
@@ -53,22 +54,24 @@ from wordhoard.utilities.email_address_verification import validate_address
 
 logger = logging.getLogger(__name__)
 
-rand_user_agent = get_random_user_agent()
-http_headers = {'user-agent': rand_user_agent}
-
 
 class Translator(object):
 
     def __init__(self,
                  source_language='',
                  str_to_translate='',
-                 email_address=None
+                 email_address=None,
+                 proxies=None
                  ):
 
         self._source_language = source_language
         self._str_to_translate = str_to_translate
         self._url_to_query = 'http://api.mymemory.translated.net/get'
         self._email_address = email_address
+        self._proxies = proxies
+
+        rand_user_agent = get_random_user_agent()
+        http_headers = {'user-agent': rand_user_agent}
         self._headers = http_headers
 
         ratelimit_status = False
@@ -97,164 +100,9 @@ class Translator(object):
         :return: language
         :rtype: string
         """
-        # MyMemory Translator supported languages as of 02-09-2023
-        supported_languages = {'af': 'afrikaans',
-                               'sq': 'albanian',
-                               'am': 'amharic',
-                               'ar': 'arabic',
-                               'hy': 'armenian',
-                               'az': 'azerbaijani',
-                               'bjs': 'bajan',
-                               'rm': 'balkan gipsy',
-                               'eu': 'basque',
-                               'be': 'bielarus',
-                               'bem': 'bemba',
-                               'bn': 'bengali',
-                               'bi': 'bislama',
-                               'bs': 'bosnian',
-                               'br': 'breton',
-                               'bg': 'bulgarian',
-                               'ca': 'catalan',
-                               'cb': 'cebuano',
-                               'ny': 'chichewa',
-                               'ch': 'chamorro',
-                               'zh-CN': 'chinese (simplified)',
-                               'zh-TW': 'chinese (traditional)',
-                               'zdj': 'comorian',
-                               'cop': 'coptic',
-                               'aig': 'creole english (antigua and barbuda)',
-                               'bah': 'creole english (bahamas)',
-                               'gcl': 'creole english (grenadian)',
-                               'gyn': 'creole english (guyanese)',
-                               'jam': 'creole english (jamaican)',
-                               'svc': 'creole english (vincentian)',
-                               'vic': 'creole english (virgin islands)',
-                               'ht': 'creole french (haitian)',
-                               'acf': 'creole french (saint lucian)',
-                               'crs': 'creole french (seselwa)',
-                               'pov': 'creole portuguese (upper guinea)',
-                               'co': 'corsican',
-                               'hr': 'croatian',
-                               'cs': 'czech',
-                               'da': 'danish',
-                               'nl': 'dutch',
-                               'dz': 'dzongkha',
-                               'en': 'english',
-                               'eo': 'esperanto',
-                               'et-EE': 'estonian',
-                               'fn': 'fanagalo',
-                               'fo': 'faroese',
-                               'fi': 'finnish',
-                               'fr': 'french',
-                               'fy': 'frisian',
-                               'gl': 'galician',
-                               'ka': 'georgian',
-                               'de': 'german',
-                               'el': 'greek',
-                               'gu': 'gujarati',
-                               'ha': 'hausa',
-                               'haw': 'hawaiian',
-                               'he': 'hebrew',
-                               'hi': 'hindi',
-                               'hmn': 'hmong',
-                               'hu': 'hungarian',
-                               'is': 'icelandic',
-                               'ig': 'igbo',
-                               'id': 'indonesian',
-                               'kl': 'inuktitut',
-                               'ga': 'irish',
-                               'it': 'italian',
-                               'ja': 'japanese',
-                               'jv': 'javanese',
-                               'kea': 'kabuverdianu',
-                               'kab': 'kabylian',
-                               'kn': 'kannada',
-                               'kk': 'kazakh',
-                               'km': 'khmer',
-                               'rw': 'kinyarwanda',
-                               'rn': 'kirundi',
-                               'ko': 'korean',
-                               'ku': 'kurdish',
-                               'ckb': 'kurdish sorani',
-                               'ky': 'kyrgyz',
-                               'lo': 'lao',
-                               'la': 'latin',
-                               'lv': 'latvian',
-                               'lt': 'lithuanian',
-                               'lb': 'luxembourgish',
-                               'mk': 'macedonian',
-                               'mg': 'malagasy',
-                               'ms': 'malay',
-                               'ml': 'malayalam',
-                               'dv': 'maldivian',
-                               'mt': 'maltese',
-                               'gv': 'manx gaelic',
-                               'mi': 'maori',
-                               'mr': 'marathi',
-                               'mh': 'marshallese',
-                               'men': 'mende',
-                               'mn': 'mongolian',
-                               'my': 'myanmar',
-                               'ne': 'nepali',
-                               'niu': 'niuean',
-                               'no': 'norwegian',
-                               'or': 'odia',
-                               'pau': 'palauan',
-                               'pa': 'panjabi',
-                               'pap': 'papiamentu',
-                               'ps': 'pashto',
-                               'pis': 'pijin',
-                               'fa': 'persian',
-                               'pl': 'polish',
-                               'pt': 'portuguese',
-                               'qu': 'quechua',
-                               'ro': 'romanian',
-                               'ru': 'russian',
-                               'sm': 'samoan',
-                               'gd': 'scots gaelic',
-                               'sr': 'serbian',
-                               'st': 'sesotho',
-                               'sn': 'shona',
-                               'sd': 'sindhi',
-                               'si': 'sinhala',
-                               'sk': 'slovak',
-                               'sl': 'slovenian',
-                               'so': 'somali',
-                               'es': 'spanish',
-                               'su': 'sundanese',
-                               'sw': 'swahili',
-                               'sv': 'swedish',
-                               'de-ch': 'swiss german',
-                               'tl': 'tagalog',
-                               'tg': 'tajik',
-                               'tmh': 'tamashek',
-                               'ta': 'tamil',
-                               'tt': 'tatar',
-                               'te': 'telugu',
-                               'tet': 'tetum',
-                               'th': 'thai',
-                               'bo': 'tibetan',
-                               'ti': 'tigrinya',
-                               'tpi': 'tok pisin',
-                               'tkl': 'tokelauan',
-                               'to': 'tongan',
-                               'tn': 'tswana',
-                               'tr': 'turkish',
-                               'tk': 'turkmen',
-                               'tvl': 'tuvaluan',
-                               'uk': 'ukrainian',
-                               'ppk': 'uma',
-                               'ur': 'urdu',
-                               'ug': 'uyghur',
-                               'uz': 'uzbek',
-                               'vi': 'vietnamese',
-                               'wls': 'wallisian',
-                               'cy': 'welsh',
-                               'wo': 'wolof',
-                               'xh': 'xhosa',
-                               'yi': 'yiddish',
-                               'yo': 'yoruba',
-                               'zu': 'zulu'}
+        languages = Languages()
+        mymemory_languages = languages.mymemory_supported_languages()
+        supported_languages = eval(str(mymemory_languages))
         try:
             if self._source_language in supported_languages.keys():
                 return self._source_language
@@ -311,7 +159,9 @@ class Translator(object):
                                                               params={'langpair': f'{original_language}|en-us',
                                                                       'q': self._str_to_translate,
                                                                       'de': self._email_address},
-                                                              headers=self._headers)
+                                                              headers=self._headers,
+                                                              proxies=self._proxies
+                                                              )
 
                 if response.status_code == 429:
                     raise TooManyRequestsException()
@@ -393,7 +243,9 @@ class Translator(object):
                                                               params={'langpair': f'en-us|{self._source_language}',
                                                                       'q': self._str_to_translate,
                                                                       'de': self._email_address},
-                                                              headers=self._headers)
+                                                              headers=self._headers,
+                                                              proxies=self._proxies
+                                                              )
 
                 if response.status_code == 429:
                     raise TooManyRequestsException()
@@ -472,6 +324,10 @@ class Translator(object):
             print(colorized_text(255, 0, 0, f'The language provided is not one of the supported languages '
                                             f'for the MyMemory Translation service.'))
             print(colorized_text(255, 0, 0, f'Requested language: {self._source_language}'))
+            print(colorized_text(255, 0, 0, f'Please review Mymemory'
+                                            f'https://wordhoard.readthedocs.io/en/latest/supported_languages'
+                                            f'for the Mymemory'))
+
             return None
 
     def reverse_translate(self):

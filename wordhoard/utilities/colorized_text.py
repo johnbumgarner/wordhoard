@@ -30,7 +30,12 @@ __copyright__ = "Copyright (C) 2023 John Bumgarner"
 
 def colorized_text(r, g, b, text):
     """
-    This function provides error messages in the color red.
+    This function provides error messages color.
+
+    For example:
+
+    rgb(255, 0, 0) is displayed as the color red
+    rgb(0, 255, 0) is displayed as the color green
 
     :param r: red color value
     :param g: green color value

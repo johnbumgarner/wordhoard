@@ -25,7 +25,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: September 24, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: February 04, 2023
+# Date Last Revised: February 12, 2023
 # Revised by: John Bumgarner
 #
 ##################################################################################
@@ -42,6 +42,7 @@ from deepl.exceptions import AuthorizationException
 from deepl.exceptions import QuotaExceededException
 from deepl.exceptions import TooManyRequestsException
 from wordhoard.utilities.colorized_text import colorized_text
+from wordhoard.utilities.translator_languages import Languages
 from wordhoard.utilities.exceptions import LanguageNotSupportedException
 
 logger = logging.getLogger(__name__)
@@ -85,36 +86,9 @@ class Translator(object):
         :return: language
         :rtype: string
         """
-        # Deep Translator supported languages listed in as of 02-04-2023
-        supported_languages = {'bg': 'bulgarian',
-                               'zh': 'chinese',
-                               'cs': 'czech',
-                               'da': 'danish',
-                               'nl': 'dutch',
-                               'en': 'english',
-                               'et': 'estonian',
-                               'fi': 'finnish',
-                               'fr': 'french',
-                               'de': 'german',
-                               'el': 'greek',
-                               'hu': 'hungarian',
-                               'id': 'indonesian',
-                               'it': 'italian',
-                               'ja': 'japanese',
-                               'ko': 'korean',
-                               'lv': 'latvian',
-                               'lt': 'lithuanian',
-                               'nb': 'norwegian',
-                               'pl': 'polish',
-                               'pt': 'portuguese',
-                               'ro': 'romanian',
-                               'ru': 'russian',
-                               'sk': 'slovakian',
-                               'sl': 'slovenian',
-                               'es': 'spanish',
-                               'sv': 'swedish',
-                               'tr': 'turkish',
-                               'uk': 'ukrainian'}
+        languages = Languages()
+        deep_languages = languages.deep_supported_languages()
+        supported_languages = eval(str(deep_languages))
         try:
             if self._source_language in supported_languages.keys():
                 return self._source_language

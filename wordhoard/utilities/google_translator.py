@@ -25,7 +25,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: September 24, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: February 10, 2023
+# Date Last Revised: February 12, 2023
 # Revised by: John Bumgarner
 #
 ##################################################################################
@@ -43,6 +43,7 @@ from requests.adapters import HTTPAdapter
 from ratelimit import limits, RateLimitException
 from wordhoard.utilities.exceptions import RequestException
 from wordhoard.utilities.colorized_text import colorized_text
+from wordhoard.utilities.translator_languages import Languages
 from wordhoard.utilities.user_agents import get_random_user_agent
 from wordhoard.utilities.exceptions import InvalidLengthException
 from wordhoard.utilities.exceptions import ElementNotFoundException
@@ -78,9 +79,6 @@ class Translator(object):
         self.translate_word = handler(limiter(self.translate_word))
         self.reverse_translate = handler(limiter(self.reverse_translate))
 
-    # def _colorized_text(self, r, g, b, text):
-    #     return f"\033[38;2;{r};{g};{b}m{text} \033[38;2;255;255;255m"
-
     def _backoff_handler(self):
         if self._rate_limit_status is False:
             print(colorized_text(255, 0, 0,
@@ -97,141 +95,9 @@ class Translator(object):
         :return: language
         :rtype: string
         """
-        # Google Translator supported languages listed as of 02-10-2023
-        supported_languages = {'af': 'afrikaans',
-                               'sq': 'albanian',
-                               'am': 'amharic',
-                               'ar': 'arabic',
-                               'hy': 'armenian',
-                               'as': 'assamese',
-                               'ay': 'aymara',
-                               'az': 'azerbaijani',
-                               'bm': 'bambara',
-                               'eu': 'basque',
-                               'be': 'belarusian',
-                               'bn': 'bengali',
-                               'bho': 'bhojpuri',
-                               'bs': 'bosnian',
-                               'bg': 'bulgarian',
-                               'ca': 'catalan',
-                               'ceb': 'cebuano',
-                               'ny': 'chichewa',
-                               'zh-CN': 'chinese (simplified)',
-                               'zh-TW': 'chinese (traditional)',
-                               'co': 'corsican',
-                               'hr': 'croatian',
-                               'cs': 'czech',
-                               'da': 'danish',
-                               'dv': 'dhiveh',
-                               'doi': 'dogri',
-                               'nl': 'dutch',
-                               'en': 'english',
-                               'eo': 'esperanto',
-                               'et': 'estonian',
-                               'ee': 'ewe',
-                               'fil': 'filipino',
-                               'fi': 'finnish',
-                               'fr': 'french',
-                               'fy': 'frisian',
-                               'gl': 'galician',
-                               'ka': 'georgian',
-                               'de': 'german',
-                               'el': 'greek',
-                               'gn': 'guarani',
-                               'gu': 'gujarati',
-                               'ht': 'haitian creole',
-                               'ha': 'hausa',
-                               'haw': 'hawaiian',
-                               'iw': 'hebrew',
-                               'hi': 'hindi',
-                               'hmn': 'hmong',
-                               'hu': 'hungarian',
-                               'is': 'icelandic',
-                               'ig': 'igbo',
-                               'ilo': 'ilocano',
-                               'id': 'indonesian',
-                               'ga': 'irish',
-                               'it': 'italian',
-                               'ja': 'japanese',
-                               'jw': 'javanese',
-                               'kn': 'kannada',
-                               'kk': 'kazakh',
-                               'km': 'khmer',
-                               'rw': 'kinyarwanda',
-                               'gom': 'konkani',
-                               'ko': 'korean',
-                               'kri': 'krio',
-                               'ku': 'kurdish',
-                               'ckb': 'kurdish (sorani)',
-                               'ky': 'kyrgyz',
-                               'lo': 'lao',
-                               'la': 'latin',
-                               'lv': 'latvian',
-                               'ln': 'lingala',
-                               'lt': 'lithuanian',
-                               'lg': 'luganda',
-                               'lb': 'luxembourgish',
-                               'mk': 'macedonian',
-                               'mai': 'maithili',
-                               'mg': 'malagasy',
-                               'ms': 'malay',
-                               'ml': 'malayalam',
-                               'mt': 'maltese',
-                               'mi': 'maori',
-                               'mr': 'marathi',
-                               'mni': 'meiteilon',
-                               'lus': 'mizo',
-                               'mn': 'mongolian',
-                               'my': 'myanmar',
-                               'ne': 'nepali',
-                               'no': 'norwegian',
-                               'or': 'odia',
-                               'om': 'oromo',
-                               'ps': 'pashto',
-                               'fa': 'persian',
-                               'pl': 'polish',
-                               'pt': 'portuguese',
-                               'pa': 'punjabi',
-                               'qu': 'quechua',
-                               'ro': 'romanian',
-                               'ru': 'russian',
-                               'sm': 'samoan',
-                               'sa': 'sanskrit',
-                               'gd': 'scots gaelic',
-                               'nso': 'sepedi',
-                               'sr': 'serbian',
-                               'st': 'sesotho',
-                               'sn': 'shona',
-                               'sd': 'sindhi',
-                               'si': 'sinhala',
-                               'sk': 'slovak',
-                               'sl': 'slovenian',
-                               'so': 'somali',
-                               'es': 'spanish',
-                               'su': 'sundanese',
-                               'sw': 'swahili',
-                               'sv': 'swedish',
-                               'tl': 'tagalog',
-                               'tg': 'tajik',
-                               'ta': 'tamil',
-                               'tt': 'tatar',
-                               'te': 'telugu',
-                               'th': 'thai',
-                               'ti': 'tigrinya',
-                               'ts': 'tsonga',
-                               'tr': 'turkish',
-                               'tk': 'turkmen',
-                               'ak': 'twi',
-                               'uk': 'ukrainian',
-                               'ur': 'urdu',
-                               'ug': 'uyghur',
-                               'uz': 'uzbek',
-                               'vi': 'vietnamese',
-                               'cy': 'welsh',
-                               'xh': 'xhosa',
-                               'yi': 'yiddish',
-                               'yo': 'yoruba',
-                               'zu': 'zulu'}
+        languages = Languages()
+        google_languages = languages.google_supported_languages()
+        supported_languages = eval(str(google_languages))
         try:
             if self._source_language in supported_languages.keys():
                 return self._source_language
@@ -283,7 +149,8 @@ class Translator(object):
                                                                   'sl': original_language,
                                                                   'q': self._str_to_translate},
                                                           headers=self._headers,
-                                                          proxies=self._proxies)
+                                                          proxies=self._proxies
+                                                          )
 
             if response.status_code == 429:
                 raise TooManyRequestsException()

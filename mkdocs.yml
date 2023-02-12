@@ -19,10 +19,18 @@ nav:
     - Parameters: parameters.md
     - Output Formats: output_formats.md
     - Additional Features: features.md
-    - Language Translations: language_translation.md
+    - Translations:
+      - Translation Overview: translations/translation_overview.md
+      - Translation Modules: 
+        - Google Translate: translations/google_translate_module.md
+        - DeepL Translator: translations/deepl_translator_module.md
+        - Mymemory Translator: translations/mymemory_translator_module.md
+      - Supported Languages: 
+        - DeepL Languages: translations/deepl_supported_translation_languages.md
+        - Google Languages: translations/google_supported_translation_languages.md
+        - Mymemory Languages: translations/mymemory_supported_translation_languages.md
     - Dependencies: dependencies.md
     - Limitations: limitations.md
-    # - Troubleshooting: troubleshooting.md
     - Code of Conduct: code_of_conduct.md
     - Contributing: contributing.md
     - License: license.md
