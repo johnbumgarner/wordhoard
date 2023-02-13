@@ -17,11 +17,11 @@ Fixed the bug identified in the Issue 14: &nbsp <a href="https://github.com/john
 </p>
 
 <p align="justify"> 
-Redesigned the <i>Expections</i> in these modules:
+Redesigned the <i>Exceptions</i> in these modules:
 </p>
 
 <ul>
-	<li>deep_translator.py/li>
+	<li>deep_translator.py</li>
 	<li>google_translator.py</li>
 	<li>mymemory_translator.py</li>
 </ul>
@@ -31,7 +31,7 @@ Updated the available languages for translations in these modules:
 </p>
 
 <ul>
-	<li>deep_translator.py/li>
+	<li>deep_translator.py</li>
 	<li>google_translator.py</li>
 	<li>mymemory_translator.py</li>
 </ul>
