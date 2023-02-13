@@ -1,4 +1,4 @@
-<h1> <strong>Basic Usage</strong></h1>
+
 ---
 
 <p align="justify"> 
