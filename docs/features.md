@@ -76,10 +76,6 @@ results = synonym.find_synonyms()
 	It is highly recommended that a reliable commercial proxy service is used over free ones, such as <a href="http://free-proxy.cz">free-proxy.cz</a> or <a href="https://free-proxy-list.net/">Free Proxy List.</a>. 	
 </p>
 
-<p align="justify">
-There is a known bug in <i>urllib3</i> between versions 1.26.x, which will raise different proxy errors. <strong>WordHoard</strong> will be using <i>urllib3</i> version 1.25.11 until the bug is fixed in a future release.  
-</p>
-
 
 ### User Agents
 
