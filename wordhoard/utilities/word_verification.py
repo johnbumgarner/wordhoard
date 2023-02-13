@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 """
-This Python script is to validate the syntax of words to query.
+This Python script is designed to validate the syntax of word in a query
+meets a format requirement.
 """
 __author__ = 'John Bumgarner'
 __date__ = 'October 15, 2020'

@@ -2,7 +2,7 @@
 
 """
 This Python script is used to translate a specific word from it source language,
-such as Spanish into American English using the Google translation service.
+such as Spanish into American English using the Google Translation service.
 """
 __author__ = 'John Bumgarner'
 __date__ = 'September 24, 2021'
@@ -194,7 +194,7 @@ class Translator(object):
         except RequestException as error:
             """
             This exception is thrown when an ambiguous exception occurs during a connection to the 
-            Google Translation service. Translator service.
+            Google Translation service.
             """
             print(colorized_text(255, 0, 0, 'An ambiguous connection exception has occurred when contacting the'
                                             'Google Translation service.  Please check the WordHoard log file '
@@ -261,7 +261,7 @@ class Translator(object):
         except RequestException as error:
             """
             This exception is thrown when an ambiguous exception occurs during a connection to the 
-            Google Translation service. Translator service.
+            Google Translation service.
             """
             print(colorized_text(255, 0, 0, 'An ambiguous connection exception has occurred when contacting the'
                                             'Google Translation service.  Please check the WordHoard log file '
@@ -286,6 +286,8 @@ class Translator(object):
             print(colorized_text(255, 0, 0, f'The language provided is not one of the supported languages '
                                             f'for the Google Translation service.'))
             print(colorized_text(255, 0, 0, f'Requested language: {self._source_language}'))
+            print(colorized_text(255, 0, 0, f'Please review the languages supported by the Google Translation service\n'
+                                            f'https://wordhoard.readthedocs.io/en/latest/translations/google_supported_translation_languages/'))
             return None
 
     def reverse_translate(self):

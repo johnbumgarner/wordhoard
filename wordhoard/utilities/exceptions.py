@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This Python script provides various Exceptions, which are used in the WordHoard Translation Classes.
+This Python script provides various Exceptions Classes, which are used in the WordHoard Translation modules.
 """
 __author__ = 'John Bumgarner'
 __date__ = 'February 04, 2023'

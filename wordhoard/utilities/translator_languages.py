@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-This Python script provides the supported languages for the translation services used
-by WordHoard.
+This Python script provides the supported languages for the translation modules
+embedded into WordHoard.
 """
 __author__ = 'John Bumgarner'
 __date__ = 'February 12, 2023'
@@ -34,7 +34,7 @@ class Languages:
     @staticmethod
     def deep_supported_languages():
         """
-        This function returns the supported languages for the Deep translation service.
+        This function returns the supported languages for the Deep Translation service.
 
         :return: languages
         :rtype: string
@@ -75,7 +75,7 @@ class Languages:
     @staticmethod
     def google_supported_languages():
         """
-        This function returns the supported languages for the Google Translator service.
+        This function returns the supported languages for the Google Translation service.
 
         :return: languages
         :rtype: string
@@ -221,7 +221,7 @@ class Languages:
     @staticmethod
     def mymemory_supported_languages():
         """
-        This function returns the supported languages for the MyMemory Translator services.
+        This function returns the supported languages for the MyMemory Translation service.
 
         :return: languages
         :rtype: string

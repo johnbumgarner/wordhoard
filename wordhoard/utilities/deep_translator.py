@@ -2,7 +2,7 @@
 
 """
 This Python script is used to translate a specific word from it source language,
-such as Spanish into American English using the Deep translation service.
+such as Spanish into American English using the Deep Translation service.
 """
 __author__ = 'John Bumgarner'
 __date__ = 'September 24, 2021'
@@ -266,6 +266,8 @@ class Translator(object):
             print(colorized_text(255, 0, 0, f'The language provided is not one of the supported languages '
                                             f'for the Deep Translation service.'))
             print(colorized_text(255, 0, 0, f'Requested language: {self._source_language}'))
+            print(colorized_text(255, 0, 0, f'Please review the languages supported by the Deep Translate service\n'
+                                            f'https://wordhoard.readthedocs.io/en/latest/translations/deepl_supported_translation_languages/'))
             return None
 
     def reverse_translate(self):

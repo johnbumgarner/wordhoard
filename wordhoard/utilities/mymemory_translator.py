@@ -2,7 +2,7 @@
 
 """
 This Python script is used to translate a specific word from it source language,
-such as Spanish into American English using the MyMemory translation service.
+such as Spanish into American English using the MyMemory Translation service.
 """
 __author__ = 'John Bumgarner'
 __date__ = 'September 24, 2021'
@@ -116,7 +116,7 @@ class Translator(object):
              service.
             """
             logger.info(f'The language provided is not one of the supported languages of the MyMemory '
-                        f'translation service.')
+                        f'Translation service.')
             logger.info(f'Requested language: {self._source_language}')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
@@ -151,7 +151,7 @@ class Translator(object):
         try:
             if validate_address(self._email_address) is False:
                 print(colorized_text(255, 0, 0,
-                                     'A valid email address is required to use the MyMemory translation '
+                                     'A valid email address is required to use the MyMemory Translation '
                                      'service.'))
                 sys.exit(1)
             elif validate_address(self._email_address) is True:
@@ -187,9 +187,9 @@ class Translator(object):
             not the validity of the address provided.
             """
             print(colorized_text(255, 0, 0, 'The email address provided for authentication to the MyMemory '
-                                            'Translation MyMemory is invalid.'))
+                                            'Translation service is invalid.'))
             logger.error('Invalid Email Address Error:')
-            logger.error('The email address provided for authentication to the MyMemory Translation MyMemory '
+            logger.error('The email address provided for authentication to the MyMemory Translation service '
                          'is invalid.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
@@ -198,7 +198,7 @@ class Translator(object):
             This exception is thrown if the provided text exceed the length limit of the MyMemory Translator service.
             """
             logger.error(f'The text length for the word: {self._str_to_translate} exceed the length limit of '
-                         f'MyMemory translation service.')
+                         f'MyMemory Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
         except TooManyRequestsException as error:
@@ -235,7 +235,7 @@ class Translator(object):
         try:
             if validate_address(self._email_address) is False:
                 print(colorized_text(255, 0, 0,
-                                     'A valid email address is required to use the MyMemory translation '
+                                     'A valid email address is required to use the MyMemory Translation '
                                      'service.'))
                 sys.exit(1)
             elif validate_address(self._email_address) is True:
@@ -271,9 +271,9 @@ class Translator(object):
             not the validity of the address provided.
             """
             print(colorized_text(255, 0, 0, 'The email address provided for authentication to the MyMemory '
-                                            'Translation MyMemory is invalid.'))
+                                            'Translation is invalid.'))
             logger.error('Invalid Email Address Error:')
-            logger.error('The email address provided for authentication to the MyMemory Translation MyMemory '
+            logger.error('The email address provided for authentication to the MyMemory Translation '
                          'is invalid.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
             sys.exit(1)
@@ -307,7 +307,7 @@ class Translator(object):
                                             'for additional information.'))
             logger.error('Connection Exception:')
             logger.error('An ambiguous connection exception has occurred when communicating with the '
-                         'MyMemoryTranslation service.')
+                         'MyMemory Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
     def translate_word(self):
@@ -324,9 +324,8 @@ class Translator(object):
             print(colorized_text(255, 0, 0, f'The language provided is not one of the supported languages '
                                             f'for the MyMemory Translation service.'))
             print(colorized_text(255, 0, 0, f'Requested language: {self._source_language}'))
-            print(colorized_text(255, 0, 0, f'Please review Mymemory'
-                                            f'https://wordhoard.readthedocs.io/en/latest/supported_languages'
-                                            f'for the Mymemory'))
+            print(colorized_text(255, 0, 0, f'Please review the languages supported by the MyMemory Translate service\n'
+                                            f'https://wordhoard.readthedocs.io/en/latest/translations/mymemory_supported_translation_languages/'))
 
             return None
 

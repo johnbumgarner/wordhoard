@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This Python script provide colorized text in error messages thrown by WordHoard.
+This Python script provide colorized text in the error messages thrown by WordHoard.
 """
 __author__ = 'John Bumgarner'
 __date__ = 'February 04, 2023'
