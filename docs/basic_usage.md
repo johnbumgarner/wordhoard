@@ -1,5 +1,6 @@
-
+<h1> <strong>Basic Usage</strong> </h1>
 ---
+
 
 <p align="justify"> 
 <strong>WordHoard</strong> is a <i>Python 3</i> module that was designed using the rules of simplicity, which try to limit overly complex configuration requirements and keeps backend user intervention to the bare minimum.  
