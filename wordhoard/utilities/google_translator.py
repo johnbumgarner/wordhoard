@@ -21,13 +21,11 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 ##################################################################################
 
 ##################################################################################
-#
 # Date Completed: September 24, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: February 12, 2023
+# Date Last Revised: March 04, 2023
 # Revised by: John Bumgarner
-#
 ##################################################################################
 
 ##################################################################################
@@ -40,6 +38,7 @@ from bs4 import BeautifulSoup
 from requests.adapters import Retry
 from backoff import on_exception, expo
 from requests.adapters import HTTPAdapter
+from typing import Dict, Optional, Tuple, Union
 from ratelimit import limits, RateLimitException
 from wordhoard.utilities.exceptions import RequestException
 from wordhoard.utilities.colorized_text import colorized_text
@@ -56,9 +55,9 @@ logger = logging.getLogger(__name__)
 class Translator(object):
 
     def __init__(self,
-                 source_language='',
-                 str_to_translate='',
-                 proxies=None):
+                 source_language: str = '',
+                 str_to_translate: str = '',
+                 proxies: Optional[Dict[str, str]] = None):
 
         self._source_language = source_language
         self._str_to_translate = str_to_translate
@@ -87,7 +86,7 @@ class Translator(object):
             logger.info('The Google Translation service query rate limit was reached.')
             self._rate_limit_status = True
 
-    def _google_supported_languages(self):
+    def _google_supported_languages(self) -> Union[str, None]:
         """
         This function determines if the requested source language is
         one supported languages for the Google Translator.
@@ -116,10 +115,10 @@ class Translator(object):
 
     # reference: https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html#module-urllib3.util.retry
     @staticmethod
-    def _requests_retry_session(retries=5,
-                                backoff_factor=0.5,
-                                status_forcelist=(500, 502, 503, 504),
-                                session=None,
+    def _requests_retry_session(retries: int = 5,
+                                backoff_factor: float = 0.5,
+                                status_forcelist: Tuple[int] = (500, 502, 503, 504),
+                                session: requests.sessions.Session = None,
                                 ):
         session = session or requests.Session()
         retry = Retry(
@@ -134,7 +133,7 @@ class Translator(object):
         session.mount('https://', adapter)
         return session
 
-    def _google_translate(self, original_language):
+    def _google_translate(self, original_language: str) -> Union[str, None]:
         """
         This function is used to translate a word from it source language, such as Spanish
         into American English.
@@ -153,6 +152,8 @@ class Translator(object):
                                                           )
 
             if response.status_code == 429:
+                # HTTP 429 -- Too Many Requests response status code indicates the user has
+                # sent too many requests in a given amount of time ("rate limiting")
                 raise TooManyRequestsException()
             elif response.status_code != 200:
                 raise RequestException()
@@ -162,7 +163,8 @@ class Translator(object):
                     translated_word = soup.find('div', {"class": "result-container"})
                     return translated_word.text
                 else:
-                    return f'Google could not translate the word {self._str_to_translate}'
+                    print(colorized_text(255, 0, 0, f'Google could not translate the word {self._str_to_translate}'))
+                    return None
 
         except ElementNotFoundException as error:
             """
@@ -204,7 +206,7 @@ class Translator(object):
                          'Google Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
-    def _google_translate_reverse(self):
+    def _google_translate_reverse(self) -> Union[str, None]:
         """
         This function is used to translate a word from American English into another language, such as Spanish.
 
@@ -221,6 +223,8 @@ class Translator(object):
                                                           )
 
             if response.status_code == 429:
+                # HTTP 429 -- Too Many Requests response status code indicates the user has
+                # sent too many requests in a given amount of time ("rate limiting")
                 raise TooManyRequestsException()
             elif response.status_code != 200:
                 raise RequestException()
@@ -230,7 +234,9 @@ class Translator(object):
                     translated_word = soup.find('div', {"class": "result-container"})
                     return translated_word.text
                 else:
-                    return f'Google could not translate the word {self._str_to_translate}'
+                    print(colorized_text(255, 0, 0, f'Google could not translate the word {self._str_to_translate}'))
+                    return None
+
         except ElementNotFoundException as error:
             """
             This exception is thrown if the requested HTML element was not found in the body element being 
@@ -271,7 +277,7 @@ class Translator(object):
                          'Google Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
-    def translate_word(self):
+    def translate_word(self) -> Union[str, None]:
         """
         This function is used to translate a word from it source language, such as Spanish
         into American English.
@@ -290,7 +296,7 @@ class Translator(object):
                                             f'https://wordhoard.readthedocs.io/en/latest/translations/google_supported_translation_languages/'))
             return None
 
-    def reverse_translate(self):
+    def reverse_translate(self) -> str:
         """
         This function is used to translate a word from American English into
         another language, such as Spanish.

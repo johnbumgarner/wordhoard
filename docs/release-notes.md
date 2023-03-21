@@ -5,6 +5,48 @@
 This page provides information on all the <strong>WordHoard</strong> releases since inception.
 </p>
 
+## Version 1.5.3
+
+<strong>Date of Release: 03.21.2023</strong><br>
+<strong>Purpose: Code enhancements to improve performance when querying online repositories and to obtain part of speech category for word being queried.</strong>
+
+---
+
+<p align="justify"> 
+	A <i>ThreadPoolExecutor function</i> and more targeted word extraction was added to the following modules. The 
+	<i>ThreadPoolExecutor</i> decreases collection time by almost 50% in some cases.  The targeted extraction is designed to find more relevant antonyms, synonyms and definitions. 
+</p>
+
+<ul>
+	<li>antonyms</li>
+	<li>dictionary</li>
+	<li>synonyms</li>
+</ul>
+
+
+<p align="justify"> 
+	Type hinting was added to all functions within all query modules and all utilities modules.  
+</p>
+
+
+<p align="justify"> 
+	Additional Cloudflare verification was added to the query modules. This verification allowed the source 
+	<a href="https://www.collinsdictionary.com">Collins Dictionary</a> to be readded to the list of repositories being queried. 
+</p>
+
+
+## Version 1.5.2
+
+<strong>Date of Release: 02.12.2023</strong><br>
+<strong>Purpose: Code enhancements of the Translator classes and bug fix in the dictionary module</strong>
+
+---
+
+<p align="justify"> 
+Fixed the bug identified in the Issue 14: &nbsp <a href="https://github.com/johnbumgarner/wordhoard/issues/14">find_definitions can returns antonyms</a>
+</p>
+
+
 ## Version 1.5.2
 
 <strong>Date of Release: 02.12.2023</strong><br>

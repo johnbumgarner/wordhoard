@@ -20,13 +20,11 @@ __copyright__ = "Copyright (C) 2023 John Bumgarner"
 ##################################################################################
 
 ##################################################################################
-#
 # Date Completed: February 09, 2023
 # Author: John Bumgarner
 #
-# Date Last Revised:
-# Revised by:
-#
+# Date Last Revised: February 19, 2023
+# Revised by: John Bumgarner
 ##################################################################################
 
 ##################################################################################
@@ -34,8 +32,7 @@ __copyright__ = "Copyright (C) 2023 John Bumgarner"
 ##################################################################################
 import re as regex
 
-
-def validate_address(email_address):
+def validate_address(email_address: str) -> bool:
     """
     This function is designed to validate the format of email address provided by
     an end user.

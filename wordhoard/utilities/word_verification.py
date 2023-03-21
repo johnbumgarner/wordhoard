@@ -21,13 +21,11 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 ##################################################################################
 
 ##################################################################################
-#
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Revised:
-# Revised by:
-#
+# Date Revised: February 19, 2023
+# Revised by: John Bumgarner
 ##################################################################################
 
 ##################################################################################
@@ -36,7 +34,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 import re as regex
 
 
-def validate_word_syntax(word):
+def validate_word_syntax(word: str) -> bool:
     """
     This function is designed to validate that the syntax for
     a string variable is acceptable.

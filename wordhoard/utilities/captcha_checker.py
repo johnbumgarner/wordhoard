@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-This Python script is used to verify the HREF being queried is
-protected by a captcha that requires human interaction to bypass.
+This Python script is used to verify the webpage being queried is either
+protected or not protected by a captcha that requires human interaction to bypass.
 """
 __author__ = 'John Bumgarner'
 __date__ = 'December 07, 2021'
@@ -24,13 +24,14 @@ __copyright__ = 'Copyright (C) 2021 John Bumgarner'
 # Date Completed: December 07, 2021
 # Author: John Bumgarner
 #
-# Date Revised:
-# Revised by:
+# Date Revised: February 25, 2023
+# Revised by: John Bumgarner
 ##################################################################################
 
 ##################################################################################
 # Python imports required for basic operations
 ##################################################################################
+import bs4
 import logging
 
 logger = logging.getLogger(__name__)
@@ -42,10 +43,10 @@ class CaptchaVerification(object):
     """
 
     def __init__(self, url, soup):
-        self._url = url
-        self._raw_soup = soup
+        self._url: str = url
+        self._raw_soup: bs4.BeautifulSoup = soup
 
-    def _check_div_tag(self):
+    def _check_div_tag(self) -> bool:
         """
         This function is designed to query for the existence
         of specific tag known to be commonly related to a
@@ -61,7 +62,7 @@ class CaptchaVerification(object):
         elif captcha_protected_div_tag is False:
             return False
 
-    def _check_title_tag(self):
+    def _check_title_tag(self)  -> bool:
         """
         This function is designed to query for the existence
         of specific captcha related text contained in a title tag.
@@ -76,7 +77,7 @@ class CaptchaVerification(object):
         else:
             return False
 
-    def _check_h2_tag(self):
+    def _check_h2_tag(self) -> bool:
         """
         This function is designed to query for the existence
         of specific captcha related text contained in an H2 tag.
@@ -92,7 +93,7 @@ class CaptchaVerification(object):
             else:
                 return False
 
-    def captcha_protected_url(self):
+    def captcha_protected_url(self)  -> bool:
         """
         This function is designed to query specific elements, which
         will determine if a webpage is protected by a captcha.

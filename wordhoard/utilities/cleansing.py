@@ -20,17 +20,15 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 ##################################################################################
 
 ##################################################################################
-#
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Revised:
-# Revised by:
-#
+# Date Revised: March 04, 2023
+# Revised by: John Bumgarner
 ##################################################################################
+from typing import List, Union
 
-
-def normalize_space(list_of_words):
+def normalize_space(list_of_words: List) -> List:
     """
     This function is designed to remove all leading and
     trailing whitespace surrounding words contained in
@@ -39,18 +37,29 @@ def normalize_space(list_of_words):
     :param list_of_words: list of words
     :return: list of words
     """
-    return ' '.join(list_of_words.split()).lower()
+    normalize_list = [x.strip() for x in list_of_words]
+    return normalize_list
 
+def remove_excess_whitespace(input_string: str) -> str:
+    """
+    This function uses the join() and split() methods together to remove duplicate spaces
+    and newline characters from a string.
 
-def flatten_multidimensional_list(list_of_lists):
+    :param input_string:
+    :return: str
+    """
+    return ' '.join(input_string.split())
+
+def flatten_multidimensional_list(list_of_lists: Union[List[str], List[List[str]]]) -> List:
     """
     This function is used to flatten a multidimensional list into a single list.
 
     :return: a multidimensional list that has been flattened
     :rtype: list
     """
-    if len(list_of_lists) == 0:
+    if any(isinstance(i, List) for i in list_of_lists):
+        flattened_list = [element for sub_list in list_of_lists for element in sub_list]
+        return flattened_list
+    else:
         return list_of_lists
-    if isinstance(list_of_lists[0], list):
-        return flatten_multidimensional_list(list_of_lists[0]) + flatten_multidimensional_list(list_of_lists[1:])
-    return list_of_lists[:1] + flatten_multidimensional_list(list_of_lists[1:])
+

@@ -20,13 +20,11 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 ##################################################################################
 
 ##################################################################################
-#
 # Date Completed: September 12, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised:
-# Revised by:
-#
+# Date Last Revised: March 04, 2023
+# Revised by: John Bumgarner
 ##################################################################################
 
 ##################################################################################
@@ -38,6 +36,7 @@ import random
 import pickle
 import logging
 import traceback
+from typing import Union
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ except OSError as error:
     sys.exit(1)
 
 
-def get_random_user_agent():
+def get_random_user_agent() -> str:
     """
     This function obtains a random user agent from a
     dictionary of available agents.
@@ -79,7 +78,7 @@ def get_random_user_agent():
     return random_value
 
 
-def get_specific_user_agent(requested_key):
+def get_specific_user_agent(requested_key: str) -> Union[str, None]:
     """
     This function obtains a specific user agent type from a
     dictionary of available agents. The available agents types
@@ -98,7 +97,6 @@ def get_specific_user_agent(requested_key):
     :return: random user agent
     :rtype: string
     """
-
     # available user agent types
     user_agent_keys = {'chrome macOS': 'chrome_mac_os_x', 'chrome windows': 'chrome_windows_10',
                        'firefox macOS': 'firefox_mac_os_x', 'firefox windows': 'firefox_windows_10',
@@ -113,3 +111,4 @@ def get_specific_user_agent(requested_key):
     else:
         logger.error('The requested user agent was not found in the list of available agents.')
         logger.info(f'Agent requested: {requested_key}')
+        return None

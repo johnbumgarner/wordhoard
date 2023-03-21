@@ -24,15 +24,19 @@ __copyright__ = "Copyright (C) 2023 John Bumgarner"
 # Date Completed: February 12, 2023
 # Author: John Bumgarner
 #
-# Date Last Revised:
-# Revised by:
+# Date Last Revised: February 28, 2023
+# Revised by: John Bumgarner
 ##################################################################################
 
+##################################################################################
+# Python imports required for basic operations
+##################################################################################
+from typing import Dict
 
 class Languages:
 
     @staticmethod
-    def deep_supported_languages():
+    def deep_supported_languages() -> Dict[str, str]:
         """
         This function returns the supported languages for the Deep Translation service.
 
@@ -73,7 +77,7 @@ class Languages:
         return supported_languages
 
     @staticmethod
-    def google_supported_languages():
+    def google_supported_languages() -> Dict[str, str]:
         """
         This function returns the supported languages for the Google Translation service.
 
@@ -219,7 +223,7 @@ class Languages:
         return supported_languages
 
     @staticmethod
-    def mymemory_supported_languages():
+    def mymemory_supported_languages() -> Dict[str, str]:
         """
         This function returns the supported languages for the MyMemory Translation service.
 

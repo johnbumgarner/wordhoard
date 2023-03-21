@@ -10,7 +10,27 @@ __status__ = 'Quality Assurance'
 __license__ = 'MIT'
 __copyright__ = "Copyright (C) 2021 John Bumgarner"
 
+##################################################################################
+# Date Completed: September 20, 2020
+# Author: John Bumgarner
+#
+# Date Last Revised:
+# Revised by:
+##################################################################################
 
+##################################################################################
+# “AS-IS” Clause
+#
+# Except as represented in this agreement, all work produced by Developer is
+# provided “AS IS”. Other than as provided in this agreement, Developer makes no
+# other warranties, express or implied, and hereby disclaims all implied warranties,
+# including any warranty of merchantability and warranty of fitness for a particular
+# purpose.
+##################################################################################
+
+##################################################################################
+# Python imports required for basic operations
+##################################################################################
 import unittest
 import warnings
 from wordhoard import Hyponyms

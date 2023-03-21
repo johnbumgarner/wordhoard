@@ -23,7 +23,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: February 10, 2023
+# Date Last Revised: March 18, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -35,8 +35,8 @@ import logging
 import requests
 import warnings
 import traceback
-from bs4 import BeautifulSoup
 from requests.adapters import Retry
+from typing import Dict, Optional, Tuple
 from requests.adapters import HTTPAdapter
 from urllib3.exceptions import MaxRetryError
 from wordhoard.utilities.colorized_text import colorized_text
@@ -59,22 +59,27 @@ http_headers = {'user-agent': rand_user_agent}
 
 class Query(object):
 
-    def __init__(self, url_to_scrape='', user_agent=None, proxies=None):
+    def __init__(self,
+                 url_to_scrape: str = '',
+                 user_agent: Optional[str] = None,
+                 proxies: Optional[Dict[str, str]] = None):
 
-        self._url_to_scrape = url_to_scrape
+        # Reformat complex words, such as 'artificial intelligence' contained in a URL
+        # with a string.replace. The new format is 'artificial%20intelligence', which
+        # can be passed Python Requests as a quoted string
+        self._url_to_scrape = url_to_scrape.replace(" ", "%20")
+
         self._proxies = proxies
         self._user_agent = user_agent
 
     # reference: https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html#module-urllib3.util.retry
     @staticmethod
-    def _requests_retry_session(retries=5,
-                                backoff_factor=0.5,
-                                status_forcelist=(500, 502, 503, 504),
-                                session=None,
+    def _requests_retry_session(retries: int = 5,
+                                backoff_factor: float = 0.5,
+                                status_forcelist: Tuple[int] = (500, 502, 503, 504),
+                                session: requests.sessions.Session = None,
                                 ):
-
         session = session or requests.Session()
-
         retry = Retry(
             total=retries,
             read=retries,
@@ -90,38 +95,38 @@ class Query(object):
     ###################################################################
     # Open a HTTP connection and harvest HTML from initial source URL
     ###################################################################
-    def get_single_page_html(self):
+    def get_website_html(self) -> requests.models.Response:
         response = ''
         try:
-            if self._proxies is None:
-                if self._user_agent is None:
-                    response = self._requests_retry_session().get(self._url_to_scrape,
-                                                                  headers=http_headers,
-                                                                  allow_redirects=True,
-                                                                  verify=True,
-                                                                  timeout=(30, 45))
+            if self._proxies is None and self._user_agent is None:
+                response = self._requests_retry_session().get(self._url_to_scrape,
+                                                              headers=http_headers,
+                                                              allow_redirects=True,
+                                                              verify=True,
+                                                              timeout=(30, 45))
 
-                elif self._user_agent is not None:
-                    response = self._requests_retry_session().get(self._url_to_scrape,
-                                                                  headers={'user-agent': self._user_agent},
-                                                                  allow_redirects=True,
-                                                                  verify=True,
-                                                                  timeout=(30, 45))
-            elif self._proxies is not None:
-                if self._user_agent is None:
-                    response = self._requests_retry_session().get(self._url_to_scrape,
-                                                                  headers=http_headers,
-                                                                  allow_redirects=True,
-                                                                  verify=True,
-                                                                  timeout=(30, 45),
-                                                                  proxies=self._proxies)
-                elif self._user_agent is not None:
-                    response = self._requests_retry_session().get(self._url_to_scrape,
-                                                                  headers={'user-agent': self._user_agent},
-                                                                  allow_redirects=True,
-                                                                  verify=True,
-                                                                  timeout=(30, 45),
-                                                                  proxies=self._proxies)
+            elif self._proxies is None and self._user_agent is not None:
+                response = self._requests_retry_session().get(self._url_to_scrape,
+                                                              headers={'user-agent': self._user_agent},
+                                                              allow_redirects=True,
+                                                              verify=True,
+                                                              timeout=(30, 45))
+
+            elif self._proxies is not None and self._user_agent is None:
+                response = self._requests_retry_session().get(self._url_to_scrape,
+                                                              headers=http_headers,
+                                                              allow_redirects=True,
+                                                              verify=True,
+                                                              timeout=(30, 45),
+                                                              proxies=self._proxies)
+
+            elif self._proxies is not None and self._user_agent is not None:
+                response = self._requests_retry_session().get(self._url_to_scrape,
+                                                              headers={'user-agent': self._user_agent},
+                                                              allow_redirects=True,
+                                                              verify=True,
+                                                              timeout=(30, 45),
+                                                              proxies=self._proxies)
 
             cloudflare_protected = bool([value for (key, value) in response.headers.items()
                                          if key == 'Server'
@@ -248,22 +253,3 @@ class Query(object):
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
             sys.exit(1)
         return response
-
-    @staticmethod
-    def query_html(raw_html, tag_type, tag_attribute, attribute_text):
-        """
-
-        :param raw_html: The HTML code for the paged that was scraped in the previous function
-        :param tag_type:
-        :param tag_attribute:
-        :param attribute_text:
-        :return: The section of the HTML containing the information that requires further parsing
-        """
-        soup = BeautifulSoup(raw_html, 'lxml')
-        try:
-            results = soup.find(tag_type, {tag_attribute: attribute_text})
-        except AttributeError as e:
-            logger.error('An AttributeError has occurred when parsing with BeautifulSoup.')
-            logger.error(''.join(traceback.format_tb(e.__traceback__)))
-            sys.exit(1)
-        return results

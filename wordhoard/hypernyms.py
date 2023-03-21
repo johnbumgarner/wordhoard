@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This Python script is designed to query a online repository for the
+This Python script is designed to query an online repository for the
 hypernyms associated with a specific word.
 """
 __author__ = 'John Bumgarner'
@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Initially Completed: June 12, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: February 10, 2023
+# Date Last Revised: March 19, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -38,7 +38,8 @@ import traceback
 from bs4 import BeautifulSoup
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
-from wordhoard.utilities.basic_soup import Query
+from wordhoard.utilities.request_html import Query
+from typing import List, Dict, Optional, Set, Tuple, Union
 from wordhoard.utilities.colorized_text import colorized_text
 from wordhoard.utilities import caching, cleansing, word_verification
 from wordhoard.utilities.cloudflare_checker import CloudflareVerification
@@ -46,7 +47,7 @@ from wordhoard.utilities.cloudflare_checker import CloudflareVerification
 logger = logging.getLogger(__name__)
 
 
-def _get_number_of_pages(soup):
+def _get_number_of_pages(soup: BeautifulSoup) -> int:
     """
     This function determines the number of pages that
     contain hypernyms and hyperonyms for a specific word.
@@ -55,8 +56,7 @@ def _get_number_of_pages(soup):
     :return: number of pages
     :rtype: int
 
-    :raises
-
+    :raises:
         AttributeError: Raised when an attribute reference or assignment fails.
 
         KeyError: Raised when a mapping (dictionary) key is not found in the set of existing keys.
@@ -83,15 +83,15 @@ def _get_number_of_pages(soup):
         logger.error(''.join(traceback.format_tb(e.__traceback__)))
 
 
-def _get_hypernyms(soup):
+def _get_hypernyms(soup: BeautifulSoup) -> Set[str]:
     """
-    This function queries a HTML table for hypernyms.
+    This function queries an HTML table for hypernyms.
 
     :param soup: BeautifulSoup lxml
     :return: set of hypernyms and hyperonyms
     :rtype: set
 
-    :raises
+    :raises:
         AttributeError: Raised when an attribute reference or assignment fails.
 
         KeyError: Raised when a mapping (dictionary) key is not found in the set of existing keys.
@@ -127,12 +127,12 @@ def _get_hypernyms(soup):
 class Hypernyms(object):
 
     def __init__(self,
-                 search_string='',
-                 output_format='list',
-                 max_number_of_requests=30,
-                 rate_limit_timeout_period=60,
-                 user_agent=None,
-                 proxies=None):
+                 search_string: str = '',
+                 output_format: str = 'list',
+                 max_number_of_requests: int = 30,
+                 rate_limit_timeout_period: int = 60,
+                 user_agent: Optional[str] = None,
+                 proxies: Optional[Dict[str, str]] = None):
 
         """
         Purpose
@@ -166,13 +166,14 @@ class Hypernyms(object):
         self._word = search_string
         self._user_agent = user_agent
         self._output_format = output_format
+        self._valid_output_formats = {'dictionary', 'list', 'json'}
 
         rate_limit_status = False
         self._rate_limit_status = rate_limit_status
 
         # Retries the requests after a certain time period has elapsed
         handler = on_exception(expo, RateLimitException, max_time=60, on_backoff=self._backoff_handler)
-        # Establishes a rate limit for making requests to the antonyms repositories
+        # Establishes a rate limit for making requests to the hypernyms repositories
         limiter = limits(calls=max_number_of_requests, period=rate_limit_timeout_period)
         self.find_hypernyms = handler(limiter(self.find_hypernyms))
 
@@ -184,30 +185,30 @@ class Hypernyms(object):
             logger.info('The hypernym query rate limit was reached.')
             self._rate_limit_status = True
 
-    def _validate_word(self):
+    def _validate_word(self) -> bool:
         """
         This function is designed to validate that the syntax for a string variable is in an acceptable format.
 
         :return: True or False
         :rtype bool
-
         """
         valid_word = word_verification.validate_word_syntax(self._word)
         if valid_word:
-            return valid_word
+            return True
         else:
             logger.error(f'The word {self._word} was not in a valid format.')
             logger.error(f'Please verify that the word {self._word} is spelled correctly.')
+            return False
 
-    def _check_cache(self):
+    def _check_cache(self)-> Tuple[bool, Union[List[str], None]]:
         check_cache = caching.cache_hypernyms(self._word)
         return check_cache
 
-    def _update_cache(self, hypernym):
+    def _update_cache(self, hypernym: List[str]) -> None:
         caching.insert_word_cache_hypernyms(self._word, hypernym)
         return
 
-    def find_hypernyms(self):
+    def find_hypernyms(self) -> Union[List[str], Dict[str, List[str]], str, None]:
         """
         Purpose
         ----------
@@ -235,109 +236,109 @@ class Hypernyms(object):
             bs4.FeatureNotFound: raised by the BeautifulSoup constructor if no parser with the requested features
             is found
         """
-        valid_word = self._validate_word()
-        if valid_word:
-            check_cache = self._check_cache()
-            if check_cache[0] is True:
-                hypernym = cleansing.flatten_multidimensional_list(list(check_cache[1]))
-                if self._output_format == 'list':
-                    return sorted(hypernym)
-                elif self._output_format == 'dictionary':
-                    output_dict = {self._word: sorted(set(hypernym))}
-                    return output_dict
-                elif self._output_format == 'json':
-                    json_object = json.dumps({'hypernyms': {self._word: sorted(set(hypernym))}},
-                                             indent=4, ensure_ascii=False)
-                    return json_object
+        if self._output_format not in self._valid_output_formats:
+            print(colorized_text(255, 0, 0,
+                                 f'The provided output type --> {self._output_format} <-- is not one of the '
+                                 f'acceptable types: dictionary, list or json.'))
+        else:
+            valid_word = self._validate_word()
+            if valid_word is False:
+                print(colorized_text(255, 0, 255,
+                                     f'Please verify that the word {self._word} is spelled correctly.'))
+            elif valid_word is True:
+                check_cache = self._check_cache()
+                if check_cache[0] is True:
+                    hypernym = cleansing.flatten_multidimensional_list(list(check_cache[1]))
+                    if self._output_format == 'list':
+                        return hypernym
+                    elif self._output_format == 'dictionary':
+                        output_dict = {self._word: hypernym}
+                        return output_dict
+                    elif self._output_format == 'json':
+                        json_object = json.dumps({'hypernyms': {self._word: hypernym}},
+                                                 indent=4, ensure_ascii=False)
+                        return json_object
 
-            elif check_cache[0] is False:
-                try:
-                    response = ''
-                    if self._proxies is None:
-                        if self._user_agent is None:
-                            response = Query(
-                                f'https://www.classicthesaurus.com/{self._word}/broader').get_single_page_html()
-                        elif self._user_agent is not None:
-                            response = Query(f'https://www.classicthesaurus.com/{self._word}/broader',
-                                             user_agent=self._user_agent).get_single_page_html()
+                elif check_cache[0] is False:
+                    try:
+                        response = ''
+                        if self._proxies is None and self._user_agent is None:
+                                response = Query(
+                                    f'https://www.classicthesaurus.com/{self._word}/broader').get_website_html()
+                        elif self._proxies is None and self._user_agent is not None:
+                                response = Query(f'https://www.classicthesaurus.com/{self._word}/broader',
+                                                 user_agent=self._user_agent).get_website_html()
+                        elif self._proxies is not None and self._user_agent is None:
+                                response = Query(f'https://www.classicthesaurus.com/{self._word}/broader',
+                                                 proxies=self._proxies).get_website_html()
+                        elif self._proxies is not None and self._user_agent is not None:
+                                response = Query(f'https://www.classicthesaurus.com/{self._word}/broader',
+                                                 user_agent=self._user_agent, proxies=self._proxies).get_website_html()
 
-                    elif self._proxies is not None:
-                        if self._user_agent is None:
-                            response = Query(f'https://www.classicthesaurus.com/{self._word}/broader',
-                                             proxies=self._proxies).get_single_page_html()
-                        elif self._user_agent is not None:
-                            response = Query(f'https://www.classicthesaurus.com/{self._word}/broader',
-                                             user_agent=self._user_agent, proxies=self._proxies).get_single_page_html()
-
-                    if response.status_code == 404:
-                        logger.info(f'Classic Thesaurus had no hypernyms reference for the word {self._word}')
-                    else:
-                        soup = BeautifulSoup(response.text, "lxml")
-                        cloudflare_protection = CloudflareVerification('https://www.classicthesaurus.com',
-                                                                       soup).cloudflare_protected_url()
-                        if cloudflare_protection is False:
-                            hypernym = _get_hypernyms(soup)
-                            if 'no hypernyms found' in hypernym:
-                                return colorized_text(255, 0, 255,
-                                                      f'No hypernyms were found for the word: {self._word} \n'
-                                                      f'Please verify that the word is spelled correctly.')
-                            else:
-                                number_of_pages = _get_number_of_pages(soup)
-                                if number_of_pages >= 2:
-                                    for page in range(2, number_of_pages):
-                                        sub_html = ''
-                                        if self._proxies is None:
-                                            if self._user_agent is None:
-                                                sub_html = Query(
-                                                    f'https://www.classicthesaurus.com/{self._word}/broader/{page}').get_single_page_html()
-                                            elif self._user_agent is not None:
-                                                sub_html = Query(
-                                                    f'https://www.classicthesaurus.com/{self._word}/broader/{page}',
-                                                    user_agent=self._user_agent).get_single_page_html()
-                                        elif self._proxies is not None:
-                                            if self._user_agent is None:
-                                                sub_html = Query(
-                                                    f'https://www.classicthesaurus.com/{self._word}/broader/{page}',
-                                                    proxies=self._proxies).get_single_page_html()
-                                            elif self._user_agent is not None:
-                                                sub_html = Query(
-                                                    f'https://www.classicthesaurus.com/{self._word}/broader/{page}',
-                                                    user_agent=self._user_agent,
-                                                    proxies=self._proxies).get_single_page_html()
-
-                                        sub_soup = BeautifulSoup(sub_html.text, 'lxml')
-                                        additional_hypernym = _get_hypernyms(sub_soup)
-                                        if additional_hypernym:
-                                            hypernym.union(additional_hypernym)
-                                self._update_cache(hypernym)
-                                if self._output_format == 'list':
-                                    return sorted(set(hypernym))
-                                elif self._output_format == 'dictionary':
-                                    output_dict = {self._word: sorted(set(hypernym))}
-                                    return output_dict
-                                elif self._output_format == 'json':
-                                    json_object = json.dumps({'hypernyms': {self._word: sorted(set(hypernym))}},
-                                                             indent=4, ensure_ascii=False)
-                                    return json_object
-                        elif cloudflare_protection is True:
-                            logger.info('-' * 80)
-                            logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
-                            logger.info('https://www.classicthesaurus.com')
-                            logger.info('-' * 80)
+                        if response.status_code == 404:
+                            logger.info(f'Classic Thesaurus had no hypernyms reference for the word {self._word}')
                             return None
+                        else:
+                            soup = BeautifulSoup(response.text, "lxml")
+                            cloudflare_protection = CloudflareVerification('https://www.classicthesaurus.com',
+                                                                           soup).cloudflare_protected_url()
+                            if cloudflare_protection is False:
+                                hypernym = _get_hypernyms(soup)
+                                if 'no hypernyms found' in hypernym:
+                                    print(colorized_text(255, 0, 255,
+                                                         f'No hypernyms were found for the word: {self._word} \n'
+                                                         f'Please verify that the word is spelled correctly.'))
+                                else:
+                                    number_of_pages = _get_number_of_pages(soup)
+                                    if number_of_pages >= 2:
+                                        for page in range(2, number_of_pages):
+                                            sub_html = ''
+                                            if self._proxies is None and self._user_agent is None:
+                                                    sub_html = Query(
+                                                        f'https://www.classicthesaurus.com/{self._word}/broader/{page}').get_website_html()
+                                            elif self._proxies is None and self._user_agent is not None:
+                                                    sub_html = Query(
+                                                        f'https://www.classicthesaurus.com/{self._word}/broader/{page}',
+                                                        user_agent=self._user_agent).get_website_html()
+                                            elif self._proxies is not None and self._user_agent is None:
+                                                    sub_html = Query(
+                                                        f'https://www.classicthesaurus.com/{self._word}/broader/{page}',
+                                                        proxies=self._proxies).get_website_html()
+                                            elif self._proxies is not None and self._user_agent is not None:
+                                                    sub_html = Query(
+                                                        f'https://www.classicthesaurus.com/{self._word}/broader/{page}',
+                                                        user_agent=self._user_agent,
+                                                        proxies=self._proxies).get_website_html()
 
-                except bs4.FeatureNotFound as error:
-                    logger.error('An error occurred in the following code segment:')
-                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
-                except AttributeError as error:
-                    logger.error('An AttributeError occurred in the following code segment:')
-                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
-                except IndexError as error:
-                    logger.error('An IndexError occurred in the following code segment:')
-                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
-                except KeyError as error:
-                    logger.error('A KeyError occurred in the following code segment:')
-                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
-                except TypeError as error:
-                    logger.error('A TypeError occurred in the following code segment:')
-                    logger.error(''.join(traceback.format_tb(error.__traceback__)))
+                                            sub_soup = BeautifulSoup(sub_html.text, 'lxml')
+                                            additional_hypernym = _get_hypernyms(sub_soup)
+                                            if additional_hypernym:
+                                                hypernym.union(additional_hypernym)
+                                    self._update_cache(sorted(hypernym))
+                                    if self._output_format == 'list':
+                                        return sorted(hypernym)
+                                    elif self._output_format == 'dictionary':
+                                        output_dict = {self._word: sorted(hypernym)}
+                                        return output_dict
+                                    elif self._output_format == 'json':
+                                        json_object = json.dumps({'hypernyms': {self._word: sorted(hypernym)}},
+                                                                 indent=4, ensure_ascii=False)
+                                        return json_object
+                            elif cloudflare_protection is True:
+                                return None
+
+                    except bs4.FeatureNotFound as error:
+                        logger.error('An error occurred in the following code segment:')
+                        logger.error(''.join(traceback.format_tb(error.__traceback__)))
+                    except AttributeError as error:
+                        logger.error('An AttributeError occurred in the following code segment:')
+                        logger.error(''.join(traceback.format_tb(error.__traceback__)))
+                    except IndexError as error:
+                        logger.error('An IndexError occurred in the following code segment:')
+                        logger.error(''.join(traceback.format_tb(error.__traceback__)))
+                    except KeyError as error:
+                        logger.error('A KeyError occurred in the following code segment:')
+                        logger.error(''.join(traceback.format_tb(error.__traceback__)))
+                    except TypeError as error:
+                        logger.error('A TypeError occurred in the following code segment:')
+                        logger.error(''.join(traceback.format_tb(error.__traceback__)))

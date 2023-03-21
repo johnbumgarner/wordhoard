@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 """
-This Python script is used to verify the HREF being queried is
-protected by Cloudflare's DDoS mitigation services.
+This Python script is used to verify that the webpage being queried is
+either protected or not protected by Cloudflare's DDoS mitigation services.
 """
 __author__ = 'John Bumgarner'
 __date__ = 'January 07, 2022'
@@ -24,10 +24,14 @@ __copyright__ = 'Copyright (C) 2022 John Bumgarner'
 # Date Completed: January 08, 2022
 # Author: John Bumgarner
 #
-# Date Revised:
-# Revised by:
+# Date Revised: February 25, 2023
+# Revised by: John Bumgarner
 ##################################################################################
 
+##################################################################################
+# Python imports required for basic operations
+##################################################################################
+from bs4 import BeautifulSoup
 
 class CloudflareVerification(object):
     """
@@ -36,10 +40,10 @@ class CloudflareVerification(object):
     """
 
     def __init__(self, url, soup):
-        self._url = url
-        self._raw_soup = soup
+        self._url: str = url
+        self._raw_soup: BeautifulSoup = soup
 
-    def _check_p_tag(self):
+    def _check_p_tag(self) -> bool:
         """
         This function is designed to query for the existence
         of specific tag known to be commonly related to a
@@ -56,7 +60,13 @@ class CloudflareVerification(object):
             else:
                 return False
 
-    def _check_title_tag(self):
+    def _check_div_tag(self) -> bool:
+        if self._raw_soup.find(name='div', attrs={'id': 'challenge-body-text'}):
+            return True
+        else:
+            return False
+
+    def _check_title_tag(self) -> bool:
         """
         This function is designed to query for the existence
         of specific Cloudflare related text contained in a title tag.
@@ -66,14 +76,14 @@ class CloudflareVerification(object):
         """
         title_tag = self._raw_soup.find(name='title')
         try:
-            if 'Please Wait... | Cloudflare' in title_tag.text:
+            if 'Please Wait... | Cloudflare' in title_tag.text or 'Just a moment...' in title_tag.text:
                 return True
             else:
                 return False
         except AttributeError:
             pass
 
-    def _check_meta_tag(self):
+    def _check_meta_tag(self) -> bool:
         """
         This function is designed to query for the existence
         of specific Cloudflare related meta tag.
@@ -86,7 +96,7 @@ class CloudflareVerification(object):
         else:
             return False
 
-    def cloudflare_protected_url(self):
+    def cloudflare_protected_url(self) -> bool:
         """
         This function is designed to query specific elements, which
         will determine if a webpage is protected by Cloudflare's
@@ -96,10 +106,13 @@ class CloudflareVerification(object):
         :rtype: boolean
         """
         p_tag_bool = self._check_p_tag()
+        div_tag_bool = self._check_div_tag()
         title_tag_bool = self._check_title_tag()
         meta_tag_bool = self._check_meta_tag()
 
         if p_tag_bool is True:
+            return True
+        elif div_tag_bool is True:
             return True
         elif title_tag_bool is True:
             return True

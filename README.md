@@ -41,14 +41,15 @@ Please reference the <a href="https://wordhoard.readthedocs.io/en/latest" target
 # Sources
 
 <p align="justify">
-This package is designed to query these online sources for antonyms, synonyms, hypernyms, hyponyms and definitions:
+This package is currently designed to query these online sources for antonyms, synonyms, hypernyms, hyponyms and definitions:
 
 1. classicthesaurus.com
-2. merriam-webster.com
-3. synonym.com
-4. thesaurus.com
-5. wordhippo.com
-6. wordnet.princeton.edu
+2. collinsdictionary.com
+3. merriam-webster.com
+4. synonym.com
+5. thesaurus.com
+6. wordhippo.com
+7. wordnet.princeton.edu
 </p>
   
 # Dependencies
@@ -75,7 +76,6 @@ Additional details on this package's dependencies can be found <a href="https://
 If you would like to contribute to the <strong>WordHoard</strong> project please read the <a href="https://wordhoard.readthedocs.io/en/latest/contributing" target="_blank">contributing guidelines</a>.
    
 Items currently under development:
-   - English language word verification using the Python package `pyenchant` 
    - Expanding the list of hypernyms, hyponyms and homophones
    - Adding part-of-speech filters in queries 
 </p>

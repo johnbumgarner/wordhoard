@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: June 11, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: February 12, 2023
+# Date Last Revised: February 27, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -36,6 +36,7 @@ import sys
 import pickle
 import logging
 import traceback
+from typing import List, Union
 from wordhoard.utilities import word_verification
 from wordhoard.utilities.colorized_text import colorized_text
 
@@ -79,7 +80,7 @@ except OSError as error:
 class Homophones(object):
 
     def __init__(self,
-                 search_string=''):
+                 search_string: str = ''):
 
         """
         Purpose
@@ -103,7 +104,7 @@ class Homophones(object):
 
         self._word = search_string
 
-    def _validate_word(self):
+    def _validate_word(self) -> bool:
         """
         This function is designed to validate that the syntax for
         a string variable is in an acceptable format.
@@ -113,12 +114,13 @@ class Homophones(object):
         """
         valid_word = word_verification.validate_word_syntax(self._word)
         if valid_word:
-            return valid_word
+            return True
         else:
             logger.error(f'The word {self._word} was not in a valid format.')
             logger.error(f'Please verify that the word {self._word} is spelled correctly.')
+            return False
 
-    def _common_english_homophones(self):
+    def _common_english_homophones(self) -> List[str]:
         """
         This function iterates through a list of known
         English language homophones.
@@ -137,7 +139,7 @@ class Homophones(object):
         if len(rtn_list) > 0:
             return list(set(rtn_list))
 
-    def _english_words_without_homophones(self):
+    def _english_words_without_homophones(self) -> str:
         """
         This function iterates through a list of English
         language words with no known homophones.
@@ -151,7 +153,7 @@ class Homophones(object):
             return colorized_text(255, 0, 255,
                                   f'No homophones for {self._word}')
 
-    def find_homophones(self):
+    def find_homophones(self) -> Union[List[str], str]:
         """
         Purpose
         ----------

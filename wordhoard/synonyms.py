@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: February 12, 2023
+# Date Last Revised: March 20, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -34,28 +34,31 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 import bs4
 import json
 import logging
+import requests
 import traceback
 import re as regex
 from bs4 import BeautifulSoup
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
-from wordhoard.utilities.basic_soup import Query
+from wordhoard.utilities.request_html import Query
+from wordhoard.utilities.cloudflare_bypass import Cloudflare
 from wordhoard.utilities.colorized_text import colorized_text
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Dict, List, Optional, Set, Sized, Tuple, Union
 from wordhoard.utilities import caching, cleansing, word_verification
 from wordhoard.utilities.cloudflare_checker import CloudflareVerification
 
 logger = logging.getLogger(__name__)
 
-
 class Synonyms(object):
 
     def __init__(self,
-                 search_string='',
-                 output_format='list',
-                 max_number_of_requests=30,
-                 rate_limit_timeout_period=60,
-                 user_agent=None,
-                 proxies=None):
+                 search_string: str = '',
+                 output_format: str = 'list',
+                 max_number_of_requests: int = 30,
+                 rate_limit_timeout_period: int = 60,
+                 user_agent: Optional[str] = None,
+                 proxies: Optional[Dict[str, str]] = None):
         """
         This Python class is used to query multiple online repositories for the synonyms
         associated with a specific word.
@@ -88,6 +91,7 @@ class Synonyms(object):
         self._word = search_string
         self._user_agent = user_agent
         self._output_format = output_format
+        self._valid_output_formats = {'dictionary', 'list', 'json'}
 
         rate_limit_status = False
         self._rate_limit_status = rate_limit_status
@@ -106,7 +110,7 @@ class Synonyms(object):
             logger.info('The synonyms query rate limit was reached.')
             self._rate_limit_status = True
 
-    def _validate_word(self):
+    def _validate_word(self) -> bool:
         """
         This function is designed to validate that the syntax for
         a string variable is in an acceptable format.
@@ -116,20 +120,67 @@ class Synonyms(object):
         """
         valid_word = word_verification.validate_word_syntax(self._word)
         if valid_word:
-            return valid_word
+            return True
         else:
             logger.error(f'The word {self._word} was not in a valid format.')
             logger.error(f'Please verify that the word {self._word} is spelled correctly.')
+            return False
 
-    def _check_cache(self):
+    def _check_cache(self) -> Tuple[bool, Union[Dict[str, List[str]], None]]:
         check_cache = caching.cache_synonyms(self._word)
         return check_cache
 
-    def _update_cache(self, synonyms):
-        caching.insert_word_cache_synonyms(self._word, synonyms)
+    def _update_cache(self, pos_category: str, synonyms: Union[List[str], Set[str]]) -> None:
+        caching.insert_word_cache_synonyms(self._word, pos_category, synonyms)
         return
 
-    def find_synonyms(self):
+    def _request_http_response(self, url: str) -> requests.models.Response:
+        """
+        This function queries the requested online repository and returns the
+        response for this specific query.
+
+        :param url: the URL for the online repository being queried
+        :return: response content
+        :rtype: requests.models.Response
+        """
+        if self._proxies is None and self._user_agent is None:
+            response = Query(url).get_website_html()
+            return response
+        elif self._proxies is None and self._user_agent is not None:
+            response = Query(url, self._user_agent).get_website_html()
+            return response
+        elif self._proxies is not None and self._user_agent is None:
+            response = Query(url, user_agent=None, proxies=self._proxies).get_website_html()
+            return response
+        elif self._proxies is not None and self._user_agent is not None:
+            response = Query(url, user_agent=self._user_agent, proxies=self._proxies).get_website_html()
+            return response
+
+    def _run_query_tasks_in_parallel(self) -> List[str]:
+        """
+        Runs the query tasks in parallel using a ThreadPool.
+
+        :return: list
+        :rtype: nested list
+        """
+        tasks = [self._query_collins_dictionary, self._query_merriam_webster, self._query_synonym_com,
+                 self._query_thesaurus_com, self._query_wordnet]
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            running_tasks = []
+            finished_tasks = []
+            try:
+                for task in tasks:
+                    submitted_task = executor.submit(task)
+                    running_tasks.append(submitted_task)
+                for finished_task in as_completed(running_tasks):
+                    finished_tasks.append(finished_task.result())
+                return finished_tasks
+            except Exception as error:
+                logger.error('An unknown error occurred in the following code segment:')
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+
+    def find_synonyms(self) -> Union[List[Sized], Dict[str, List[str]], str]:
         """
         Purpose
         ----------
@@ -144,55 +195,60 @@ class Synonyms(object):
 
         :rtype: list
         """
-        valid_word = self._validate_word()
-        if valid_word:
-            check_cache = self._check_cache()
-            if check_cache[0] is True:
-                synonyms = cleansing.flatten_multidimensional_list(check_cache[1])
-                if self._output_format == 'list':
-                    return sorted(set(synonyms))
-                elif self._output_format == 'dictionary':
-                    output_dict = {self._word: sorted(set(synonyms))}
-                    return output_dict
-                elif self._output_format == 'json':
-                    json_object = json.dumps({'synonyms': {self._word: sorted(set(synonyms))}},
-                                             indent=4, ensure_ascii=False)
-                    return json_object
-
-            elif check_cache[0] is False:
-                # _query_collins_dictionary() disabled due to Cloudflare protection
-                # synonyms_01 = self._query_collins_dictionary()
-
-                synonyms_02 = self._query_merriam_webster()
-                synonyms_03 = self._query_synonym_com()
-                synonyms_04 = self._query_thesaurus_com()
-                synonyms_05 = self._query_wordnet()
-                synonyms = ([x for x in [synonyms_02, synonyms_03, synonyms_04, synonyms_05]
-                             if x is not None])
-                synonyms_results = cleansing.flatten_multidimensional_list(synonyms)
-                # remove excess white spaces from the strings in the list
-                synonyms_results = [x.lstrip().rstrip() for x in synonyms_results]
-                if not synonyms_results:
-                    return colorized_text(255, 0, 255,
-                                          f'No synonyms were found for the word: {self._word} \n'
-                                          f'Please verify that the word is spelled correctly.')
-                else:
+        if self._output_format not in self._valid_output_formats:
+            print(colorized_text(255, 0, 0,
+                                 f'The provided output type --> {self._output_format} <-- is not one of the '
+                                 f'acceptable types: dictionary, list or json.'))
+        else:
+            valid_word = self._validate_word()
+            if valid_word is False:
+                print(colorized_text(255, 0, 255,
+                                  f'Please verify that the word {self._word} is spelled correctly.'))
+            elif valid_word is True:
+                check_cache = self._check_cache()
+                if check_cache[0] is True:
+                    part_of_speech = list(check_cache[1].keys())[0]
+                    synonyms = cleansing.flatten_multidimensional_list(list(check_cache[1].values()))
                     if self._output_format == 'list':
-                        return sorted(set([word.lower() for word in synonyms_results]))
+                        return sorted(set([word.lower() for word in check_cache[1]]))
                     elif self._output_format == 'dictionary':
-                        output_dict = {self._word: sorted(set([word.lower() for word in synonyms_results]))}
+                        output_dict = {self._word: {'part_of_speech': part_of_speech, 'synonyms': sorted(set(
+                            synonyms), key=len)}}
                         return output_dict
                     elif self._output_format == 'json':
-                        json_object = json.dumps({'synonyms': {self._word:
-                                                                   sorted(set([word.lower() for word in
-                                                                               synonyms_results]))}},
+                        json_object = json.dumps({self._word: {'part_of_speech': part_of_speech,
+                                                               'synonyms': sorted(set(synonyms), key=len)}},
                                                  indent=4, ensure_ascii=False)
                         return json_object
-        else:
-            return colorized_text(255, 0, 255,
-                                  f'Please verify that the word {self._word} is spelled correctly.')
 
-    def _query_collins_dictionary(self):
+                elif check_cache[0] is False:
+                    query_results = self._run_query_tasks_in_parallel()
+
+                    part_of_speech = ''.join(set([x[1] for x in query_results if x and x is not None]))
+
+                    synonyms = ([x[0] for x in query_results if x and x is not None])
+                    synonyms_results =  cleansing.flatten_multidimensional_list(synonyms)
+                    # remove excess white spaces from the strings in the list
+                    synonyms_results = cleansing.normalize_space(synonyms_results)
+                    if not synonyms_results:
+                        print(colorized_text(255, 0, 255,
+                                             f'No synonyms were found for the word: {self._word} \n'
+                                             f'Please verify that the word is spelled correctly.'))
+                    else:
+                        if self._output_format == 'list':
+                            return sorted(set([word.lower() for word in synonyms_results]), key=len)
+                        elif self._output_format == 'dictionary':
+                            output_dict = {self._word: {'part_of_speech': part_of_speech, 'synonyms': sorted(set(
+                                synonyms_results), key=len)}}
+                            return output_dict
+                        elif self._output_format == 'json':
+                            json_object = json.dumps({self._word: {'part_of_speech': part_of_speech,
+                                                                   'synonyms': sorted(set(synonyms_results), key=len)}},
+                                                     indent=4, ensure_ascii=False)
+                            return json_object
+
+
+    def _query_collins_dictionary(self) -> Union[Tuple[List[str], str], None]:
         """
         This function queries collinsdictionary.com for synonyms associated
         with the specific word provided to the Class Synonyms.
@@ -202,7 +258,7 @@ class Synonyms(object):
 
         :rtype: list
 
-        :raises
+        :raises:
             AttributeError: Raised when an attribute reference or assignment fails
 
             IndexError: Raised when a sequence subscript is out of range
@@ -215,53 +271,65 @@ class Synonyms(object):
             is found
         """
         try:
-            synonyms = []
-            response = ''
-            if self._proxies is None:
-                if self._user_agent is None:
-                    response = Query(
-                        f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}').get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}',
-                                     user_agent=self._user_agent).get_single_page_html()
-            elif self._proxies is not None:
-                if self._user_agent is None:
-                    response = Query(f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}',
-                                     proxies=self._proxies).get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}',
-                                     user_agent=self._user_agent, proxies=self._proxies).get_single_page_html()
+            response = self._request_http_response(f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}')
 
             if response.status_code == 404:
                 logger.info(f'Collins Dictionary had no synonym reference for the word {self._word}')
+                return None
             else:
                 soup = BeautifulSoup(response.text, 'lxml')
                 cloudflare_protection = CloudflareVerification('https://www.collinsdictionary.com',
                                                                soup).cloudflare_protected_url()
                 if cloudflare_protection is False:
-                    word_found = soup.find('h1',
+                    no_word_results = soup.find('h1',
                                            text=f'Sorry, no results for “{self._word}” in the English Thesaurus.')
-                    if word_found:
+                    if no_word_results:
                         logger.info(f'Collins Dictionary had no synonym reference for the word {self._word}')
+                        return None
                     else:
-                        if soup.find('div', {'class': 'blockSyn'}):
-                            query_results = soup.find('div', {'class': 'blockSyn'})
-                            for primary_syn in query_results.find_all('div', {'class', 'form type-syn orth'}):
-                                synonyms.append(primary_syn.text)
+                        part_of_speech_category = ''
+                        # obtain the part of speech category for the specific word
+                        if soup.find('span', {'class': 'headerSensePos'}):
+                            tag_part_of_speech = soup.find('span', {'class': 'headerSensePos'})
+                            if len(tag_part_of_speech.text) != 0:
+                                part_of_speech_category = tag_part_of_speech.text.strip('()')
+                            else:
+                                part_of_speech_category = ''
 
+                        synonyms = []
+                        query_results = soup.find('div', {'class': 'blockSyn'})
+                        if query_results:
                             for sub_syn in query_results.find_all('div', {'class', 'form type-syn'}):
                                 child = sub_syn.findChild('span', {'class': 'orth'})
                                 synonyms.append(child.text)
+                            synonyms_list = sorted([x.lower().strip() for x in synonyms])
+                            self._update_cache(part_of_speech_category, synonyms_list)
+                            return synonyms_list, part_of_speech_category
 
-                        synonyms = sorted([x.lower() for x in synonyms])
-                        self._update_cache(synonyms)
-                        return sorted(synonyms)
                 elif cloudflare_protection is True:
-                    logger.info('-' * 80)
-                    logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
-                    logger.info('https://www.collinsdictionary.com')
-                    logger.info('-' * 80)
-                    return None
+                    part_of_speech_category = ''
+
+                    fresh_soup = Cloudflare(f'https://www.collinsdictionary.com/dictionary/english-thesaurus'
+                                            f'/{self._word}').bypass()
+
+                    # obtain the part of speech category for the specific word
+                    if fresh_soup.find('span', {'class': 'headerSensePos'}):
+                        tag_part_of_speech = fresh_soup.find('span', {'class': 'headerSensePos'})
+                        if len(tag_part_of_speech.text) != 0:
+                            part_of_speech_category = tag_part_of_speech.text.strip('()')
+                        else:
+                            part_of_speech_category = ''
+
+                    synonyms = []
+                    query_results = fresh_soup.find('div', {'class': 'blockSyn'})
+                    if query_results:
+                        for sub_syn in query_results.find_all('div', {'class', 'form type-syn'}):
+                            child = sub_syn.findChild('span', {'class': 'orth'})
+                            synonyms.append(child.text)
+
+                        synonyms_list = sorted([x.lower().strip() for x in synonyms])
+                        self._update_cache(part_of_speech_category, synonyms_list)
+                        return synonyms_list, part_of_speech_category
 
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
@@ -279,7 +347,8 @@ class Synonyms(object):
             logger.error('A TypeError occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
-    def _query_merriam_webster(self):
+
+    def _query_merriam_webster(self) -> Union[Tuple[List[str], str], None]:
         """
         This function queries merriam-webster.com for synonyms associated
         with the specific word provided to the Class Synonyms.
@@ -287,9 +356,9 @@ class Synonyms(object):
         :returns:
             synonyms: list of synonyms
 
-        :rtype: list
+        :rtype: list or None
 
-        :raises
+        :raises:
            AttributeError: Raised when an attribute reference or assignment fails
 
             IndexError: Raised when a sequence subscript is out of range
@@ -302,24 +371,11 @@ class Synonyms(object):
             is found
         """
         try:
-            synonyms_list = []
-            response = ''
-            if self._proxies is None:
-                if self._user_agent is None:
-                    response = Query(f'https://www.merriam-webster.com/thesaurus/{self._word}').get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.merriam-webster.com/thesaurus/{self._word}',
-                                     self._user_agent).get_single_page_html()
-            elif self._proxies is not None:
-                if self._user_agent is None:
-                    response = Query(f'https://www.merriam-webster.com/thesaurus/{self._word}',
-                                     user_agent=None, proxies=self._proxies).get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.merriam-webster.com/thesaurus/{self._word}',
-                                     user_agent=self._user_agent, proxies=self._proxies).get_single_page_html()
+            response = self._request_http_response(f'https://www.merriam-webster.com/thesaurus/{self._word}')
 
             if response.status_code == 404:
                 logger.info(f'Merriam-webster.com had no synonym reference for the word {self._word}')
+                return None
             else:
                 soup = BeautifulSoup(response.text, "lxml")
                 cloudflare_protection = CloudflareVerification('https://www.merriam-webster.com',
@@ -328,27 +384,36 @@ class Synonyms(object):
                     pattern = regex.compile(r'Words fail us')
                     if soup.find(text=pattern):
                         logger.info(f'Merriam-webster.com had no synonym reference for the word {self._word}')
+                        return None
                     elif soup.find('h1', {'class': 'mispelled-word'}):
                         logger.info(f'Merriam-webster.com had no synonym reference for the word {self._word}')
+                        return None
                     else:
-                        synonyms = []
+                        synonyms_list = []
+                        part_of_speech_category = ''
+
+                        # obtain the part of speech category for the specific word
+                        if soup.select('#thesaurus-entry-1-1 > div.row.entry-header > div > div > div.align-items-baseline.d-flex.flex-grow-1 > h2 > a'):
+                            css_part_of_speech = soup.select(
+                                '#thesaurus-entry-1-1 > div.row.entry-header > div > div > div.align-items-baseline.d-flex.flex-grow-1 > h2 > a')
+                            if len(css_part_of_speech[0].text) != 0:
+                                part_of_speech_category = css_part_of_speech[0].text
+                            else:
+                                part_of_speech_category = ''
+
                         if soup.find('p', {'class': 'function-label'}):
                             label = soup.find('p', {'class': 'function-label'})
-                            if label.text.startswith('Synonyms for'):
-                                parent_tag = soup.find("span", {'class': 'thes-list syn-list'})
-                                word_container = parent_tag.find('div', {'class': 'thes-list-content synonyms_list'})
-                                for list_item in word_container.find_all("ul", {'class': 'mw-list'}):
-                                    for link in list_item.find_all('a', href=True):
-                                        synonyms_list.append(link.text)
-                                synonyms = sorted([cleansing.normalize_space(i) for i in synonyms_list])
-                                synonyms = sorted([x.lower() for x in synonyms])
-                            self._update_cache(synonyms)
-                            return synonyms
+                            if label.text.startswith('Synonyms'):
+                                word_container = soup.find('div', {'class': 'thes-list-content synonyms_list'})
+                                for list_item in word_container.find_all("li", {'class': 'thes-word-list-item'}):
+                                    if list_item.find('span', {'class': 'lozenge color-4'}) or \
+                                        list_item.find('span', {'class': 'lozenge color-3'}):
+                                        link = list_item.find('a', href=True)
+                                        synonyms_list.append(link.text.strip())
+                                synonyms_list = sorted([x.lower().strip() for x in synonyms_list])
+                                self._update_cache(part_of_speech_category, synonyms_list)
+                            return synonyms_list, part_of_speech_category
                 elif cloudflare_protection is True:
-                    logger.info('-' * 80)
-                    logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
-                    logger.info('https://www.merriam-webster.com')
-                    logger.info('-' * 80)
                     return None
 
         except bs4.FeatureNotFound as error:
@@ -367,7 +432,8 @@ class Synonyms(object):
             logger.error('A TypeError occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
-    def _query_synonym_com(self):
+
+    def _query_synonym_com(self) -> Union[Tuple[List[str], str], None]:
         """
         This function queries synonym.com for synonyms associated
         with the specific word provided to the Class Synonyms.
@@ -375,9 +441,9 @@ class Synonyms(object):
          :returns:
             synonyms: list of synonyms
 
-        :rtype: list
+        :rtype: list or None
 
-        :raises
+        :raises:
             AttributeError: Raised when an attribute reference or assignment fails
 
             IndexError: Raised when a sequence subscript is out of range
@@ -390,23 +456,11 @@ class Synonyms(object):
             is found
         """
         try:
-            response = ''
-            if self._proxies is None:
-                if self._user_agent is None:
-                    response = Query(f'https://www.synonym.com/synonyms/{self._word}').get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.synonym.com/synonyms/{self._word}',
-                                     user_agent=self._user_agent).get_single_page_html()
-            elif self._proxies is not None:
-                if self._user_agent is None:
-                    response = Query(f'https://www.synonym.com/synonyms/{self._word}',
-                                     user_agent=None, proxies=self._proxies).get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.synonym.com/synonyms/{self._word}',
-                                     user_agent=self._user_agent, proxies=self._proxies).get_single_page_html()
+            response = self._request_http_response(f'https://www.synonym.com/synonyms/{self._word}')
 
             if response.status_code == 404:
                 logger.info(f'Synonym.com had no synonym reference for the word {self._word}')
+                return None
             else:
                 soup = BeautifulSoup(response.text, "lxml")
                 cloudflare_protection = CloudflareVerification('https://www.synonym.com',
@@ -416,32 +470,39 @@ class Synonyms(object):
                     pattern = regex.compile(r'Oops, 404!')
                     if soup.find(text=pattern):
                         logger.info(f'Synonym.com had no synonym reference for the word {self._word}')
+                        return None
                     elif status_tag.attrs['content'] == 'Term':
+                        part_of_speech_category = ''
+
                         if soup.find('div', {'data-section': 'synonyms'}):
                             synonyms_class = soup.find('div', {'data-section': 'synonyms'})
                             synonyms = [word.text for word in
                                         synonyms_class.find('ul', {'class': 'section-list'}).find_all('li')]
-                            synonyms = sorted([x.lower() for x in synonyms])
-                            self._update_cache(synonyms)
-                            return sorted(synonyms)
+                            synonyms_list = sorted([x.lower().strip() for x in synonyms])
+
+                            # obtain the part of speech category for the specific word
+                            if soup.select('body > div.page-container > div.content-container > div.main-column > div.sections-wrapper > div:nth-child(1) > p > strong'):
+                                css_part_of_speech = soup.select(
+                                    'body > div.page-container > div.content-container > div.main-column > div.sections-wrapper > div:nth-child(1) > p > strong')
+                                if len(css_part_of_speech[0].text) != 0:
+                                    part_of_speech_category = css_part_of_speech[0].text.strip('.')
+                                else:
+                                    part_of_speech_category = ''
+
+                            self._update_cache(part_of_speech_category, synonyms_list)
+                            return synonyms_list, part_of_speech_category
                         else:
                             logger.info(f'Synonym.com had no synonym reference for the word {self._word}')
+                            return None
                 elif cloudflare_protection is True:
-                    logger.info('-' * 80)
-                    logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
-                    logger.info('https://www.synonym.com')
-                    logger.info('-' * 80)
                     return None
 
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
         except AttributeError as error:
-            logger.info('\n')
-            logger.info(self._word)
             logger.error('An AttributeError occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
-            logger.info('\n')
         except IndexError as error:
             logger.error('An IndexError occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -452,7 +513,8 @@ class Synonyms(object):
             logger.error('A TypeError occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
-    def _query_thesaurus_com(self):
+
+    def _query_thesaurus_com(self) -> Union[Tuple[List[str], str], None]:
         """
         This function queries thesaurus.com for synonyms associated
         with the specific word provided to the Class Synonyms.
@@ -460,9 +522,9 @@ class Synonyms(object):
         :returns:
             synonyms: list of synonyms
 
-        :rtype: list
+        :rtype: list or None
 
-        :raises
+        :raises:
             AttributeError: Raised when an attribute reference or assignment fails
 
             IndexError: Raised when a sequence subscript is out of range
@@ -475,24 +537,11 @@ class Synonyms(object):
             is found
         """
         try:
-            synonyms_list = []
-            response = ''
-            if self._proxies is None:
-                if self._user_agent is None:
-                    response = Query(f'https://www.thesaurus.com/browse/{self._word}').get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.thesaurus.com/browse/{self._word}',
-                                     self._user_agent).get_single_page_html()
-            elif self._proxies is not None:
-                if self._user_agent is None:
-                    response = Query(f'https://www.thesaurus.com/browse/{self._word}',
-                                     user_agent=None, proxies=self._proxies).get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.thesaurus.com/browse/{self._word}',
-                                     user_agent=self._user_agent, proxies=self._proxies).get_single_page_html()
+            response = self._request_http_response(f'https://www.thesaurus.com/browse/{self._word}')
 
             if response.status_code == 404:
                 logger.info(f'Thesaurus.com had no synonym reference for the word {self._word}')
+                return None
             else:
                 soup = BeautifulSoup(response.text, "lxml")
                 cloudflare_protection = CloudflareVerification('https://www.thesaurus.com',
@@ -501,21 +550,27 @@ class Synonyms(object):
                     status_tag = soup.find("h1")
                     if status_tag.text.startswith('0 results for'):
                         logger.info(f'Thesaurus.com had no synonym reference for the word {self._word}')
+                        return None
                     else:
-                        synonyms = []
+                        synonyms_list = []
+                        part_of_speech_category = ''
+                        # obtain the part of speech category for the specific word
+                        if soup.select('#headword > div.css-bjn8wh.e1br8a1p0 > div > ul > li > a > em'):
+                            css_part_of_speech = soup.select(
+                            '#headword > div.css-bjn8wh.e1br8a1p0 > div > ul > li > a > em')
+                            if len(css_part_of_speech[0].text) != 0:
+                                part_of_speech_category = css_part_of_speech[0].text
+                            else:
+                                part_of_speech_category = ''
                         word_container = soup.find('div', {'data-testid': 'word-grid-container'})
                         for list_item in word_container.find('ul').find_all('li'):
-                            for link in list_item.find_all('a', href=True):
-                                synonyms_list.append(link.text)
-                            synonyms = sorted([cleansing.normalize_space(i) for i in synonyms_list])
-                            synonyms = sorted([x.lower() for x in synonyms])
-                        self._update_cache(synonyms)
-                        return synonyms
+                            for link in list_item.find_all('a', {'class': 'css-1kg1yv8 eh475bn0'}):
+                                synonyms_list.append(link.text.strip())
+
+                            synonyms_list = sorted([x.lower().strip() for x in  synonyms_list])
+                        self._update_cache(part_of_speech_category, synonyms_list)
+                        return synonyms_list, part_of_speech_category
                 elif cloudflare_protection is True:
-                    logger.info('-' * 80)
-                    logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
-                    logger.info('https://www.thesaurus.com')
-                    logger.info('-' * 80)
                     return None
 
         except bs4.FeatureNotFound as error:
@@ -534,7 +589,8 @@ class Synonyms(object):
             logger.error('A TypeError occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
-    def _query_wordnet(self):
+
+    def _query_wordnet(self) -> Union[Tuple[List[str], str], None]:
         """
         This function queries wordnet for synonyms associated
         with the specific word provided to the Class Synonyms.
@@ -544,7 +600,7 @@ class Synonyms(object):
 
         :rtype: list
 
-        :raises
+        :raises:
             AttributeError: Raised when an attribute reference or assignment fails
 
             IndexError: Raised when a sequence subscript is out of range
@@ -557,25 +613,11 @@ class Synonyms(object):
             is found
         """
         try:
-            synonyms = []
-            response = ''
-            if self._proxies is None:
-                if self._user_agent is None:
-                    response = Query(
-                        f'http://wordnetweb.princeton.edu/perl/webwn?s={self._word}').get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'http://wordnetweb.princeton.edu/perl/webwn?s={self._word}',
-                                     user_agent=self._user_agent).get_single_page_html()
-            elif self._proxies is not None:
-                if self._user_agent is None:
-                    response = Query(f'http://wordnetweb.princeton.edu/perl/webwn?s={self._word}',
-                                     user_agent=None, proxies=self._proxies).get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'http://wordnetweb.princeton.edu/perl/webwn?s={self._word}',
-                                     user_agent=self._user_agent, proxies=self._proxies).get_single_page_html()
+            response = self._request_http_response(f'http://wordnetweb.princeton.edu/perl/webwn?s={self._word}')
 
             if response.status_code == 404:
                 logger.info(f'Wordnet had no synonym reference for the word {self._word}')
+                return None
             else:
                 soup = BeautifulSoup(response.text, "lxml")
                 cloudflare_protection = CloudflareVerification('http://wordnetweb.princeton.edu',
@@ -584,21 +626,20 @@ class Synonyms(object):
                     pattern = regex.compile(r'Your search did not return any results')
                     if soup.find(text=pattern):
                         logger.info(f'Wordnet had no synonym reference for the word {self._word}')
+                        return None
                     else:
+                        synonyms_list = []
                         if soup.findAll('h3', text='Noun'):
+                            part_of_speech_category = 'noun'
                             parent_node = soup.findAll("ul")[0].findAll('li')
                             for children in parent_node:
                                 for child in children.find_all(href=True):
                                     if 'S:' not in child.contents[0]:
-                                        synonyms.append(child.contents[0])
-                            synonyms = sorted([x.lower() for x in synonyms])
-                            self._update_cache(synonyms)
-                            return synonyms
-                        else:
-                            logger.info(f'Wordnet had no synonym reference for the word {self._word}')
+                                        synonyms_list.append(child.contents[0])
+                            synonyms_list = sorted([x.lower().strip() for x in synonyms_list])
+                            self._update_cache(part_of_speech_category, synonyms_list)
+                            return synonyms_list, part_of_speech_category
                 elif cloudflare_protection is True:
-                    logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
-                    logger.info('http://wordnetweb.princeton.edu')
                     return None
 
         except bs4.FeatureNotFound as error:

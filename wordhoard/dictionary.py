@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: February 11, 2023
+# Date Last Revised: March 19, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -34,13 +34,17 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 import bs4
 import json
 import logging
+import requests
 import traceback
 import re as regex
 from bs4 import BeautifulSoup
 from backoff import on_exception, expo
 from ratelimit import limits, RateLimitException
-from wordhoard.utilities.basic_soup import Query
+from wordhoard.utilities.request_html import Query
+from wordhoard.utilities.cloudflare_bypass import Cloudflare
 from wordhoard.utilities.colorized_text import colorized_text
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Dict, List, Optional, Set, Sized, Tuple, Union
 from wordhoard.utilities import caching, cleansing, word_verification
 from wordhoard.utilities.cloudflare_checker import CloudflareVerification
 
@@ -50,12 +54,12 @@ logger = logging.getLogger(__name__)
 class Definitions(object):
 
     def __init__(self,
-                 search_string='',
-                 output_format='list',
-                 max_number_of_requests=30,
-                 rate_limit_timeout_period=60,
-                 user_agent=None,
-                 proxies=None):
+                 search_string: str = '',
+                 output_format: str = 'list',
+                 max_number_of_requests: int = 30,
+                 rate_limit_timeout_period: int = 60,
+                 user_agent: Optional[str] = None,
+                 proxies: Optional[Dict[str, str]] = None):
         """
         Purpose
         ----------
@@ -91,6 +95,7 @@ class Definitions(object):
         self._word = search_string
         self._user_agent = user_agent
         self._output_format = output_format
+        self._valid_output_formats = {'dictionary', 'list', 'json'}
 
         rate_limit_status = False
         self._rate_limit_status = rate_limit_status
@@ -109,7 +114,7 @@ class Definitions(object):
             logger.info('The definition query rate limit was reached.')
             self._rate_limit_status = True
 
-    def _validate_word(self):
+    def _validate_word(self) -> bool:
         """
         This function is designed to validate that the syntax for a string variable is in an acceptable format.
 
@@ -118,16 +123,67 @@ class Definitions(object):
         """
         valid_word = word_verification.validate_word_syntax(self._word)
         if valid_word:
-            return valid_word
+            return True
         else:
             logger.error(f'The word {self._word} was not in a valid format.')
             logger.error(f'Please verify that the word {self._word} is spelled correctly.')
+            return False
 
-    def _update_cache(self, definition):
-        caching.insert_word_cache_definition(self._word, definition)
+    def _check_cache(self) -> Tuple[bool, Union[Dict[str, List[str]], None]]:
+        check_cache = caching.cache_definition(self._word)
+        return check_cache
+
+    def _update_cache(self, pos_category: str, definition: Union[List[str], Set[str]]) -> None:
+        caching.insert_word_cache_definition(self._word, pos_category, definition)
         return
 
-    def find_definitions(self):
+    def _request_http_response(self, url: str) -> requests.models.Response:
+        """
+        This function queries the requested online repository and returns the
+        response for this specific query.
+
+        :param url: the URL for the online repository being queried
+        :return: response content
+        :rtype: requests.models.Response
+        """
+        if self._proxies is None and self._user_agent is None:
+            response = Query(url).get_website_html()
+            return response
+        elif self._proxies is None and self._user_agent is not None:
+            response = Query(url, self._user_agent).get_website_html()
+            return response
+        elif self._proxies is not None and self._user_agent is None:
+            response = Query(url, user_agent=None, proxies=self._proxies).get_website_html()
+            return response
+        elif self._proxies is not None and self._user_agent is not None:
+            response = Query(url, user_agent=self._user_agent, proxies=self._proxies).get_website_html()
+            return response
+
+    def _run_query_tasks_in_parallel(self) -> List[str]:
+        """
+        Runs the query tasks in parallel using a ThreadPool.
+
+        :return: list
+        :rtype: nested list
+        """
+        tasks = [self._query_collins_dictionary, self._query_merriam_webster,
+                 self._query_synonym_com, self._query_thesaurus_com]
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            running_tasks = []
+            finished_tasks = []
+            try:
+                for task in tasks:
+                    submitted_task = executor.submit(task)
+                    running_tasks.append(submitted_task)
+                for finished_task in as_completed(running_tasks):
+                    finished_tasks.append(finished_task.result())
+                return finished_tasks
+            except Exception as error:
+                logger.error('An unknown error occurred in the following code segment:')
+                logger.error(''.join(traceback.format_tb(error.__traceback__)))
+
+    def find_definitions(self) -> Union[List[Sized], Dict[str, List[str]], str]:
         """
         Purpose
         ----------
@@ -141,50 +197,59 @@ class Definitions(object):
 
         :rtype: list
         """
-        valid_word = self._validate_word()
-        if valid_word:
-            check_cache = caching.cache_definition(self._word)
-            if check_cache[0] is True:
-                definitions = cleansing.flatten_multidimensional_list(check_cache[1])
-                if self._output_format == 'list':
-                    return sorted(set(definitions))
-                elif self._output_format == 'dictionary':
-                    output_dict = {self._word: sorted(set(definitions))}
-                    return output_dict
-                elif self._output_format == 'json':
-                    json_object = json.dumps({'definitions': {self._word: sorted(set(definitions))}},
-                                             indent=4, ensure_ascii=False)
-                    return json_object
-
-            elif check_cache[0] is False:
-                # _query_collins_dictionary() disabled due to Cloudflare protection
-                # definition_01 = self._query_collins_dictionary()
-
-                definition_02 = self._query_merriam_webster()
-                definition_03 = self._query_synonym_com()
-                definitions = ([x for x in [definition_02, definition_03] if x is not None])
-                definitions = cleansing.flatten_multidimensional_list(definitions)
-                # remove excess white spaces from the strings in the list
-                definitions = [regex.sub(' +', " ", x) for x in definitions]
-                if not definitions:
-                    return colorized_text(255, 0, 255,
-                                          f'No definitions were found for the word: {self._word} \n'
-                                          f'Please verify that the word is spelled correctly.')
-                else:
+        if self._output_format not in self._valid_output_formats:
+            print(colorized_text(255, 0, 0,
+                                 f'The provided output type --> {self._output_format} <-- is not one of the '
+                                 f'acceptable types: dictionary, list or json.'))
+        else:
+            valid_word = self._validate_word()
+            if valid_word is False:
+                print(colorized_text(255, 0, 255,
+                                     f'Please verify that the word {self._word} is spelled correctly.'))
+            elif valid_word is True:
+                check_cache = self._check_cache()
+                if check_cache[0] is True:
+                    part_of_speech = list(check_cache[1].keys())[0]
+                    definitions = cleansing.flatten_multidimensional_list(list(check_cache[1].values()))
                     if self._output_format == 'list':
-                        return sorted(set(definitions))
+                        return sorted(set(definitions), key=len)
                     elif self._output_format == 'dictionary':
-                        output_dict = {self._word: sorted(set(definitions))}
+                        output_dict = {self._word: {'part_of_speech': part_of_speech,
+                                                    'definitions': sorted(set(definitions), key=len)}}
                         return output_dict
                     elif self._output_format == 'json':
-                        json_object = json.dumps({'definitions': {self._word: sorted(set(definitions))}},
+                        json_object = json.dumps({self._word: {'part_of_speech': part_of_speech,
+                                                               'definitions': sorted(set(definitions), key=len)}},
                                                  indent=4, ensure_ascii=False)
                         return json_object
-        else:
-            return colorized_text(255, 0, 255,
-                                  f'Please verify that the word {self._word} is spelled correctly.')
 
-    def _query_collins_dictionary(self):
+                elif check_cache[0] is False:
+                    query_results = self._run_query_tasks_in_parallel()
+
+                    part_of_speech = ''.join(set([x[1] for x in query_results if x and x is not None]))
+
+                    definitions = ([x[0] for x in query_results if x and x is not None])
+                    definitions = cleansing.flatten_multidimensional_list(definitions)
+                    # remove excess white spaces from the strings in the list
+                    definitions = [regex.sub(' +', " ", x) for x in definitions]
+                    if not definitions:
+                        print(colorized_text(255, 0, 255,
+                                             f'No definitions were found for the word: {self._word} \n'
+                                             f'Please verify that the word is spelled correctly.'))
+                    else:
+                        if self._output_format == 'list':
+                            return sorted(set(definitions), key=len)
+                        elif self._output_format == 'dictionary':
+                            output_dict = {self._word: {'part_of_speech': part_of_speech, 'definitions': sorted(set(
+                                definitions), key=len)}}
+                            return output_dict
+                        elif self._output_format == 'json':
+                            json_object = json.dumps({self._word: {'part_of_speech': part_of_speech,
+                                                                   'definitions': sorted(set(definitions), key=len)}},
+                                                     indent=4, ensure_ascii=False)
+                            return json_object
+
+    def _query_collins_dictionary(self) -> Union[Tuple[List[str], str], None]:
         """
         This function queries collinsdictionary.com for a definition associated
         with the specific word provided to the Class Definitions.
@@ -194,7 +259,7 @@ class Definitions(object):
 
         :rtype: str
 
-        :raises
+        :raises:
             AttributeError: Raised when an attribute reference or assignment fails
 
             IndexError: Raised when a sequence subscript is out of range
@@ -207,42 +272,60 @@ class Definitions(object):
             is found
         """
         try:
-            response = ''
-            if self._proxies is None:
-                if self._user_agent is None:
-                    response = Query(
-                        f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}').get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}',
-                                     user_agent=self._user_agent).get_single_page_html()
-            elif self._proxies is not None:
-                if self._user_agent is None:
-                    response = Query(f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}',
-                                     proxies=self._proxies).get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}',
-                                     user_agent=self._user_agent, proxies=self._proxies).get_single_page_html()
+            response = self._request_http_response(f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}')
 
             if response.status_code == 404:
                 logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
+                return None
             else:
                 soup = BeautifulSoup(response.text, "lxml")
                 cloudflare_protection = CloudflareVerification('https://www.collinsdictionary.com',
                                                                soup).cloudflare_protected_url()
                 if cloudflare_protection is False:
+                    definition_list = []
+                    part_of_speech_category = ''
+
+                    # obtain the part of speech category for the specific word
+                    if soup.find('span', {'class': 'headerSensePos'}):
+                        tag_part_of_speech = soup.find('span', {'class': 'headerSensePos'})
+                        if len(tag_part_of_speech.text) != 0:
+                            part_of_speech_category = tag_part_of_speech.text.strip('()')
+                        else:
+                            part_of_speech_category = ''
+
                     query_results = soup.find('div', {'class': 'form type-def titleTypeSubContainer'})
                     if query_results is not None:
                         definition = query_results.findNext('div', {'class': 'def'})
-                        self._update_cache(definition.text)
-                        return definition.text
-                    else:
+                        definition_list.append(definition.text.strip())
+                        self._update_cache(part_of_speech_category, definition_list)
+                        return definition_list, part_of_speech_category
+                    elif query_results is None:
                         logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
+                        return None
                 elif cloudflare_protection is True:
-                    logger.info('-' * 80)
-                    logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
-                    logger.info('https://www.collinsdictionary.com')
-                    logger.info('-' * 80)
-                    return None
+                    fresh_soup = Cloudflare(
+                        f'https://www.collinsdictionary.com/dictionary/english-thesaurus/{self._word}').bypass()
+
+                    definition_list = []
+                    part_of_speech_category = ''
+
+                    # obtain the part of speech category for the specific word
+                    if fresh_soup.find('span', {'class': 'headerSensePos'}):
+                        tag_part_of_speech = fresh_soup.find('span', {'class': 'headerSensePos'})
+                        if len(tag_part_of_speech.text) != 0:
+                            part_of_speech_category = tag_part_of_speech.text.strip('()')
+                        else:
+                            part_of_speech_category = ''
+
+                    query_results = fresh_soup.find('div', {'class': 'form type-def titleTypeSubContainer'})
+                    if query_results is not None:
+                        definition = query_results.findNext('div', {'class': 'def'})
+                        definition_list.append(definition.text.strip())
+                        self._update_cache(part_of_speech_category, definition_list)
+                        return definition_list, part_of_speech_category
+                    elif query_results is None:
+                        logger.error(f'Collins Dictionary had no definition reference for the word {self._word}')
+                        return definition_list, part_of_speech_category
 
         except bs4.FeatureNotFound as error:
             logger.error('An error occurred in the following code segment:')
@@ -260,7 +343,7 @@ class Definitions(object):
             logger.error('A TypeError occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
-    def _query_merriam_webster(self):
+    def _query_merriam_webster(self) -> Union[Tuple[List[str], str], None]:
         """
         This function queries merriam-webster.com for a definition associated
         with the specific word provided to the Class Definitions
@@ -270,7 +353,7 @@ class Definitions(object):
 
         :rtype: list
 
-        :raises
+        :raises:
             AttributeError: Raised when an attribute reference or assignment fails
 
             IndexError: Raised when a sequence subscript is out of range
@@ -283,48 +366,47 @@ class Definitions(object):
             is found
         """
         try:
-            response = ''
-            if self._proxies is None:
-                if self._user_agent is None:
-                    response = Query(f'https://www.merriam-webster.com/dictionary/{self._word}').get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.merriam-webster.com/dictionary/{self._word}',
-                                     user_agent=self._user_agent).get_single_page_html()
-            elif self._proxies is not None:
-                if self._user_agent is None:
-                    response = Query(f'https://www.merriam-webster.com/dictionary/{self._word}',
-                                     proxies=self._proxies).get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.merriam-webster.com/dictionary/{self._word}',
-                                     user_agent=self._user_agent, proxies=self._proxies).get_single_page_html()
+            response = self._request_http_response(f'https://www.merriam-webster.com/dictionary/{self._word}')
 
             if response.status_code == 404:
                 logger.info(f'Merriam-webster.com has no definition reference for the word {self._word}')
+                return None
             else:
-                definition_list = []
                 soup = BeautifulSoup(response.text, "lxml")
                 cloudflare_protection = CloudflareVerification('https://www.merriam-webster.com',
                                                                soup).cloudflare_protected_url()
+
                 if cloudflare_protection is False:
                     pattern = regex.compile(r'Words fail us')
                     if soup.find(text=pattern):
                         logger.info(f'Merriam-webster.com has no reference for the word {self._word}')
+                        return None
                     elif soup.find('h1', {'class': 'mispelled-word'}):
                         logger.info(f'Merriam-webster.com has no definition reference for the word {self._word}')
+                        return None
                     else:
+                        definition_list = []
+                        part_of_speech_category = ''
+
+                        # obtain the part of speech category for the specific word
+                        if soup.select(
+                            '#dictionary-entry-1 > div.row.entry-header > div > '
+                            'div.entry-header-content.d-flex.flex-wrap.align-items-baseline.flex-row.mb-0 > h2 > a'):
+                            css_part_of_speech = soup.select(
+                                '#dictionary-entry-1 > div.row.entry-header > div > div.entry-header-content.d-flex.flex-wrap.align-items-baseline.flex-row.mb-0 > h2 > a')
+                            if len(css_part_of_speech[0].text) != 0:
+                                part_of_speech_category = css_part_of_speech[0].text.split()[0]
+                            else:
+                                part_of_speech_category = ''
+
                         dictionary_entry = soup.find('div', {'id': 'dictionary-entry-1'})
                         definition_container = dictionary_entry.find('div', {'class': 'vg'})
-                        definition_entries = definition_container.find_all('span', {'class': 'sb-0'})[0]
+                        definition_entries = definition_container.find('div', {'class': 'sb-0 sb-entry'})
                         for definition_entry in definition_entries.find_all('span', {'class': 'dtText'}):
                             definition_list.append(definition_entry.text.lower().replace(':', '').strip())
-                        definitions = sorted([cleansing.normalize_space(i) for i in definition_list])
-                        self._update_cache(definitions)
-                        return definitions
+                        self._update_cache(part_of_speech_category, definition_list)
+                        return definition_list, part_of_speech_category
                 elif cloudflare_protection is True:
-                    logger.info('-' * 80)
-                    logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
-                    logger.info('https://www.merriam-webster.com')
-                    logger.info('-' * 80)
                     return None
 
         except bs4.FeatureNotFound as error:
@@ -343,7 +425,7 @@ class Definitions(object):
             logger.error('A TypeError occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
 
-    def _query_synonym_com(self):
+    def _query_synonym_com(self) -> Union[Tuple[List[str], str], None]:
         """
         This function queries synonym.com for a definition associated
         with the specific word provided to the Class Definitions
@@ -353,7 +435,7 @@ class Definitions(object):
 
         :rtype: list
 
-        :raises
+        :raises:
             AttributeError: Raised when an attribute reference or assignment fails
 
             IndexError: Raised when a sequence subscript is out of range
@@ -366,46 +448,119 @@ class Definitions(object):
             is found
         """
         try:
-            response = ''
-            if self._proxies is None:
-                if self._user_agent is None:
-                    response = Query(f'https://www.synonym.com/synonyms/{self._word}').get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.synonym.com/synonyms/{self._word}',
-                                     user_agent=self._user_agent).get_single_page_html()
-            elif self._proxies is not None:
-                if self._user_agent is None:
-                    response = Query(f'https://www.synonym.com/synonyms/{self._word}',
-                                     proxies=self._proxies).get_single_page_html()
-                elif self._user_agent is not None:
-                    response = Query(f'https://www.synonym.com/synonyms/{self._word}',
-                                     user_agent=self._user_agent, proxies=self._proxies).get_single_page_html()
+            response = self._request_http_response(f'https://www.synonym.com/synonyms/{self._word}')
 
             if response.status_code == 404:
                 logger.info(f'Synonym.com had no definition reference for the word {self._word}')
+                return None
             else:
-                definition_list = []
+
                 soup = BeautifulSoup(response.text, "lxml")
                 cloudflare_protection = CloudflareVerification('https://www.synonym.com',
                                                                soup).cloudflare_protected_url()
                 if cloudflare_protection is False:
+                    definition_list = []
+                    part_of_speech_category = ''
+
                     status_tag = soup.find("meta", {"name": "pagetype"})
                     pattern = regex.compile(r'Oops, 404!')
                     if soup.find(text=pattern):
                         logger.info(f'Synonym.com had no definition reference for the word {self._word}')
+                        return definition_list, part_of_speech_category
                     elif status_tag.attrs['content'] == 'Term':
+                        # obtain the part of speech category for the specific word
+                        if soup.select(
+                            'body > div.page-container > div.content-container > div.main-column > '
+                            'div.sections-wrapper > div:nth-child(1) > p > strong'):
+                            css_part_of_speech = soup.select(
+                                'body > div.page-container > div.content-container > div.main-column > div.sections-wrapper > div:nth-child(1) > p > strong')
+                            if len(css_part_of_speech[0].text) != 0:
+                                part_of_speech_category = css_part_of_speech[0].text.rstrip('.')
+                            else:
+                                part_of_speech_category = ''
+
                         dictionary_entries = soup.find('h3', {'class': 'section-title'})
                         dictionary_entry = dictionary_entries.find_next('p').text
                         remove_brackets = regex.sub(r'.*?\[.*?\]', '', dictionary_entry)
-                        definition_list.append(remove_brackets.strip())
-                        definitions = sorted([x.lower() for x in definition_list])
-                        self._update_cache(definitions)
-                        return sorted(definitions)
+                        remove_spaces = cleansing.remove_excess_whitespace(remove_brackets)
+                        definition_list.append(remove_spaces)
+                        self._update_cache(part_of_speech_category, definition_list)
+                        return definition_list, part_of_speech_category
                 elif cloudflare_protection is True:
-                    logger.info('-' * 80)
-                    logger.info(f'The following URL has Cloudflare DDoS mitigation service protection.')
-                    logger.info('https://www.synonym.com')
-                    logger.info('-' * 80)
+                    return None
+
+        except bs4.FeatureNotFound as error:
+            logger.error('An error occurred in the following code segment:')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+        except AttributeError as error:
+            logger.error('An AttributeError occurred in the following code segment:')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+        except IndexError as error:
+            logger.error('An IndexError occurred in the following code segment:')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+        except KeyError as error:
+            logger.error('A KeyError occurred in the following code segment:')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+        except TypeError as error:
+            logger.error('A TypeError occurred in the following code segment:')
+            logger.error(''.join(traceback.format_tb(error.__traceback__)))
+
+    def _query_thesaurus_com(self) -> Union[Tuple[List[str], str], None]:
+        """
+        This function queries thesaurus.com for a definition associated
+        with the specific word provided to the Class Synonyms.
+
+        :returns:
+            definitions: definition for a word
+
+        :rtype: list
+
+        :raises:
+            AttributeError: Raised when an attribute reference or assignment fails
+
+            IndexError: Raised when a sequence subscript is out of range
+
+            KeyError: Raised when a mapping (dictionary) key is not found in the set of existing keys
+
+            TypeError: Raised when an operation or function is applied to an object of inappropriate type
+
+            bs4.FeatureNotFound: raised by the BeautifulSoup constructor if no parser with the requested features
+            is found
+        """
+        try:
+            response = self._request_http_response(f'https://www.thesaurus.com/browse/{self._word}')
+
+            if response.status_code == 404:
+                logger.info(f'Thesaurus.com had no definition reference for the word {self._word}')
+                return None
+            else:
+                soup = BeautifulSoup(response.text, "lxml")
+                cloudflare_protection = CloudflareVerification('https://www.thesaurus.com',
+                                                               soup).cloudflare_protected_url()
+                if cloudflare_protection is False:
+                    status_tag = soup.find("h1")
+                    if status_tag.text.startswith('0 results for'):
+                        logger.info(f'Thesaurus.com had no definition reference for the word {self._word}')
+                        return None
+                    else:
+                        definition_list = []
+                        part_of_speech_category = ''
+
+                        # obtain the part of speech category for the specific word
+                        if soup.select('#headword > div.css-bjn8wh.e1br8a1p0 > div > ul > li > a > em'):
+                            css_part_of_speech = soup.select('#headword > div.css-bjn8wh.e1br8a1p0 > div > ul > li > a > em')
+                            if len(css_part_of_speech[0].text) != 0:
+                                part_of_speech_category = css_part_of_speech[0].text.rstrip('.')
+                            else:
+                                part_of_speech_category = ''
+
+                        if soup.select('#headword > div.css-bjn8wh.e1br8a1p0 > div > ul > li > a > strong'):
+                            css_definition = soup.select('#headword > div.css-bjn8wh.e1br8a1p0 > div > ul > li > a > strong')
+                            if len(css_definition[0].text) != 0:
+                                definition_list.append(css_definition[0].text)
+                        self._update_cache(part_of_speech_category, definition_list)
+                        return definition_list, part_of_speech_category
+                elif cloudflare_protection is True:
                     return None
 
         except bs4.FeatureNotFound as error:

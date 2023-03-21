@@ -21,99 +21,92 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 ##################################################################################
 
 ##################################################################################
-#
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: March 12, 2022
+# Date Last Revised: March 18, 2023
 # Revised by: John Bumgarner
-#
 ##################################################################################
+
+##################################################################################
+# Python imports required for basic operations
+##################################################################################
+from typing import List, Dict, Optional, Tuple, Union, Set
 
 ##################################################################################
 # in memory temporary cache for antonyms
 ##################################################################################
-temporary_dict_antonyms = {}
+temporary_dict_antonyms: Dict[str, Dict[str, Set[str]]] = {}
 
+def cache_antonyms(word:  str) -> Tuple[bool, Optional[str]]:
+    success = (retrieved := temporary_dict_antonyms.get(word)) is not None
+    return success, retrieved
 
-def cache_antonyms(word):
-    item_to_check = f'{word}'
-    if item_to_check in temporary_dict_antonyms.keys():
-        values = temporary_dict_antonyms.get(item_to_check)
-        return True, values
-    else:
-        return False, None
-
-
-def insert_word_cache_antonyms(word, values):
+def insert_word_cache_antonyms(word: str, pos_category: str, antonyms: Set[str]) -> None:
     if word in temporary_dict_antonyms:
-        temporary_dict_antonyms[word].append(values)
+        deduplicated_values = set(antonyms) - set(temporary_dict_antonyms.get(word))
+        temporary_dict_antonyms[word][pos_category] += deduplicated_values
     else:
-        temporary_dict_antonyms[word] = values
+        temporary_dict_antonyms[word] = {pos_category: antonyms}
 
 
 ##################################################################################
 # in memory temporary cache for synonyms
 ##################################################################################
-temporary_dict_synonyms = {}
+temporary_dict_synonyms: Dict[str, Dict[str, Set[str]]] = {}
 
+def cache_synonyms(word:  str) -> Tuple[bool, Optional[str]]:
+    success = (retrieved := temporary_dict_synonyms.get(word)) is not None
+    return success, retrieved
 
-def cache_synonyms(word):
-    item_to_check = f'{word}'
-    if item_to_check in temporary_dict_synonyms.keys():
-        values = temporary_dict_synonyms.get(item_to_check)
-        return True, values
-    else:
-        return False, None
-
-
-def insert_word_cache_synonyms(word, values):
+def insert_word_cache_synonyms(word: str, pos_category: str, synonyms: Set[str]) -> None:
     if word in temporary_dict_synonyms:
-        temporary_dict_synonyms[word].append(values)
+        deduplicated_values = set(synonyms) - set(temporary_dict_synonyms.get(word))
+        temporary_dict_synonyms[word][pos_category] += deduplicated_values
     else:
-        temporary_dict_synonyms[word] = values
+        temporary_dict_synonyms[word] = {pos_category: synonyms}
+
 
 
 ##################################################################################
 # in memory temporary cache for definitions
 ##################################################################################
-temporary_dict_definition = {}
+temporary_dict_definition: Dict[str, Dict[str, Set[str]]] = {}
 
 
-def cache_definition(word):
-    item_to_check = f'{word}'
-    if item_to_check in temporary_dict_definition.keys():
-        values = temporary_dict_definition.get(item_to_check)
-        return True, values
-    else:
-        return False, None
+def cache_definition(word:  str) -> Tuple[bool, Optional[str]]:
+    success = (retrieved := temporary_dict_definition.get(word)) is not None
+    return success, retrieved
 
 
-def insert_word_cache_definition(word, values):
+def insert_word_cache_definition(word: str, pos_category: str, definitions: Set[str]) -> None:
     if word in temporary_dict_definition:
-        temporary_dict_definition.update({word: values})
+        deduplicated_values = set(definitions) - set(temporary_dict_definition.get(word))
+        temporary_dict_definition[word][pos_category] += deduplicated_values
     else:
-        temporary_dict_definition[word] = values
+        temporary_dict_definition[word] = {pos_category: definitions}
+
 
 
 ##################################################################################
 # in memory temporary cache for hypernyms
 ##################################################################################
-temporary_dict_hypernyms = {}
+temporary_dict_hypernyms: Dict[str, list[str]] = {}
 
 
-def cache_hypernyms(word):
-    item_to_check = f'{word}'
-    if item_to_check in temporary_dict_hypernyms.keys():
-        values = temporary_dict_hypernyms.get(item_to_check)
-        return True, values
-    else:
+def cache_hypernyms(word: str) -> Tuple[bool, Optional[List[str]]]:
+    try:
+        values = temporary_dict_hypernyms[word]
+    except KeyError:
         return False, None
+    else:
+        return True, sorted(set(values))
 
 
-def insert_word_cache_hypernyms(word, values):
+def insert_word_cache_hypernyms(word: str, values: List[str]) -> None:
     if word in temporary_dict_hypernyms:
-        temporary_dict_hypernyms[word].append(values)
+        deduplicated_values = set(values) - set(temporary_dict_hypernyms.get(word))
+        temporary_dict_hypernyms[word].extend(deduplicated_values)
     else:
         temporary_dict_hypernyms[word] = values
 
@@ -121,20 +114,21 @@ def insert_word_cache_hypernyms(word, values):
 ##################################################################################
 # in memory temporary cache for hyponyms
 ##################################################################################
-temporary_dict_hyponyms = {}
+temporary_dict_hyponyms: Dict[str, List[str]] = {}
 
 
-def cache_hyponyms(word):
-    item_to_check = f'{word}'
-    if item_to_check in temporary_dict_hyponyms.keys():
-        values = temporary_dict_hyponyms.get(item_to_check)
-        return True, values
-    else:
+def cache_hyponyms(word: str) -> Tuple[bool, Optional[List[str]]]:
+    try:
+        values = temporary_dict_hyponyms[word]
+    except KeyError:
         return False, None
+    else:
+        return True, sorted(set(values))
 
 
-def insert_word_cache_hyponyms(word, values):
+def insert_word_cache_hyponyms(word: str, values: List[str]) -> None:
     if word in temporary_dict_hyponyms:
-        temporary_dict_hyponyms[word].append(values)
+        deduplicated_values = set(values) - set(temporary_dict_hyponyms.get(word))
+        temporary_dict_hyponyms[word].extend(deduplicated_values)
     else:
         temporary_dict_hyponyms[word] = values

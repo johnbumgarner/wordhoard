@@ -35,7 +35,7 @@ synonym = Synonyms(search_string='',
 	<ul>
 		<li>type: string</li> 
 		<li>String containing the requested output format</li>  
-		<li>Acceptable values: list and dictionary</li> 
+		<li>Acceptable values: dictionary, list and json</li> 
 </ul>
 </li>
 
