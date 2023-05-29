@@ -210,7 +210,7 @@ class Synonyms(object):
                     part_of_speech = list(check_cache[1].keys())[0]
                     synonyms = cleansing.flatten_multidimensional_list(list(check_cache[1].values()))
                     if self._output_format == 'list':
-                        return sorted(set([word.lower() for word in check_cache[1]]))
+                        return sorted(set([word.lower() for word in synonyms]))
                     elif self._output_format == 'dictionary':
                         output_dict = {self._word: {'part_of_speech': part_of_speech, 'synonyms': sorted(set(
                             synonyms), key=len)}}
