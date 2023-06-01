@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: March 19, 2023
+# Date Last Revised: May 31, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -32,6 +32,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Python imports required for basic operations
 ##################################################################################
 import bs4
+import sys
 import json
 import logging
 import requests
@@ -108,9 +109,8 @@ class Definitions(object):
 
     def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(colorized_text(255, 0, 0,
-                                 'The definition query rate limit was reached. The querying process is entering '
-                                 'a temporary hibernation mode.'))
+            colorized_text('The definition query rate limit was reached. The querying process is entering '
+                           'a temporary hibernation mode.', 'red')
             logger.info('The definition query rate limit was reached.')
             self._rate_limit_status = True
 
@@ -159,7 +159,7 @@ class Definitions(object):
             response = Query(url, user_agent=self._user_agent, proxies=self._proxies).get_website_html()
             return response
 
-    def _run_query_tasks_in_parallel(self) -> List[str]:
+    def _run_query_tasks_in_parallel(self) -> List[tuple[List[str], str]]:
         """
         Runs the query tasks in parallel using a ThreadPool.
 
@@ -198,21 +198,20 @@ class Definitions(object):
         :rtype: list
         """
         if self._output_format not in self._valid_output_formats:
-            print(colorized_text(255, 0, 0,
-                                 f'The provided output type --> {self._output_format} <-- is not one of the '
-                                 f'acceptable types: dictionary, list or json.'))
+            colorized_text(f'The provided output type --> {self._output_format} <-- is not one of the '
+                           f'acceptable types: dictionary, list or json.', 'red')
+            sys.exit(1)
         else:
             valid_word = self._validate_word()
             if valid_word is False:
-                print(colorized_text(255, 0, 255,
-                                     f'Please verify that the word {self._word} is spelled correctly.'))
+                colorized_text(f'Please verify that the word {self._word} is spelled correctly.', 'magenta')
             elif valid_word is True:
                 check_cache = self._check_cache()
                 if check_cache[0] is True:
                     part_of_speech = list(check_cache[1].keys())[0]
                     definitions = cleansing.flatten_multidimensional_list(list(check_cache[1].values()))
                     if self._output_format == 'list':
-                        return sorted(set(definitions), key=len)
+                        return sorted(set(definitions))
                     elif self._output_format == 'dictionary':
                         output_dict = {self._word: {'part_of_speech': part_of_speech,
                                                     'definitions': sorted(set(definitions), key=len)}}
@@ -225,20 +224,18 @@ class Definitions(object):
 
                 elif check_cache[0] is False:
                     query_results = self._run_query_tasks_in_parallel()
-
                     part_of_speech = ''.join(set([x[1] for x in query_results if x and x is not None]))
-
                     definitions = ([x[0] for x in query_results if x and x is not None])
+                    # flatten definitions list
                     definitions = cleansing.flatten_multidimensional_list(definitions)
                     # remove excess white spaces from the strings in the list
                     definitions = [regex.sub(' +', " ", x) for x in definitions]
                     if not definitions:
-                        print(colorized_text(255, 0, 255,
-                                             f'No definitions were found for the word: {self._word} \n'
-                                             f'Please verify that the word is spelled correctly.'))
+                        colorized_text(f'No definitions were found for the word: {self._word} \n'
+                                       f'Please verify that the word is spelled correctly.', 'blue')
                     else:
                         if self._output_format == 'list':
-                            return sorted(set(definitions), key=len)
+                            return sorted(set(definitions))
                         elif self._output_format == 'dictionary':
                             output_dict = {self._word: {'part_of_speech': part_of_speech, 'definitions': sorted(set(
                                 definitions), key=len)}}
@@ -387,7 +384,6 @@ class Definitions(object):
                     else:
                         definition_list = []
                         part_of_speech_category = ''
-
                         # obtain the part of speech category for the specific word
                         if soup.select(
                             '#dictionary-entry-1 > div.row.entry-header > div > '

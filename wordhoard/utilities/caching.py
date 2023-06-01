@@ -24,14 +24,14 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: March 18, 2023
+# Date Last Revised: April 14, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
 ##################################################################################
 # Python imports required for basic operations
 ##################################################################################
-from typing import List, Dict, Optional, Tuple, Union, Set
+from typing import List, Dict, Optional, Tuple, Set
 
 ##################################################################################
 # in memory temporary cache for antonyms

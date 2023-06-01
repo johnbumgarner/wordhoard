@@ -1,7 +1,7 @@
 __author__ = 'John Bumgarner'
-__date__ = 'July 5, 2021'
+__date__ = 'May 31, 2023'
 __module_name__ = 'wordhoard'
-__version__ = '1.5.3'
+__version__ = '1.5.4'
 __status__ = 'Production'
 __license__ = 'MIT'
 __copyright__ = "Copyright (C) 2021 John Bumgarner"

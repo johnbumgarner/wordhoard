@@ -4,7 +4,7 @@
 This Python script provide colorized text in the error messages thrown by WordHoard.
 """
 __author__ = 'John Bumgarner'
-__date__ = 'February 04, 2023'
+__date__ = 'May 28, 2023'
 __status__ = 'Production'
 __license__ = 'MIT'
 __copyright__ = "Copyright (C) 2023 John Bumgarner"
@@ -20,24 +20,28 @@ __copyright__ = "Copyright (C) 2023 John Bumgarner"
 ##################################################################################
 
 ##################################################################################
-# Date Completed: February 04, 2023
+# Date Completed: May 28, 2023
 # Author: John Bumgarner
 #
 # Date Last Revised:
 # Revised by:
 ##################################################################################
 
-
-def colorized_text(r: int, g: int, b: int, text: str) -> str:
+def colorized_text(text: str, color: str) -> None:
     """
-    This function provides error messages color.
-    For example:
-    rgb(255, 0, 0) is displayed as the color red
-    rgb(0, 255, 0) is displayed as the color green
-    :param r: red color value
-    :param g: green color value
-    :param b: below color value
+    This function provides terminal error messages in color.
     :param text: text to colorized
-    :return: string of colorized text
+    :param color: color value
+    :return: print error in color
     """
-    return f"\033[38;2;{r};{g};{b}m{text}\033[0m"
+    RESET = "\033[0m" # resets the terminal color to its default
+    if color == 'red':
+        print(f'\033[1;31m{text}{RESET}')
+    elif color == 'blue':
+        print(f'\033[1;34m{text}{RESET}')
+    elif color == 'green':
+        print(f'\033[1;32m{text}{RESET}')
+    elif color == 'magenta':
+        print(f'\033[1;35m{text}{RESET}')
+
+

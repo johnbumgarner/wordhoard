@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Initially Completed: June 12, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: March 19, 2023
+# Date Last Revised: May 31, 2023
 # Revised by: John Bumgarner
 ###################################################################################
 
@@ -32,6 +32,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Python imports required for basic operations
 ##################################################################################
 import bs4
+import sys
 import json
 import logging
 import traceback
@@ -183,9 +184,8 @@ class Hyponyms(object):
 
     def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(colorized_text(255, 0, 0,
-                                 'The hyponyms query rate limit was reached. The querying process is entering '
-                                 'a temporary hibernation mode.'))
+            colorized_text('The hyponyms query rate limit was reached. The querying process is entering '
+                           'a temporary hibernation mode.', 'red')
             logger.info('The hyponyms query rate limit was reached.')
             self._rate_limit_status = True
 
@@ -241,14 +241,13 @@ class Hyponyms(object):
             is found
         """
         if self._output_format not in self._valid_output_formats:
-            print(colorized_text(255, 0, 0,
-                                 f'The provided output type --> {self._output_format} <-- is not one of the '
-                                 f'acceptable types: dictionary, list or json.'))
+            colorized_text(f'The provided output type --> {self._output_format} <-- is not one of the '
+                           f'acceptable types: dictionary, list or json.', 'red')
+            sys.exit(1)
         else:
             valid_word = self._validate_word()
             if valid_word is False:
-                print(colorized_text(255, 0, 255,
-                                     f'Please verify that the word {self._word} is spelled correctly.'))
+                colorized_text(f'Please verify that the word {self._word} is spelled correctly.', 'magenta')
             elif valid_word is True:
                 check_cache = self._check_cache()
                 if check_cache[0] is True:
@@ -291,9 +290,8 @@ class Hyponyms(object):
                             if cloudflare_protection is False:
                                 hyponym = _get_hyponyms(soup)
                                 if 'no hyponyms found' in hyponym:
-                                    print(colorized_text(255, 0, 255,
-                                                         f'No hyponyms were found for the word: {self._word} \n'
-                                                         f'Please verify that the word is spelled correctly.'))
+                                    colorized_text(f'No hyponyms were found for the word: {self._word} \n'
+                                                   f'Please verify that the word is spelled correctly.', 'blue')
                                     return None
                                 else:
                                     number_of_pages = _get_number_of_pages(soup)

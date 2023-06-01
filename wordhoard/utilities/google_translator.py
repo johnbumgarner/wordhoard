@@ -24,7 +24,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: September 24, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: March 04, 2023
+# Date Last Revised: May 31, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -80,9 +80,8 @@ class Translator(object):
 
     def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(colorized_text(255, 0, 0,
-                                 'The Google Translation service query rate Limit was reached. The querying '
-                                 'process is entering a temporary hibernation mode.'))
+            colorized_text('The Google Translation service query rate Limit was reached. The querying '
+                           'process is entering a temporary hibernation mode.', 'red')
             logger.info('The Google Translation service query rate limit was reached.')
             self._rate_limit_status = True
 
@@ -163,7 +162,7 @@ class Translator(object):
                     translated_word = soup.find('div', {"class": "result-container"})
                     return translated_word.text
                 else:
-                    print(colorized_text(255, 0, 0, f'Google could not translate the word {self._str_to_translate}'))
+                    colorized_text(f'Google could not translate the word {self._str_to_translate}', 'magenta')
                     return None
 
         except ElementNotFoundException as error:
@@ -187,8 +186,7 @@ class Translator(object):
             This exception is thrown when the maximum number of connection requests have been exceeded for a 
             specific time for the Google Translation service.
             """
-            print(colorized_text(255, 0, 0, 'There has been too many connection requests to the Google '
-                                            'Translation service.'))
+            colorized_text('There has been too many connection requests to the Google Translation service.', 'red')
             logger.error('Connection Request Error:')
             logger.error('There has been too many connection requests to the Google Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -198,9 +196,8 @@ class Translator(object):
             This exception is thrown when an ambiguous exception occurs during a connection to the 
             Google Translation service.
             """
-            print(colorized_text(255, 0, 0, 'An ambiguous connection exception has occurred when contacting the'
-                                            'Google Translation service.  Please check the WordHoard log file '
-                                            'for additional information.'))
+            colorized_text('An ambiguous connection exception has occurred when contacting theGoogle Translation '
+                           'service.  Please check the WordHoard log file for additional information.', 'red')
             logger.error('Connection Exception:')
             logger.error('An ambiguous connection exception has occurred when communicating with the '
                          'Google Translation service.')
@@ -234,7 +231,7 @@ class Translator(object):
                     translated_word = soup.find('div', {"class": "result-container"})
                     return translated_word.text
                 else:
-                    print(colorized_text(255, 0, 0, f'Google could not translate the word {self._str_to_translate}'))
+                    colorized_text(f'Google could not translate the word {self._str_to_translate}', 'magenta')
                     return None
 
         except ElementNotFoundException as error:
@@ -258,8 +255,7 @@ class Translator(object):
             This exception is thrown when the maximum number of connection requests have been exceeded for a 
             specific time for the Google Translation service.
             """
-            print(colorized_text(255, 0, 0, 'There has been too many connection requests to the Google '
-                                            'Translation service.'))
+            colorized_text('There has been too many connection requests to the Google Translation service.', 'red')
             logger.error('Connection Request Error:')
             logger.error('There has been too many connection requests to the Google Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -269,9 +265,8 @@ class Translator(object):
             This exception is thrown when an ambiguous exception occurs during a connection to the 
             Google Translation service.
             """
-            print(colorized_text(255, 0, 0, 'An ambiguous connection exception has occurred when contacting the'
-                                            'Google Translation service.  Please check the WordHoard log file '
-                                            'for additional information.'))
+            colorized_text('An ambiguous connection exception has occurred when contacting the Google Translation '
+                           'service.  Please check the WordHoard log file for additional information.', 'red')
             logger.error('Connection Exception:')
             logger.error('An ambiguous connection exception has occurred when communicating with the '
                          'Google Translation service.')
@@ -289,11 +284,12 @@ class Translator(object):
         if supported_language:
             return self._google_translate(supported_language)
         elif not supported_language:
-            print(colorized_text(255, 0, 0, f'The language provided is not one of the supported languages '
-                                            f'for the Google Translation service.'))
-            print(colorized_text(255, 0, 0, f'Requested language: {self._source_language}'))
-            print(colorized_text(255, 0, 0, f'Please review the languages supported by the Google Translation service\n'
-                                            f'https://wordhoard.readthedocs.io/en/latest/translations/google_supported_translation_languages/'))
+            colorized_text(f'The language provided is not one of the supported languages for the '
+                           f'Google Translation service.', 'red')
+            colorized_text(f'Requested language: {self._source_language}', 'red')
+            colorized_text(f'Please review the languages supported by the Google Translation service\n'
+                           f'https://wordhoard.readthedocs.io/en/latest/translations'
+                           f'/google_supported_translation_languages/', 'green')
             return None
 
     def reverse_translate(self) -> str:

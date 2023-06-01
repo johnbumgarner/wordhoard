@@ -23,7 +23,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: March 18, 2023
+# Date Last Revised: May 31, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -154,9 +154,8 @@ class Query(object):
                 logger.info(f'Requested URL: {self._url_to_scrape}')
                 logger.info('-' * 80)
             elif response.status_code == 500:
-                print(colorized_text(255, 0, 0,
-                                     'An HTTP 500 Internal Server Error has occurred.'
-                                     '\nPlease review the WordHoard logs for additional information.'))
+                colorized_text('An HTTP 500 Internal Server Error has occurred.'
+                               '\nPlease review the WordHoard logs for additional information.', 'red')
                 logger.info('-' * 80)
                 logger.error(f'Response Status Code: {response.status_code}')
                 logger.info(
@@ -165,9 +164,8 @@ class Query(object):
                 logger.info(f'Requested URL: {self._url_to_scrape}')
                 logger.info('-' * 80)
             elif response.status_code == 503:
-                print(colorized_text(255, 0, 0,
-                                     'A 503 Service Unavailable status code has been detected.'
-                                     '\nPlease review the WordHoard logs for additional information.'))
+                colorized_text('A 503 Service Unavailable status code has been detected.'
+                               '\nPlease review the WordHoard logs for additional information.', 'red')
                 logger.info('-' * 80)
                 logger.error(f'Response Status Code: {response.status_code}')
                 logger.info(
@@ -176,9 +174,8 @@ class Query(object):
                 logger.error(f'Requested URL: {self._url_to_scrape}')
                 logger.info('-' * 80)
             elif response.status_code == 504:
-                print(colorized_text(255, 0, 0,
-                                     'An HTTP 504 Gateway Timeout Error status code has been detected.'
-                                     '\nPlease review the WordHoard logs for additional information.'))
+                colorized_text('An HTTP 504 Gateway Timeout Error status code has been detected.'
+                               '\nPlease review the WordHoard logs for additional information.', 'red')
                 logger.info('-' * 80)
                 logger.error(f'Response Status Code: {response.status_code}')
                 logger.info(
@@ -188,9 +185,8 @@ class Query(object):
                 logger.error(f'Requested URL: {self._url_to_scrape}')
                 logger.info('-' * 80)
             elif response.status_code == 521:
-                print(colorized_text(255, 0, 0,
-                                     'A 521 status code has been detected. This code is often used by CloudFlare.'
-                                     '\nPlease review the WordHoard logs for additional information.'))
+                colorized_text('A 521 status code has been detected. This code is often used by CloudFlare.'
+                               '\nPlease review the WordHoard logs for additional information.', 'red')
                 logger.info('-' * 80)
                 logger.error(f'Response Status Code: {response.status_code}')
                 logger.info("This status code is not specified in any RFCs, but is used by CloudFlare's"
@@ -199,17 +195,15 @@ class Query(object):
                 logger.info('-' * 80)
             else:
                 if response.status_code != 200:
-                    print(colorized_text(255, 0, 0,
-                                         f'The Status Code: {response.status_code} has been detected.'
-                                         '\nPlease review the WordHoard logs for additional information.'))
+                    colorized_text(f'The Status Code: {response.status_code} has been detected.'
+                                   '\nPlease review the WordHoard logs for additional information.', 'red')
                     logger.error(f'Response Status Code: {response.status_code}')
                     logger.info(f'Requested URL: {self._url_to_scrape}')
                     logger.info('-' * 80)
 
         except requests.HTTPError as error:
-            print(colorized_text(255, 0, 0,
-                                 'A HTTPError has occurred.'
-                                 '\nPlease review the WordHoard logs for additional information.'))
+            colorized_text('A HTTPError has occurred.'
+                           '\nPlease review the WordHoard logs for additional information.', 'red')
             logger.error(f'A HTTPError has occurred when requesting {self._url_to_scrape}')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
             sys.exit(1)
@@ -218,37 +212,32 @@ class Query(object):
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
             sys.exit(1)
         except requests.exceptions.ProxyError as error:
-            print(colorized_text(255, 0, 0,
-                                 'A unknown type of Proxy Error has occurred.'
-                                 '\nPlease verify that your proxies are working.'))
+            colorized_text('A unknown type of Proxy Error has occurred.'
+                           '\nPlease verify that your proxies are working.', 'red')
             logger.error(f'A ProxyError has occurred when requesting {self._url_to_scrape}')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
             sys.exit(1)
         except MaxRetryError as error:
-            print(colorized_text(255, 0, 0,
-                                 'The max number of connection retries was exceeded.'
-                                 '\nPlease review the WordHoard logs for additional information.'))
+            colorized_text('The max number of connection retries was exceeded.'
+                           '\nPlease review the WordHoard logs for additional information.', 'red')
             logger.error(f'A MaxRetryError has occurred when requesting {self._url_to_scrape}')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
             sys.exit(1)
         except requests.ConnectionError as error:
-            print(colorized_text(255, 0, 0,
-                                 'A ConnectionError has occurred.'
-                                 '\nPlease review the WordHoard logs for additional information.'))
+            colorized_text('A ConnectionError has occurred.'
+                           '\nPlease review the WordHoard logs for additional information.', 'red')
             logger.error(f'A ConnectionError has occurred when requesting {self._url_to_scrape}')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
             sys.exit(1)
         except requests.Timeout as error:
-            print(colorized_text(255, 0, 0,
-                                 'A connection timeout has occurred.'
-                                 '\nPlease review the WordHoard logs for additional information.'))
+            colorized_text('A connection timeout has occurred.'
+                           '\nPlease review the WordHoard logs for additional information.', 'red')
             logger.error(f'A Timeout has occurred when requesting {self._url_to_scrape}')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
             sys.exit(1)
         except requests.RequestException as error:
-            print(colorized_text(255, 0, 0,
-                                 'A RequestException has occurred.'
-                                 '\nPlease review the WordHoard logs for additional information.'))
+            colorized_text('A RequestException has occurred.'
+                           '\nPlease review the WordHoard logs for additional information.', 'red')
             logger.error(f'A RequestException has occurred when requesting {self._url_to_scrape}')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
             sys.exit(1)

@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: June 11, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: February 27, 2023
+# Date Last Revised: May 31, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -139,7 +139,7 @@ class Homophones(object):
         if len(rtn_list) > 0:
             return list(set(rtn_list))
 
-    def _english_words_without_homophones(self) -> str:
+    def _english_words_without_homophones(self) -> None:
         """
         This function iterates through a list of English
         language words with no known homophones.
@@ -150,10 +150,9 @@ class Homophones(object):
         global _no_homophones_list
         match = bool(self._word in _no_homophones_list)
         if match:
-            return colorized_text(255, 0, 255,
-                                  f'No homophones for {self._word}')
+            return None
 
-    def find_homophones(self) -> Union[List[str], str]:
+    def find_homophones(self) -> Union[List[str], None]:
         """
         Purpose
         ----------
@@ -176,4 +175,7 @@ class Homophones(object):
             if known_english_homophones:
                 return known_english_homophones
             elif not known_english_homophones:
-                return self._english_words_without_homophones()
+                if self._english_words_without_homophones() is None:
+                    colorized_text(f'No homophones for the word - {self._word}', 'magenta')
+                    return None
+

@@ -55,8 +55,9 @@ class Cloudflare(object):
 
         :return: BeautifulSoup object
         """
-        scraper = cloudscraper.create_scraper(delay=10,  browser={'custom': 'ScraperBot/1.0', })
+        scraper = cloudscraper.create_scraper(delay=10, browser={'custom': 'ScraperBot/1.0', })
         response = scraper.get(self._url)
+
         if response.status_code == 502 or response.status_code == 520 or response.status_code == 521:
             logger.info('-' * 80)
             logger.info(f'Cloudflare DDoS mitigation service protection bypass started.')

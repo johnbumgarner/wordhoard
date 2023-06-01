@@ -5,7 +5,7 @@ with open("PYPI_description.md", "r") as fh:
 
 setuptools.setup(
     name="wordhoard",
-    version="1.5.3",
+    version="1.5.4",
     author="John Bumgarner",
     author_email="wordhoardproject@gmail.com",
     description="A comprehensive lexical discovery application that is useful for finding semantic relationships "

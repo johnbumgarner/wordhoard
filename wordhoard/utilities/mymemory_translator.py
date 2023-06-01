@@ -24,7 +24,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: September 24, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: February 12, 2023
+# Date Last Revised: May 31, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -86,9 +86,8 @@ class Translator(object):
 
     def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(colorized_text(255, 0, 0,
-                                 'The MyMemory translation service query rate Limit was reached. The querying '
-                                 'process is entering a temporary hibernation mode.'))
+            colorized_text('The MyMemory translation service query rate Limit was reached. The querying '
+                           'process is entering a temporary hibernation mode.', 'red')
             logger.info('The MyMemory translation service query rate limit was reached.')
             self._rate_limit_status = True
 
@@ -150,9 +149,7 @@ class Translator(object):
         """
         try:
             if validate_address(self._email_address) is False:
-                print(colorized_text(255, 0, 0,
-                                     'A valid email address is required to use the MyMemory Translation '
-                                     'service.'))
+                colorized_text('A valid email address is required to use the MyMemory Translation service.', 'red')
                 sys.exit(1)
             elif validate_address(self._email_address) is True:
                 response = self._requests_retry_session().get(self._url_to_query,
@@ -172,8 +169,7 @@ class Translator(object):
                 else:
                     data = response.json()
                     if not data:
-                        print(colorized_text(255, 0, 0,f'MyMemory could not translate the word '
-                                                       f'{self._str_to_translate}.'))
+                        colorized_text(f'MyMemory could not translate the word {self._str_to_translate}.', 'magenta')
                         return None
 
                     else:
@@ -191,8 +187,8 @@ class Translator(object):
             Please note that the MyMemory Translation service only validates the format of the email address and 
             not the validity of the address provided.
             """
-            print(colorized_text(255, 0, 0, 'The email address provided for authentication to the MyMemory '
-                                            'Translation service is invalid.'))
+            colorized_text('The email address provided for authentication to the MyMemory Translation service '
+                           'is invalid.', 'red')
             logger.error('Invalid Email Address Error:')
             logger.error('The email address provided for authentication to the MyMemory Translation service '
                          'is invalid.')
@@ -202,8 +198,8 @@ class Translator(object):
             """
             This exception is thrown if the provided text exceed the length limit of the MyMemory Translator service.
             """
-            print(colorized_text(255, 0, 0, f'The text length for the word: {self._str_to_translate} '
-                                            f'exceed the length limit of MyMemory translation service.'))
+            colorized_text(f'The text length for the word: {self._str_to_translate} exceed the length limit '
+                           f'of MyMemory translation service.', 'red')
             logger.error(f'The text length for the word: {self._str_to_translate} exceed the length limit of '
                          f'MyMemory Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -213,8 +209,7 @@ class Translator(object):
             This exception is thrown when the maximum number of connection requests have been exceeded for a 
             specific time for the MyMemory Translation service.
             """
-            print(colorized_text(255, 0, 0, 'There has been too many connection requests to the MyMemory '
-                                            'Translation service.'))
+            colorized_text('There has been too many connection requests to the MyMemory Translation service.', 'red')
             logger.error('Connection Request Error:')
             logger.error('There has been too many connection requests to the MyMemory Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -224,9 +219,8 @@ class Translator(object):
             This exception is thrown when an ambiguous exception occurs during a connection to the 
             MyMemory Translation service.
             """
-            print(colorized_text(255, 0, 0, 'An ambiguous connection exception has occurred when contacting the'
-                                            'MyMemory Translation service.  Please check the WordHoard log file '
-                                            'for additional information.'))
+            colorized_text('An ambiguous connection exception has occurred when contacting the MyMemory Translation '
+                           'service.  Please check the WordHoard log file for additional information.', 'red')
             logger.error('Connection Exception:')
             logger.error('An ambiguous connection exception has occurred when communicating with the '
                          'MyMemory Translation service.')
@@ -241,9 +235,7 @@ class Translator(object):
         """
         try:
             if validate_address(self._email_address) is False:
-                print(colorized_text(255, 0, 0,
-                                     'A valid email address is required to use the MyMemory Translation '
-                                     'service.'))
+                colorized_text('A valid email address is required to use the MyMemory Translation service.', 'red')
                 sys.exit(1)
             elif validate_address(self._email_address) is True:
                 response = self._requests_retry_session().get(self._url_to_query,
@@ -263,8 +255,7 @@ class Translator(object):
                 else:
                     data = response.json()
                     if not data:
-                        print(colorized_text(255, 0, 0, f'MyMemory could not translate the word '
-                                                        f'{self._str_to_translate}.'))
+                        colorized_text(f'MyMemory could not translate the word {self._str_to_translate}.', 'red')
                         return None
 
                     else:
@@ -282,8 +273,8 @@ class Translator(object):
             Please note that the MyMemory Translation service only validates the format of the email address and 
             not the validity of the address provided.
             """
-            print(colorized_text(255, 0, 0, 'The email address provided for authentication to the MyMemory '
-                                            'Translation is invalid.'))
+            colorized_text('The email address provided for authentication to the MyMemory Translation is invalid.',
+                           'red')
             logger.error('Invalid Email Address Error:')
             logger.error('The email address provided for authentication to the MyMemory Translation '
                          'is invalid.')
@@ -294,8 +285,8 @@ class Translator(object):
             """
             This exception is thrown if the provided text exceed the length limit of the MyMemory Translator service.
             """
-            print(colorized_text(255, 0, 0, f'The text length for the word: {self._str_to_translate} '
-                                            f'exceed the length limit of MyMemory translation service.'))
+            colorized_text(f'The text length for the word: {self._str_to_translate} exceed the length limit '
+                           f'of MyMemory translation service.', 'red')
             logger.error(f'The text length for the word: {self._str_to_translate} exceed the length limit of '
                          f'MyMemory translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -305,8 +296,7 @@ class Translator(object):
             This exception is thrown when the maximum number of connection requests have been exceeded for a 
             specific time for the MyMemory Translation service.
             """
-            print(colorized_text(255, 0, 0, 'There has been too many connection requests to the MyMemory '
-                                            'Translation service.'))
+            colorized_text('There has been too many connection requests to the MyMemory Translation service.', 'red')
             logger.error('Connection Request Error:')
             logger.error('There has been too many connection requests to the MyMemory Translation service.')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
@@ -316,9 +306,8 @@ class Translator(object):
             This exception is thrown when an ambiguous exception occurs during a connection to the 
             MyMemory Translation service.
             """
-            print(colorized_text(255, 0, 0, 'An ambiguous connection exception has occurred when contacting the'
-                                            'MyMemory Translation service.  Please check the WordHoard log file '
-                                            'for additional information.'))
+            colorized_text('An ambiguous connection exception has occurred when contacting the MyMemory Translation '
+                           'service.  Please check the WordHoard log file for additional information.', 'red')
             logger.error('Connection Exception:')
             logger.error('An ambiguous connection exception has occurred when communicating with the '
                          'MyMemory Translation service.')
@@ -335,11 +324,12 @@ class Translator(object):
         if supported_language:
             return self._mymemory_translate(supported_language)
         elif not supported_language:
-            print(colorized_text(255, 0, 0, f'The language provided is not one of the supported languages '
-                                            f'for the MyMemory Translation service.'))
-            print(colorized_text(255, 0, 0, f'Requested language: {self._source_language}'))
-            print(colorized_text(255, 0, 0, f'Please review the languages supported by the MyMemory Translate service\n'
-                                            f'https://wordhoard.readthedocs.io/en/latest/translations/mymemory_supported_translation_languages/'))
+            colorized_text(f'The language provided is not one of the supported languages for the MyMemory '
+                           f'Translation service.', 'red')
+            colorized_text(f'Requested language: {self._source_language}', 'red')
+            colorized_text(f'Please review the languages supported by the MyMemory Translate service\n'
+                           f'https://wordhoard.readthedocs.io/en/latest/translations'
+                           f'/mymemory_supported_translation_languages/', 'green')
 
             return None
 

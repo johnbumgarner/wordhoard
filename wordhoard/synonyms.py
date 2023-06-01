@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: March 20, 2023
+# Date Last Revised: May 31, 2023
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -32,6 +32,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Python imports required for basic operations
 ##################################################################################
 import bs4
+import sys
 import json
 import logging
 import requests
@@ -47,6 +48,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional, Set, Sized, Tuple, Union
 from wordhoard.utilities import caching, cleansing, word_verification
 from wordhoard.utilities.cloudflare_checker import CloudflareVerification
+
 
 logger = logging.getLogger(__name__)
 
@@ -104,9 +106,8 @@ class Synonyms(object):
 
     def _backoff_handler(self):
         if self._rate_limit_status is False:
-            print(colorized_text(255, 0, 0,
-                                 'The synonyms query rate limit was reached. The querying process is '
-                                 'entering a temporary hibernation mode.'))
+            colorized_text('The synonyms query rate limit was reached. The querying process is '
+                                 'entering a temporary hibernation mode.', 'red')
             logger.info('The synonyms query rate limit was reached.')
             self._rate_limit_status = True
 
@@ -156,7 +157,7 @@ class Synonyms(object):
             response = Query(url, user_agent=self._user_agent, proxies=self._proxies).get_website_html()
             return response
 
-    def _run_query_tasks_in_parallel(self) -> List[str]:
+    def _run_query_tasks_in_parallel(self) -> List[tuple[List[str], str]]:
         """
         Runs the query tasks in parallel using a ThreadPool.
 
@@ -196,21 +197,20 @@ class Synonyms(object):
         :rtype: list
         """
         if self._output_format not in self._valid_output_formats:
-            print(colorized_text(255, 0, 0,
-                                 f'The provided output type --> {self._output_format} <-- is not one of the '
-                                 f'acceptable types: dictionary, list or json.'))
+            colorized_text(f'The provided output type --> {self._output_format} <-- is not one of the '
+                           f'acceptable types: dictionary, list or json.', 'red')
+            sys.exit(1)
         else:
             valid_word = self._validate_word()
             if valid_word is False:
-                print(colorized_text(255, 0, 255,
-                                  f'Please verify that the word {self._word} is spelled correctly.'))
+                colorized_text(f'Please verify that the word {self._word} is spelled correctly.', 'magenta')
             elif valid_word is True:
                 check_cache = self._check_cache()
                 if check_cache[0] is True:
                     part_of_speech = list(check_cache[1].keys())[0]
                     synonyms = cleansing.flatten_multidimensional_list(list(check_cache[1].values()))
                     if self._output_format == 'list':
-                        return sorted(set([word.lower() for word in check_cache[1]]))
+                        return sorted(set(synonyms))
                     elif self._output_format == 'dictionary':
                         output_dict = {self._word: {'part_of_speech': part_of_speech, 'synonyms': sorted(set(
                             synonyms), key=len)}}
@@ -223,20 +223,18 @@ class Synonyms(object):
 
                 elif check_cache[0] is False:
                     query_results = self._run_query_tasks_in_parallel()
-
                     part_of_speech = ''.join(set([x[1] for x in query_results if x and x is not None]))
-
                     synonyms = ([x[0] for x in query_results if x and x is not None])
+                    # flatten synonyms list
                     synonyms_results =  cleansing.flatten_multidimensional_list(synonyms)
                     # remove excess white spaces from the strings in the list
                     synonyms_results = cleansing.normalize_space(synonyms_results)
                     if not synonyms_results:
-                        print(colorized_text(255, 0, 255,
-                                             f'No synonyms were found for the word: {self._word} \n'
-                                             f'Please verify that the word is spelled correctly.'))
+                        colorized_text(f'No synonyms were found for the word: {self._word} \n'
+                                       f'Please verify that the word is spelled correctly.', 'blue')
                     else:
                         if self._output_format == 'list':
-                            return sorted(set([word.lower() for word in synonyms_results]), key=len)
+                            return sorted(set([word.lower() for word in synonyms_results]))
                         elif self._output_format == 'dictionary':
                             output_dict = {self._word: {'part_of_speech': part_of_speech, 'synonyms': sorted(set(
                                 synonyms_results), key=len)}}
@@ -657,3 +655,4 @@ class Synonyms(object):
         except TypeError as error:
             logger.error('A TypeError occurred in the following code segment:')
             logger.error(''.join(traceback.format_tb(error.__traceback__)))
+
