@@ -24,7 +24,7 @@ __copyright__ = 'Copyright (C) 2022 John Bumgarner'
 # Date Completed: January 08, 2022
 # Author: John Bumgarner
 #
-# Date Revised: February 25, 2023
+# Date Revised: May 25, 2024
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -33,7 +33,7 @@ __copyright__ = 'Copyright (C) 2022 John Bumgarner'
 ##################################################################################
 from bs4 import BeautifulSoup
 
-class CloudflareVerification(object):
+class CloudflareVerification:
     """
     This Class is used to query a webpage to determine if it is protected by
     Cloudflare's DDoS mitigation services.
@@ -52,19 +52,18 @@ class CloudflareVerification(object):
         :return: True or False
         :rtype: boolean
         """
-        if self._raw_soup.find(name='p', attrs={'data-translate': 'why_captcha_detail'}):
-            p_tag = self._raw_soup.find(name='p', attrs={'data-translate': 'why_captcha_detail'})
-            if p_tag.text == 'Completing the CAPTCHA proves you are a human and gives you temporary access to ' \
-                             'the web property.':
-                return True
-            else:
-                return False
+        p_tag = self._raw_soup.find(name='p', attrs={'data-translate': 'why_captcha_detail'})
+        return bool(p_tag and p_tag.text == 'Completing the CAPTCHA proves you are a human and gives you temporary access to the web property.')
 
     def _check_div_tag(self) -> bool:
-        if self._raw_soup.find(name='div', attrs={'id': 'challenge-body-text'}):
-            return True
-        else:
-            return False
+        """
+        This function is designed to query for the existence
+        of a specific div tag with the id 'challenge-body-text'.
+
+        :return: True or False
+        :rtype: boolean
+        """
+        return bool(self._raw_soup.find(name='div', attrs={'id': 'challenge-body-text'}))
 
     def _check_title_tag(self) -> bool:
         """
@@ -75,13 +74,12 @@ class CloudflareVerification(object):
         :rtype: boolean
         """
         title_tag = self._raw_soup.find(name='title')
-        try:
-            if 'Please Wait... | Cloudflare' in title_tag.text or 'Just a moment...' in title_tag.text:
-                return True
-            else:
-                return False
-        except AttributeError:
-            pass
+        return bool(
+                title_tag and (
+                    'Please Wait... | Cloudflare' in title_tag.text or
+                    'Just a moment...' in title_tag.text or
+                    'Attention Required! | Cloudflare' in title_tag.text)
+                    )
 
     def _check_meta_tag(self) -> bool:
         """
@@ -91,10 +89,7 @@ class CloudflareVerification(object):
         :return: True or False
         :rtype: boolean
         """
-        if self._raw_soup.find(name='meta', attrs={'id': 'captcha-bypass'}):
-            return True
-        else:
-            return False
+        return bool(self._raw_soup.find(name='meta', attrs={'id': 'captcha-bypass'}))
 
     def cloudflare_protected_url(self) -> bool:
         """

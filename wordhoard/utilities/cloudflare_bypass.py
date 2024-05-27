@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This Python script is used to bypass the Cloudflare's DDoS mitigation protection
+This Python module is used to bypass the Cloudflare's DDoS mitigation protection
 for the website provided.
 """
 __author__ = 'John Bumgarner'
@@ -24,57 +24,76 @@ __copyright__ = 'Copyright (C) 2023 John Bumgarner'
 # Date Completed: February 25, 2023
 # Author: John Bumgarner
 #
-# Date Revised:
-# Revised by:
+# Date Revised: May 04, 2024
+# Revised by: John Bumgarner
 ##################################################################################
 
 ##################################################################################
 # Python imports required for basic operations
 ##################################################################################
+# Standard library imports
 import logging
-import cloudscraper
 from time import sleep
+from typing import Union
 from random import randint
+
+# Third-party imports
+import cloudscraper
 from bs4 import BeautifulSoup
 from cloudscraper.exceptions import CloudflareChallengeError
 
 logger = logging.getLogger(__name__)
 
+SCRAPE_COUNT = 0
 
-class Cloudflare(object):
+class Cloudflare:
     """
     This Class is used to bypass the Cloudflare's DDoS mitigation protection for a specific website.
     """
     def __init__(self, url):
         self._url: str = url
 
-    def bypass(self) -> BeautifulSoup:
+    def bypass(self) -> Union[BeautifulSoup, None]:
         """
-        This function attempts to bypass the Cloudflare's DDoS mitigation protection
-        for a specific website.
+        This function attempts to bypass the Cloudflare's DDoS mitigation protection for a specific website.
 
         :return: BeautifulSoup object
         """
-        scraper = cloudscraper.create_scraper(delay=10, browser={'custom': 'ScraperBot/1.0', })
+        global SCRAPE_COUNT
+        SCRAPE_COUNT += 1
+        scraper = cloudscraper.create_scraper(delay=20, browser={'browser': 'chrome',
+                                                                 'platform': 'ios',
+                                                                 'mobile': True})
         response = scraper.get(self._url)
-
-        if response.status_code == 502 or response.status_code == 520 or response.status_code == 521:
+        if response.status_code == 403:
+            if SCRAPE_COUNT != 10:
+                logger.info("The requested URL is protected by Cloudflare's DDoS mitigation service.")
+                logger.info(f'Requested URL: {self._url}')
+                logger.info(f'Status Code: {response.status_code}')
+                sleep(randint(1, 10))
+                Cloudflare(self._url).bypass()
+            else:
+                return None
+        elif response.status_code in (502, 520, 521):
             logger.info('-' * 80)
-            logger.info(f'Cloudflare DDoS mitigation service protection bypass started.')
+            logger.info('Cloudflare DDoS mitigation service protection bypass started.')
             logger.info(f'Requested URL: {self._url}')
             logger.info(f'Status Code: {response.status_code}')
             logger.info('-' * 80)
             scraper.close()
-            sleep(randint(1, 5))
+            sleep(randint(1, 10))
             Cloudflare(self._url).bypass()
         elif response.status_code == 200:
             try:
-                soup = BeautifulSoup(response.content, 'lxml')
                 logger.info('-' * 80)
-                logger.info(f'Cloudflare DDoS mitigation service protection bypass successful.')
+                logger.info('Cloudflare DDoS mitigation service protection bypass successful.')
                 logger.info(f'Requested URL: {self._url}')
                 logger.info('-' * 80)
-                scraper.close()
-                return soup
+                soup = BeautifulSoup(response.content, 'lxml')
+                if isinstance(soup, BeautifulSoup):
+                    scraper.close()
+                    return soup
+                elif not isinstance(soup, BeautifulSoup):
+                    return None
             except CloudflareChallengeError:
                 pass

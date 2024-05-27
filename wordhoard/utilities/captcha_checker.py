@@ -31,13 +31,16 @@ __copyright__ = 'Copyright (C) 2021 John Bumgarner'
 ##################################################################################
 # Python imports required for basic operations
 ##################################################################################
-import bs4
+# Standard library imports
 import logging
+
+# Third-party imports
+import bs4
 
 logger = logging.getLogger(__name__)
 
 
-class CaptchaVerification(object):
+class CaptchaVerification:
     """
     This Class is used to query a webpage to determine if it is protected by a captcha.
     """
@@ -85,13 +88,11 @@ class CaptchaVerification(object):
         :return: True or False
         :rtype: boolean
         """
-        captcha_protected_h2_tag = bool(self._raw_soup.find(name='h2', attrs={'class': 'main__heading'}))
-        if captcha_protected_h2_tag is True:
+        captcha_protected_tag = bool(self._raw_soup.find(name='h2', attrs={'class': 'main__heading'}))
+        if captcha_protected_tag:
             captcha_protected_tag = self._raw_soup.find(name='h2', attrs={'class': 'main__heading'})
-            if "We've detected unusual activity from your computer network" in captcha_protected_tag.text:
-                return True
-            else:
-                return False
+            return  "We've detected unusual activity from your computer network" in captcha_protected_tag.text
+        return False
 
     def captcha_protected_url(self)  -> bool:
         """
@@ -110,7 +111,4 @@ class CaptchaVerification(object):
                 return True
             else:
                 h2_tag_bool = self._check_h2_tag()
-                if h2_tag_bool is True:
-                    return True
-                else:
-                    return False
+                return bool(h2_tag_bool)

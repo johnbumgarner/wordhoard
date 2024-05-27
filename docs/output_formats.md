@@ -1,8 +1,8 @@
-<h1><strong>Output Formats</strong></h1>
+<h1 style="color:IndianRed;"><strong>Output Formats</strong></h1>
+
 ---
 
-
-### List Output
+<h3 style="color:IndianRed;"> List Output</h3>
 
 <p align="justify"> 
 The default output of <strong>WordHoard</strong> is a <i>Python list</i>.  This output is set using the variable <i>output_format</i>, which by default is preset to <i>output_format='list'</i>. All output is sorted by length.  
@@ -20,8 +20,7 @@ print(results)
 'female parent', 'mother-in-law', 'surrogate mother', 'biological mother']
 ```
 
-
-### Dictionary Output
+<h3 style="color:IndianRed;"> Dictionary Output</h3>
 
 <p align="justify"> 
 The data elements can also be outputted in a <i>Python dictionary</i>. This is accomplished by changing the 
@@ -43,7 +42,7 @@ print(results)
 
 ```
 
-### JSON Output
+<h3 style="color:IndianRed;"> JSON Output</h3>
 
 <p align="justify"> 
 The data elements can also be outputted in JSON. This is accomplished by changing the <i>output_format</i>

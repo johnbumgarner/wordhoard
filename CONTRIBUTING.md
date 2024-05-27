@@ -1,7 +1,7 @@
-## Contributing to Wordhoard
+<h1 style="color:IndianRed;">Contributing to Wordhoard</h1>
 
+___
 We're glad that you want to contribute to the Wordhoard project! This document will help answer common questions you may have during your first contribution or whether it is, such as:
-
 
 - Reporting a bug
 - Discussing the current state of the code
@@ -9,8 +9,7 @@ We're glad that you want to contribute to the Wordhoard project! This document w
 - Proposing new features
 - Becoming a maintainer
 
-
-## Submitting Issues
+<h2 style="color:IndianRed;">Submitting Issues</h2>
 
 Not every contribution comes in the form of code. Submitting, confirming, and triaging issues is an important task for any project. 
 
@@ -28,8 +27,7 @@ Write bug or issue reports with detail, background, and sample code:
 - What actually happens
 - Notes (possibly including why you think this might be happening, or stuff you tried that didn't work)
 
-
-## Pull Requests
+<h2 style="color:IndianRed;">Pull Requests</h2>
 
 Pull requests are the best way to propose changes to the codebase (we use [Github Flow](https://guides.github.com/introduction/flow/index.html)). We actively welcome your pull requests:
 
@@ -40,8 +38,7 @@ Pull requests are the best way to propose changes to the codebase (we use [Githu
 5. Make sure your code lints.
 6. Issue that pull request!
 
-
-## Reporting a Vulnerability
+<h2 style="color:IndianRed;">Reporting a Vulnerability</h2>
 
 If you have found a security vulnerability in *Wordhoard*, or a dependency use, please contact us on [Slack](https://wordhoardsupport.slack.com) or via email me at [Wordhoard project](mailto:wordhoardproject@gmail.com?subject=[GitHub]%20wordhoard%20project%20security%20issue).
 
@@ -52,7 +49,7 @@ will be created by the Member and you will be invited to explain the problem fur
 Please provide a [concise reproducible test case](http://sscce.org/) and describe what results you are seeing and what results you expect.
 
 
-## Developer Certification of Origin (DCO)
+<h2 style="color:IndianRed;">Developer Certification of Origin (DCO)</h2>
 
 Licensing is very important to open source projects. It helps ensure the software continues to be available under the terms that the author desired.
 
@@ -93,7 +90,9 @@ By making a contribution to this project, I certify that:
     involved.
 ```
 
-# DCO Sign-Off Methods
+<h1 style="color:IndianRed;">DCO Sign-Off Methods</h1>
+
+___
 
 The DCO requires a sign-off message in the following format appear on each commit in the pull request:
 
@@ -103,7 +102,7 @@ Signed-off-by: Super Coder <supercoder@somedomain.com>
 
 The DCO text can either be manually added to your commit body, or you can add either -s or --signoff to your usual git commit commands. If you are using the GitHub UI to make a change you can add the sign-off message directly to the commit message when creating the pull request. If you forget to add the sign-off you can also amend a previous commit with the sign-off by running git commit --amend -s. If you've pushed your changes to GitHub already you'll need to force push your branch after this with git push -f.
 
-## Wordhoard Obvious Fix Policy
+<h2 style="color:IndianRed;">Wordhoard Obvious Fix Policy</h2>
 
 Small contributions, such as fixing spelling errors, where the content is small enough to not be considered intellectual property, can be submitted without signing the contribution for the DCO.
 

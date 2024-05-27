@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This Python script obtains a random user agent from a pre-built dictionary.
+This Python module obtains a random user agent from a pre-built dictionary.
 """
 __author__ = 'John Bumgarner'
 __date__ = 'September 12, 2021'
@@ -23,7 +23,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: September 12, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: March 04, 2023
+# Date Last Revised: May 12, 2024
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -49,20 +49,32 @@ BASE_DIR = os.path.dirname(PROJECT_ROOT)
 # source:  https://deviceatlas.com/blog/list-of-user-agent-strings
 # source:  https://developers.whatismybrowser.com/useragents/explore
 ########################################################################
-try:
-    _common_user_agents = os.path.join(BASE_DIR, 'files/common_user_agents.pkl')
-    with open(_common_user_agents, 'rb') as _infile:
-        _user_agents_list = pickle.load(_infile)
-        _infile.close()
-except FileNotFoundError as error:
-    logger.error('The common_user_agents.pkl file was not found. Aborting operation.')
-    logger.error(''.join(traceback.format_tb(error.__traceback__)))
-    sys.exit(1)
-except OSError as error:
-    logger.error(f"An OS error occurred when trying to open the file common_user_agents.pkl")
-    logger.error(''.join(traceback.format_tb(error.__traceback__)))
-    sys.exit(1)
 
+def _unpickle_user_agents():
+    """
+    Load user agents from a pickle file.
+
+    This function attempts to load user agents from the common_user_agents.pkl file located
+    in the 'files' directory under BASE_DIR. If successful, it returns a dictionary containing
+    the user agents. If the file is not found or an OS error occurs during loading, the function
+    logs the error using the logger and exits the program with an error code.
+
+    :return: A dictionary containing user agents if loaded successfully.
+    :rtype: dict
+    """
+    try:
+        _common_user_agents = os.path.join(BASE_DIR, 'files/common_user_agents.pkl')
+        with open(file=_common_user_agents, mode='rb') as _infile:
+            user_agents_list = pickle.load(_infile)
+            return user_agents_list
+    except FileNotFoundError as error:
+        logger.error('The common_user_agents.pkl file was not found. Aborting operation.')
+        logger.error(''.join(traceback.format_tb(error.__traceback__)))
+        sys.exit(1)
+    except OSError as error:
+        logger.error("An OS error occurred when trying to open the file common_user_agents.pkl")
+        logger.error(''.join(traceback.format_tb(error.__traceback__)))
+        sys.exit(1)
 
 def get_random_user_agent() -> str:
     """
@@ -72,11 +84,10 @@ def get_random_user_agent() -> str:
     :return: random user agent
     :rtype: string
     """
-    global _user_agents_list
-    random_key = random.choice(list(_user_agents_list.keys()))
-    random_value = random.choice(list(_user_agents_list[random_key]))
+    user_agents_list = _unpickle_user_agents()
+    random_key = random.choice(list(user_agents_list.keys()))
+    random_value = random.choice(list(user_agents_list[random_key]))
     return random_value
-
 
 def get_specific_user_agent(requested_key: str) -> Union[str, None]:
     """
@@ -105,8 +116,9 @@ def get_specific_user_agent(requested_key: str) -> Union[str, None]:
 
     if bool([v for k, v in user_agent_keys.items() if k == requested_key]):
         key = ''.join([v for k, v in user_agent_keys.items() if k == requested_key])
-        global _user_agents_list
-        random_value = random.choice(list(_user_agents_list[key]))
+        user_agents_list = _unpickle_user_agents()
+        random_value = random.choice(list(user_agents_list[key]))
+        print(random_value)
         return random_value
     else:
         logger.error('The requested user agent was not found in the list of available agents.')

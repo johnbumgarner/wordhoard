@@ -1,7 +1,7 @@
 
-<h1><strong>MyMemory Translation Languages</strong></h1>
----
+<h1 style="color:IndianRed;"><strong>MyMemory Translation Languages</strong></h1>
 
+---
 
 <p align="justify">
 Below are the languages supported by the <i>MyMemory Translator</i> service:

@@ -1,4 +1,5 @@
-<h1><strong>MyMemory translator</strong></h1>
+<h1 style="color:IndianRed;"><strong>MyMemory translator</strong></h1>
+
 ---
 
 <p align="justify">

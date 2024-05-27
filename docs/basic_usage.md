@@ -1,4 +1,5 @@
-<h1> <strong>Basic Usage</strong> </h1>
+<h1 style="color:IndianRed;"> <strong>Basic Usage</strong> </h1>
+
 ---
 
 
@@ -6,8 +7,7 @@
 <strong>WordHoard</strong> is a <i>Python 3</i> module that was designed using the rules of simplicity, which try to limit overly complex configuration requirements and keeps backend user intervention to the bare minimum.  
 </p>
 
-
-### Antonyms Module Usage
+<h3 style="color:IndianRed;">Antonyms Module Usage</h3>
 
 <p align="justify"> 
 An <i>antonym</i> is word that has the exact opposite meaning of another word or its antonym.
@@ -33,7 +33,7 @@ print(antonym_results)
 ['dad', 'daddy', 'father', 'old man', 'pa', 'papa', 'pop', 'poppa']
 ```
 
-### Synonyms Module Usage
+<h3 style="color:IndianRed;">Synonyms Module Usage</h3>
 
 <p align="justify">
 A <i>synonym</i> is a word or phrase that means exactly or nearly the same as another word or phrase in the same language.
@@ -64,7 +64,7 @@ print(synonym_results)
 'quintipara', 'source', 'supermom', 'surrogate mother']
 ```
 
-### Definitions Module Usage
+<h3 style="color:IndianRed;">Definitions Module Usage</h3>
 
 <p align="justify">
 A <i>definition</i> is a statement of the exact meaning of a word, especially in a dictionary.
@@ -80,7 +80,7 @@ print(definition_results)
 'female person who has borne children']
 ```
 
-### Homophones Module Usage
+<h3 style="color:IndianRed;">Homophones Module Usage</h3>
 
 <p align="justify">
 A <i>homophone</i> is a word that is pronounced the same as another word but differs in meaning.
@@ -106,7 +106,7 @@ print(homophone_results)
 ['horse is a homophone of hoarse']
 ```
 
-### Hypernyms Module Usage
+<h3 style="color:IndianRed;">Hypernyms Module Usage</h3>
 
 <p align="justify">
 Hypernym: (semantics) A word or phrase whose referents form a set including as a subset the referents of a subordinate term. Musical instrument is a hypernym of "guitar" because a guitar is a musical instrument.
@@ -139,7 +139,7 @@ print(hypernym_results)
 'sum', 'sum of money']
 ```
 
-### Hyponyms Module Usage
+<h3 style="color:IndianRed;">Hyponyms Module Usage</h3>
 
 <p align="justify">
 A <i>hyponym</i> is a word of more specific meaning than a general or superordinate term applicable to it.

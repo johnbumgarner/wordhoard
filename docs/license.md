@@ -1,4 +1,5 @@
-<h1><strong>License</strong></h1>
+<h1 style="color:IndianRed;"><strong>License</strong></h1>
+
 ---
 
 <p align="justify"> 

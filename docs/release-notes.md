@@ -1,15 +1,78 @@
-<h1><strong> Release Notes </strong></h1>
+<h1 style="color:IndianRed;"><strong> Release Notes </strong></h1>
+
 ---
 
 <p align="justify"> 
 This page provides information on all the <strong>WordHoard</strong> releases since inception.
 </p>
 
-## Version 1.5.3
+<h2 style="color:IndianRed;"> Version 1.5.5 </h2>
 
-<strong>Date of Release: 03.21.2023</strong><br>
-<strong>Purpose: Code enhancements to improve performance when querying online repositories and to obtain part of speech category for word being queried.</strong>
+<strong>Date of Release:&nbsp;&nbsp;</strong> <i>05.23.2024</i>
+<br>
+<strong>Purpose:&nbsp;&nbsp;</strong> <i>Code refactoring to improved modularization for readability and to reduce duplicated code related to error handling and querying.</i>
 
+---
+
+<p align="justify"> 
+	Mutiple modules were refactored to improve readability and reduce duplicated code.  The following modules had new Classes added to 
+obtain parts of speech and data extract using <i> BeautifulSoup </i> .
+</p>
+
+<ul>
+	<li>antonyms</li>
+	<li>dictionary</li>
+	<li>synonyms</li>
+</ul>
+
+
+<p align="justify"> 
+	The optional variable <i>sources</i> had been added to following modules. This variable allows you to refine the search sources to fit your requirements. 
+</p>
+
+<ul>
+	<li>antonyms</li>
+	<li>dictionary</li>
+	<li>synonyms</li>
+</ul>
+
+<p align="justify"> 
+	Type hinting was validated in all functions within all query modules and all utilities modules. Additionally, all parameter names in every function or call have been added.  This improves code readability and reduces ambiguity when reviewing the code.  
+</p>
+
+<p align="justify"> 
+	Cloudflare verification was modified with a timeout feature. Using <a href="https://www.collinsdictionary.com">Collins Dictionary</a> as a source can increase the runtime of <strong>WordHoard</strong> in the following modules.
+</p>
+
+<ul>
+	<li>antonyms</li>
+	<li>dictionary</li>
+	<li>synonyms</li>
+</ul>
+
+<h2 style="color:IndianRed;"> Version 1.5.4 </h2>
+
+<strong>Date of Release:&nbsp;&nbsp;</strong> <i>06.01.2023</i>
+<br>
+<strong>Purpose:&nbsp;&nbsp;</strong> <i>Code enhancements to improve cache processing related to list output for these modules.</i>
+
+<ul>
+    <li>antonyms</li>
+    <li>dictionary</li>
+    <li>hypernyms</li>
+    <li>hyponyms</li>
+    <li>synonyms</li>	
+</ul>
+
+<p align="justify"> 
+    Updated the colorized text module. And updated console warnings and informational messages with various shades of colorized text.
+</p>
+
+<h2 style="color:IndianRed;"> Version 1.5.3 </h2>
+
+<strong>Date of Release:&nbsp;&nbsp;</strong> <i>03.21.2023</i>
+<br>
+<strong>Purpose:&nbsp;&nbsp;</strong> <i>Code enhancements to improve performance when querying online repositories and to obtain part of speech category for word being queried.</i>
 ---
 
 <p align="justify"> 
@@ -23,34 +86,20 @@ This page provides information on all the <strong>WordHoard</strong> releases si
 	<li>synonyms</li>
 </ul>
 
-
 <p align="justify"> 
 	Type hinting was added to all functions within all query modules and all utilities modules.  
 </p>
-
 
 <p align="justify"> 
 	Additional Cloudflare verification was added to the query modules. This verification allowed the source 
 	<a href="https://www.collinsdictionary.com">Collins Dictionary</a> to be readded to the list of repositories being queried. 
 </p>
 
+<h2 style="color:IndianRed;"> Version 1.5.2 </h2>
 
-## Version 1.5.2
-
-<strong>Date of Release: 02.12.2023</strong><br>
-<strong>Purpose: Code enhancements of the Translator classes and bug fix in the dictionary module</strong>
-
----
-
-<p align="justify"> 
-Fixed the bug identified in the Issue 14: &nbsp <a href="https://github.com/johnbumgarner/wordhoard/issues/14">find_definitions can returns antonyms</a>
-</p>
-
-
-## Version 1.5.2
-
-<strong>Date of Release: 02.12.2023</strong><br>
-<strong>Purpose: Code enhancements of the Translator classes and bug fix in the dictionary module</strong>
+<strong>Date of Release:&nbsp;&nbsp;</strong>  <i>02.13.2023</i>
+<br>
+<strong>Purpose:&nbsp;&nbsp;</strong>  <i>Code enhancements of the Translator classes and bug fix in the dictionary module</i>
 
 ---
 
@@ -89,10 +138,11 @@ WordHoard.
 </p>
 
 
-## Version 1.5.1
+<h2 style="color:IndianRed;"> Version 1.5.1 </h2>
 
-<strong>Date of Release: 04.06.2022</strong><br>
-<strong>Purpose: Code enhancements (proxy and user agents)</strong>
+<strong>Date of Release:&nbsp;&nbsp;</strong> <i>04.06.2022</i>
+<br>
+<strong>Purpose:&nbsp;&nbsp;</strong> <i>Code enhancements (proxy and user agents)</i>
 
 ---
 
@@ -124,11 +174,11 @@ Selectable user agents capabilities were added to these modules:
 	The source <a href="https://www.collinsdictionary.com">Collins Dictionary</a> was disabled in <strong>WordHoard</strong>, because Cloudflare DDoS mitigation service protection was recently added. 
 </p>
 
+<h2 style="color:IndianRed;"> Version 1.5.0 </h2>
 
-## Version 1.5.0
-
-<strong>Date of Release: 09.24.2021</strong><br>
-<strong>Purpose: Code enhancements (proxy and translation support)</strong>
+<strong>Date of Release:&nbsp;&nbsp;</strong> <i>09.24.2021</i>
+<br>
+<strong>Purpose:&nbsp;&nbsp;</strong> <i>Code enhancements (proxy and translation support)</i>
 
 ---
 
@@ -161,11 +211,11 @@ Multiple translation modules were also added to wordhoard. These modules are:
 	<li><a href="https://mymemory.translated.net">MyMemory Translate</a></li>
 </ul>
 
+<h2 style="color:IndianRed;"> Version 1.4.9 </h2>
 
-## Version 1.4.9
-
-<strong>Date of Release: 09.07.2021</strong><br>
-<strong>Purpose: Added query rate limiting and additional exception handling</strong>
+<strong>Date of Release:&nbsp;&nbsp;</strong> <i>09.07.2021</i>
+<br>
+<strong>Purpose:&nbsp;&nbsp;</strong> <i>Added query rate limiting and additional exception handling</i>
 
 ---
 
@@ -174,10 +224,11 @@ Rate limiting was added to all modules that query online repositories. Additiona
 </p>
 
 
-## Version 1.4.8
+<h2 style="color:IndianRed;"> Version 1.4.8 </h2>
 
-<strong>Date of Release: 08.24.2021</strong><br>
-<strong>Purpose: Removed source and leftover debugging code</strong>
+<strong>Date of Release:&nbsp;&nbsp;</strong> <i>08.24.2021</i>
+<br>
+<strong>Purpose:&nbsp;&nbsp;</strong> <i>Removed source and leftover debugging code</i>
 
 ---
 
@@ -187,10 +238,11 @@ One of the original sources being queried was providing questionable synonyms an
 </p>
 
 
-## Version 1.4.7
+<h2 style="color:IndianRed;"> Version 1.4.7 </h2>
 
-<strong>Date of Release: 08.15.2021</strong><br>
-<strong>Purpose: Bugfix linked to changes in a page's navigational structure</strong>
+<strong>Date of Release:&nbsp;&nbsp;</strong>  <i>08.15.2021</i>
+<br>
+<strong>Purpose:&nbsp;&nbsp;</strong> <i>Bugfix linked to changes in a page's navigational structure</i>
 
 ---
 
@@ -202,12 +254,11 @@ This bugfix was related to the source <a href="https://www.synonym.com">synonym.
 Version 1.4.7 was redesigned to handle this new navigational structure.
 </p>
 
+<h2 style="color:IndianRed;"> Version 1.4.6 </h2>
 
-
-## Version 1.4.6
-
-<strong>Date of Release: 06.06.2021</strong><br>
-<strong>Purpose: Code redesign and enhancements</strong>
+<strong>Date of Release:&nbsp;&nbsp;</strong> <i>06.06.2021</i>
+<br>
+<strong>Purpose:&nbsp;&nbsp;</strong> <i>Code redesign and enhancements</i>
 
 ---
 
@@ -216,18 +267,18 @@ The python modules antonyms, dictionary, homophones, hyponyms, hypernyms and syn
 </p>
 
 <p align="justify"> 
-The internal cacheing was improved.
+The internal caching was improved.
 </p>
 
 <p align="justify"> 
 Console logging was disabled and all log entries are now written only to the file <i>wordhoard_error.yaml</i>.
 </p>
 
+<h2 style="color:IndianRed;"> Version 1.4.5 </h2>
 
-## Version 1.4.5
-
-<strong>Date of Release: 05.12.2021</strong><br>
-<strong>Purpose: Code enhancements</strong>
+<strong>Date of Release:&nbsp;&nbsp;</strong>  <i>05.12.2021</i>
+<br>
+<strong>Purpose:&nbsp;&nbsp;</strong> <i>Code enhancements</i>
 
 ---
 
@@ -235,11 +286,15 @@ Console logging was disabled and all log entries are now written only to the fil
 Version 1.4.5 includes new modules to find hypernyms, hyponyms and homophones for words in the English language.
 </p>
 
+<p align="justify">
+    The discrepancy in version numbering been 1.2 and 1.4.5 is related to Python Package Index (PyPI) issues related to builds.
+</p>
 
-## Version 1.2
+<h2 style="color:IndianRed;"> Version 1.2 </h2>
 
-<strong>Date of Release: 10.23.2020</strong><br>
-<strong>Purpose: Initial Release</strong>
+<strong>Date of Release:&nbsp;&nbsp;</strong> <i>10.23.2020</i>
+<br>
+<strong>Purpose:&nbsp;&nbsp;</strong>  <i>Initial Release</i>
 
 ---
 

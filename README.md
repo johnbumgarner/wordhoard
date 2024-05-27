@@ -3,7 +3,7 @@
   <img src="https://github.com/johnbumgarner/wordhoard/blob/master/graphic/wordhoard_graphic.jpg"/>
 </p>
 
-# Overviews
+<h1 style="color:IndianRed;">Overviews</h1>
 
 ![PyPI](https://img.shields.io/pypi/v/wordhoard) &nbsp;
 ![License: MIT](https://img.shields.io/github/license/johnbumgarner/wordhoard)&nbsp;
@@ -13,7 +13,8 @@
 
 <!-- [![wordhoard](https://snyk.io/advisor/python/wordhoard/badge.svg)](https://snyk.io/advisor/python/wordhoard)&nbsp; -->
 
-# Primary Use Case
+<h1 style="color:IndianRed;">Primary Use Case</h1>
+
 <p align="justify"> 
 Textual analysis is a broad term for various research methodologies used to qualitatively describe, interpret and understand text data. These methodologies are mainly used in academic research to analyze content related to media and communication studies, popular culture, sociology, and philosophy. Textual analysis allows these researchers to quickly obtain relevant insights from unstructured data. All types of information can be gleaned from textual data, especially from social media posts or news articles. Some of this information includes the overall concept of the subtext, symbolism within the text, assumptions being made and potential relative value to a subject (e.g. data science). In some cases it is possible to deduce the relative historical and cultural context of a body of text using analysis techniques coupled with knowledge from different disciplines, like linguistics and semiotics.
    
@@ -22,7 +23,7 @@ Word frequency is the technique used in textual analysis to measure the frequenc
 <strong>WordHoard</strong> was designed to assist researchers performing textual analysis to build more comprehensive lists of antonyms, synonyms, hypernyms, hyponyms and homophones.
 </p>
 
-# Installation
+<h1 style="color:IndianRed;">Installation</h1>
 
 <p align="justify"> 
    Install the distribution via pip:
@@ -32,13 +33,13 @@ Word frequency is the technique used in textual analysis to measure the frequenc
 pip3 install wordhoard
 ```
 
-# General Package Utilization
+<h1 style="color:IndianRed;">General Package Utilization</h1>
 
 <p align="justify">
 Please reference the <a href="https://wordhoard.readthedocs.io/en/latest" target="_blank">WordHoard Documentation</a> for package usage guidance and parameters.
 </p>
 
-# Sources
+<h1 style="color:IndianRed;">Sources</h1>
 
 <p align="justify">
 This package is currently designed to query these online sources for antonyms, synonyms, hypernyms, hyponyms and definitions:
@@ -51,8 +52,8 @@ This package is currently designed to query these online sources for antonyms, s
 6. wordhippo.com
 7. wordnet.princeton.edu
 </p>
-  
-# Dependencies
+
+<h1 style="color:IndianRed;">Dependencies</h1>
 
 <p align="justify">
 This package has these core dependencies:
@@ -70,7 +71,7 @@ This package has these core dependencies:
 Additional details on this package's dependencies can be found <a href="https://wordhoard.readthedocs.io/en/latest/dependencies" target="_blank">here</a>.
 </p>
 
-# Development Roadmap
+<h1 style="color:IndianRed;">Development Roadmap</h1>
 
 <p align="justify">
 If you would like to contribute to the <strong>WordHoard</strong> project please read the <a href="https://wordhoard.readthedocs.io/en/latest/contributing" target="_blank">contributing guidelines</a>.
@@ -80,7 +81,7 @@ Items currently under development:
    - Adding part-of-speech filters in queries 
 </p>
 
-# Issues
+<h1 style="color:IndianRed;">Issues</h1>
 
 <p align="justify">
 This repository is actively maintained.  Feel free to open any issues related to bugs, coding errors, broken links or enhancements. 
@@ -89,17 +90,17 @@ You can also contact me at [John Bumgarner](mailto:wordhoardproject@gmail.com?su
 </p>
 
 
-# Sponsorship
-   
+<h1 style="color:IndianRed;">Sponsorship</h1>
+
 If you would like to contribute financially to the development and maintenance of the <strong>WordHoard</strong> project please read the <a href="https://github.com/johnbumgarner/wordhoard/blob/master/SPONSOR.md">sponsorship information</a>.
 
-# License
+<h1 style="color:IndianRed;">License</h1>
 
 <p align="justify">
 The MIT License (MIT).  Please see <a href="https://wordhoard.readthedocs.io/en/latest/license" target="_blank">License File</a> for more information.
 </p>
 
-# Author
+<h1 style="color:IndianRed;">Author</h1>
 
 <p align="justify">
   Copyright (c) 2020 John Bumgarner

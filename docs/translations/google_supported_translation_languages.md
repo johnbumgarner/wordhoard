@@ -1,7 +1,7 @@
 
-<h1><strong>Google Translation Languages</strong></h1>
----
+<h1 style="color:IndianRed;"><strong>Google Translation Languages</strong></h1>
 
+---
 
 <p align="justify">
 Below are the languages supported by the <i>Google Translator</i> service:

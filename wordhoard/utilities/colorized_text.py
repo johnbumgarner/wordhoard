@@ -43,5 +43,3 @@ def colorized_text(text: str, color: str) -> None:
         print(f'\033[1;32m{text}{RESET}')
     elif color == 'magenta':
         print(f'\033[1;35m{text}{RESET}')
-
-

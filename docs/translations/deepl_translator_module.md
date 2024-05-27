@@ -1,6 +1,6 @@
-<h1><strong>DeepL Translator</strong></h1>
----
+<h1 style="color:IndianRed;"><strong>DeepL Translator</strong></h1>
 
+---
 
 <p align="justify">
 The example below uses the <i>DeepL Translator</i> module within <strong>WordHoard</strong> to translate Spanish language words to English language and then back into Spanish.

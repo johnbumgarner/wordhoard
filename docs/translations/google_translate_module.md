@@ -1,4 +1,5 @@
-<h1><strong>Google Translator</strong></h1>
+<h1 style="color:IndianRed;"><strong>Google Translator</strong></h1>
+
 ---
 
 <p align="justify">

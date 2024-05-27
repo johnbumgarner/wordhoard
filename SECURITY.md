@@ -1,6 +1,7 @@
-# Security Policy
+<h1 style="color:IndianRed;">Security Policy</h1>
 
-## Reporting a Vulnerability
+---
+<h2 style="color:IndianRed;">Reporting a Vulnerability</h2>
 
 If you have found a security vulnerability in *Wordhoard*, or a dependency use, please contact us on [Slack](https://wordhoardsupport.slack.com) or via email me at [Wordhoard project](mailto:wordhoardproject@gmail.com?subject=[GitHub]%20wordhoard%20project%20security%20issue).
 

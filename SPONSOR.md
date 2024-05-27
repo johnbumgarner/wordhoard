@@ -1,6 +1,8 @@
-# Sponsor Wordhoard
+<h1 style="color:IndianRed;">Sponsor Wordhoard</h1>
 
-## Overview
+---
+
+<h2 style="color:IndianRed;">Overview</h2>
 
 <p align="justify">
 
@@ -11,14 +13,14 @@ This document outlines the current methods to sponsor the <i>Wordhoard</i> proje
 please don't hesitate to reach out to me [here](mailto:wordhoardproject@gmail.com?subject=[GitHub]%20wordhoard%20project%20sponsorship%20request).
 </p>
 
-## Methods of Sponsorship
+<h2 style="color:IndianRed;">Methods of Sponsorship</h2>
 
 <p align="justify">
 Currently there is only one way to sponsor the Python project <i>Wordhoard</i>. This method is listed below, which includes additional information about the method. 
 Hopefully, this method works for you.  Additional support methods will be added in the future.  
 </p>
 
-### Method: Buy Me A Coffee
+<h3 style="color:IndianRed;">Method: Buy Me A Coffee</h3>
 
 <p align="justify">
 <i>Buy me a coffee</i> is a service for online creators, such as independent developers building 

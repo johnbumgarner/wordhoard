@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-This Python script is designed to query internal repositories for the
+This Python module is designed to query internal repositories for the
 homophones associated with the given word.
 """
 __author__ = 'John Bumgarner'
@@ -14,7 +14,7 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 # Date Completed: June 11, 2021
 # Author: John Bumgarner
 #
-# Date Last Revised: May 31, 2023
+# Date Last Revised: May 09, 2024
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -31,58 +31,82 @@ __copyright__ = "Copyright (C) 2021 John Bumgarner"
 ##################################################################################
 # Python imports required for basic operations
 ##################################################################################
+# Standard library imports
 import os
 import sys
 import pickle
 import logging
 import traceback
 from typing import List, Union
+
+# Local or project-specific imports
 from wordhoard.utilities import word_verification
 from wordhoard.utilities.colorized_text import colorized_text
 
 logger = logging.getLogger(__name__)
 
-PARENT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+# Define module-level variables to store loaded data
+_known_homophones_list = []
+_no_homophones_list = []
 
-# Opening the pickle file that contains a nested list of common
-# English language homophones.
-try:
-    _file_known_homophones = os.path.join(PARENT_DIRECTORY, 'files/common_english_homophones.pkl')
-    with open(_file_known_homophones, 'rb') as _eng_homophones:
-        _known_homophones_list = pickle.load(_eng_homophones)
-        _eng_homophones.close()
-except FileNotFoundError as error:
-    logger.error('The common_english_homophones.pkl file was not found. Aborting operation.')
-    logger.error(''.join(traceback.format_tb(error.__traceback__)))
-    sys.exit(1)
-except OSError as error:
-    logger.error(f"An OS error occurred when trying to open the file common_english_homophones.pkl")
-    logger.error(''.join(traceback.format_tb(error.__traceback__)))
-    sys.exit(1)
+class PickleLoader:
+    """
+        A utility class for loading pickle files containing English homophones and
+        English words with no known homophones.
+    """
 
-# Opening the pickle file that contains a nested list of English
-# language words that have no known homophones.
-try:
-    _file_no_known_homophones = os.path.join(PARENT_DIRECTORY, 'files/no_homophones_english.pkl')
-    with open(_file_no_known_homophones, 'rb') as _no_eng_homophones:
-        _no_homophones_list = pickle.load(_no_eng_homophones)
-        _no_eng_homophones.close()
-except FileNotFoundError as error:
-    logger.error('The no_homophones_english.pkl file was not found. Aborting operation.')
-    logger.error(''.join(traceback.format_tb(error.__traceback__)))
-    sys.exit(1)
-except OSError as error:
-    logger.error(f"An OS error occurred when trying to open the file no_homophones_english.pkl")
-    logger.error(''.join(traceback.format_tb(error.__traceback__)))
-    sys.exit(1)
-
-
-class Homophones(object):
-
-    def __init__(self,
-                 search_string: str = ''):
-
+    @staticmethod
+    def load_pickle_files() -> None:
         """
+            Loads pickle files containing English homophones and English words with no known homophones.
+
+            :returns: None
+            :rtype: NoneType
+        """
+        global _known_homophones_list, _no_homophones_list
+        parent_directory = os.path.dirname(os.path.abspath(__file__))
+        _file_known_homophones = os.path.join(parent_directory, 'files/common_english_homophones.pkl')
+        _file_no_known_homophones = os.path.join(parent_directory, 'files/no_homophones_english.pkl')
+
+        try:
+                # Opening the pickle file that contains a nested list of common
+                # English language homophones.
+            with open(file=_file_known_homophones, mode='rb') as _eng_homophones:
+                _known_homophones_list = pickle.load(file=_eng_homophones)
+        except (FileNotFoundError, OSError) as error:
+            PickleLoader.handle_pickle_load_error(_file_known_homophones, error)
+
+        try:
+            # Opening the pickle file that contains a nested list of English
+            # language words that have no known homophones.
+            with open(file=_file_no_known_homophones, mode='rb') as _no_eng_homophones:
+                _no_homophones_list = pickle.load(file=_no_eng_homophones)
+        except (FileNotFoundError, OSError) as error:
+            PickleLoader.handle_pickle_load_error(_file_no_known_homophones, error)
+
+    @staticmethod
+    def handle_pickle_load_error(file_path: str, error: Exception) -> None:
+        """
+            Handles errors when loading pickle files.
+
+            :arg file_path: The path of the pickle file.
+            :arg type file_path: str
+            :arg error: The error raised during file loading.
+            :arg type error: Exception
+            :returns: None
+            :rtype; NoneType
+        """
+        if isinstance(error, FileNotFoundError):
+            logger.error(f'The pickle file {file_path} was not found. Aborting operation.')
+        else:
+            logger.error(f"An OS error occurred when trying to open the pickle file {file_path}")
+        logger.error(''.join(traceback.format_tb(error.__traceback__)))
+        sys.exit(1)
+
+PickleLoader.load_pickle_files()
+
+class Homophones:
+    """
         Purpose
         ----------
         This Python class is used to query internal files containing
@@ -90,17 +114,16 @@ class Homophones(object):
 
         Usage Examples
         ----------
-
         >>> homophones = Homophones('horse')
-        >>> results = homophones.find_homophones()
-
-        >>> homophones = Homophones(search_string='horse')
         >>> results = homophones.find_homophones()
 
         Parameters
         ----------
         :param search_string: string containing the variable to obtain homophones for
         """
+
+    def __init__(self,
+                 search_string: str = ''):
 
         self._word = search_string
 
@@ -113,12 +136,10 @@ class Homophones(object):
         :rtype: boolean
         """
         valid_word = word_verification.validate_word_syntax(self._word)
-        if valid_word:
-            return True
-        else:
+        if not valid_word:
             logger.error(f'The word {self._word} was not in a valid format.')
             logger.error(f'Please verify that the word {self._word} is spelled correctly.')
-            return False
+        return valid_word
 
     def _common_english_homophones(self) -> List[str]:
         """
@@ -128,54 +149,36 @@ class Homophones(object):
         :return: list of homophones
         :rtype: list
         """
-        global _known_homophones_list
-        rtn_list = []
+        homophones_list = []
         for homophones in _known_homophones_list:
-            match = bool([word for word in homophones if word == self._word])
-            if match:
-                for word in homophones:
-                    if word != self._word:
-                        rtn_list.append(f'{self._word} is a homophone of {word}')
-        if len(rtn_list) > 0:
-            return list(set(rtn_list))
+            if any(word == self._word for word in homophones):
+                homophones_list.extend(
+                    f'{self._word} is a homophone of {word}' for word in homophones if word != self._word)
+        return list(set(homophones_list))
 
-    def _english_words_without_homophones(self) -> None:
+    def _english_words_without_homophones(self) -> bool:
         """
         This function iterates through a list of English
         language words with no known homophones.
 
-        :return: no homophones for word
-        :rtype: str
+        :return: True or False
+        :rtype: bool
         """
-        global _no_homophones_list
-        match = bool(self._word in _no_homophones_list)
-        if match:
-            return None
+        return self._word in _no_homophones_list
 
     def find_homophones(self) -> Union[List[str], None]:
         """
-        Purpose
-        ----------
-        This function queries multiple lists to find
-        English language homophones associated with the
-        specific word provided to the Class Homophones.
+        This function queries multiple lists to find English language homophones associated
+        with the specific word provided to the Class Homophones.
 
-        Returns
-        ----------
-        :return:
-            homophones: list of homophones
-            no_homophones: string
-
-        :rtype: list
-        :rtype: str
+        :return: list of homophones
+        :rtype: Union[List[str]
         """
-        valid_word = self._validate_word()
-        if valid_word:
+        if self._validate_word():
             known_english_homophones = self._common_english_homophones()
             if known_english_homophones:
                 return known_english_homophones
-            elif not known_english_homophones:
-                if self._english_words_without_homophones() is None:
-                    colorized_text(f'No homophones for the word - {self._word}', 'magenta')
-                    return None
-
+            elif self._english_words_without_homophones() is False:
+                colorized_text(text=f'No homophones for the word - {self._word}', color='magenta')
+                return None
+        return None

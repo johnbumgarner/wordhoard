@@ -32,16 +32,18 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 ##################################################################################
 import logging
 
-def enable_logging(logger):
+def enable_logging(logger) -> logging:
+    """
+    Enable logging for the specified logger.
+
+    This function adds a file handler to the logger to write log messages to a file named 'wordhoard_error.yaml'.
+    It also sets a specific logging format for the log messages.
+
+    :param logger: The logger object to which logging will be enabled.
+    :type logger: logging.Logger
+    """
     log_name = 'wordhoard_error.yaml'
     log_handler = logging.FileHandler(f'{log_name}')
     logger.addHandler(log_handler)
     formatter = logging.Formatter('%(asctime)s:%(name)s:%(levelname)s: %(message)s', '%Y-%m-%d %H:%M:%S')
     log_handler.setFormatter(formatter)
-
-
-
-
-
-
-

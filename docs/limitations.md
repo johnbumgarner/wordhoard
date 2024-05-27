@@ -1,4 +1,4 @@
-<h1><strong>Limitations</strong></h1>
+<h1 style="color:IndianRed;"><strong>Limitations</strong></h1>
 
 ---
 

@@ -48,8 +48,5 @@ def validate_word_syntax(word: str) -> bool:
     if len(word) == 0:
         return False
     else:
-        temp = regex.match(r'^[a-zA-Z-\s]*$', word.strip())
-        if temp:
-            return True
-        else:
-            return False
+        temp = regex.match(pattern=r'^[a-zA-Z-\s]*$', string=word.strip())
+        return bool(temp)

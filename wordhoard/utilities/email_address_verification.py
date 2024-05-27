@@ -23,7 +23,7 @@ __copyright__ = "Copyright (C) 2023 John Bumgarner"
 # Date Completed: February 09, 2023
 # Author: John Bumgarner
 #
-# Date Last Revised: February 19, 2023
+# Date Last Revised: May 12, 2024
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -40,7 +40,5 @@ def validate_address(email_address: str) -> bool:
     :param email_address: input string
     :return: boolean
     """
-    if regex.fullmatch(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+', email_address):
-        return True
-    else:
-        return False
+    return bool(regex.fullmatch(pattern=r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+', string=email_address))
+

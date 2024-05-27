@@ -33,50 +33,37 @@ class ElementNotFoundException(Exception):
     The exception is thrown if the requested HTML element was not found in the body element being
     parsed by BeautifulSoup.
     """
-    pass
-
 
 class InvalidEmailAddressException(Exception):
     """
     This exception is thrown when the email address provided for authentication to the MyMemory Translation
     service is invalid.
     """
-    pass
-
 
 class InvalidLengthException(Exception):
     """
     This exception is thrown if the provided text exceed the length limit of the the Translator service being used.
     """
-    pass
-
 
 class LanguageNotSupportedException(Exception):
     """
     This exception is thrown when the requested langauge is not supported by the Translator service being used.
     """
-    pass
-
 
 class QuotaExceededException(Exception):
     """
     This exception is thrown when the translation quota for a specific time period for the Translator service
     being used has been exceeded.
     """
-    pass
-
 
 class TooManyRequestsException(Exception):
     """
     This exception is thrown when the maximum number of connection requests have been exceeded for a specific time
     period for the Translator service being used.
     """
-    pass
-
 
 class RequestException(Exception):
     """
     This exception is thrown when an ambiguous exception occurs during a connection to the Translator service
     being used.
     """
-    pass

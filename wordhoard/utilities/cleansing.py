@@ -62,4 +62,3 @@ def flatten_multidimensional_list(list_of_lists: Union[List[str], List[List[str]
         return flattened_list
     else:
         return list_of_lists
-

@@ -1,4 +1,4 @@
-<h1><strong>Contributing to WordHoard</strong></h1>
+<h1 style="color:IndianRed;"><strong>Contributing to WordHoard</strong></h1>
 ---
 
 <p align="justify">
@@ -13,8 +13,7 @@ We're glad that you want to contribute to the <strong>WordHoard</strong> project
     <li> Becoming a maintainer </li>
 </ul>
 
-
-### Submitting Issues
+<h3 style="color:IndianRed;">Submitting Issues</h3>
 
 <p align="justify">
 Not every contribution comes in the form of code. Submitting, confirming, and triaging issues is an important task for any project. 
@@ -36,8 +35,7 @@ At <strong>WordHoard</strong> we use <i>GitHub</i> to track all project issues. 
     <li> Notes (possibly including why you think this might be happening, or stuff you tried that didn't work). </li>
 </ul>
 
-
-### Pull Requests
+<h3 style="color:IndianRed;">Pull Requests</h3>
 
 <p align="justify">
 Pull requests are the best way to propose changes to the codebase. <strong>WordHoard</strong> uses <a href="https://guides.github.com/introduction/flow/index.html" target="_blank">Github Flow</a> for this. We actively welcome your pull requests.
@@ -58,7 +56,7 @@ this link is used for email obfuscation
 https://www.willmaster.com/library/generators/resurgence-of-mailto-links.php 
 -->
 
-### Reporting a Vulnerability
+<h3 style="color:IndianRed;">Reporting a Vulnerability</h3>
 
 <p align="justify">
 If you have found a security vulnerability in <strong>WordHoard</strong>, or a dependency use, please contact us via <a href="https://wordhoardsupport.slack.com" target="_blank">Slack</a> or through 
@@ -74,7 +72,7 @@ Please provide a <a href="http://sscce.org" target="_blank">concise reproducible
 </p>
 
 
-### Developer Certification of Origin (DCO)
+<h3 style="color:IndianRed;">Developer Certification of Origin (DCO)</h3>
 
 <p align="justify">
 Licensing is very important to open source projects. It helps ensure the software continues to be available under the terms that the author desired.
@@ -125,7 +123,7 @@ By making a contribution to this project, I certify that:
     involved.
 ```
 
-### DCO Sign-Off Methods
+<h3 style="color:IndianRed;">DCO Sign-Off Methods</h3>
 
 The DCO requires a sign-off message in the following format appear on each commit in the pull request:
 
@@ -136,7 +134,8 @@ Signed-off-by: Super Coder <supercoder@somedomain.com>
 The DCO text can either be manually added to your commit body, or you can add either `-s` or `--signoff` to your usual git commit commands. If you are using the <i>GitHub</i> UI to make a change you can add the sign-off message directly to the commit message when creating the pull request. If you forget to add the sign-off you can also amend a previous commit with the sign-off by running `git commit --amend -s`. If you've pushed your changes to <i>GitHub</i> already you'll need to force push your branch after this with `git push -f`.
 </p>
 
-### Obvious Fix Policy
+
+<h3 style="color:IndianRed;">Obvious Fix Policy</h3>
 
 <p align="justify">
 Small contributions, such as fixing spelling errors, where the content is small enough to not be considered intellectual property, can be submitted without signing the contribution for the DCO.

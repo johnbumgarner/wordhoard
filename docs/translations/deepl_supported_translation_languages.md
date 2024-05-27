@@ -1,7 +1,7 @@
 
-<h1><strong>DeepL Translation Languages</strong></h1>
----
+<h1 style="color:IndianRed;"><strong>DeepL Translation Languages</strong></h1>
 
+---
 
 <p align="justify">
 Below are the languages supported by the <i>DeepL Translator</i> service:

@@ -1,21 +1,21 @@
-<h1><strong>Additional Features</strong></h1>
+<h1 style="color:IndianRed;"><strong>Additional Features</strong></h1>
+
 ---
 
-### In-memory cache
-   
+<h3 style="color:IndianRed;">In-memory cache</h3>
+
 <p align="justify">
 <strong>WordHoard</strong> uses an in-memory cache, which helps prevent redundant queries to an individual resource for the same word.  These caches are currently being erased after each session. 
 </p>
 
 
-### Logging 
+<h3 style="color:IndianRed;">Logging</h3>
 
 <p align="justify">
 This application also uses <i>Python</i> logging, which is written to the logfile <i>wordhoard_error.yaml</i>. The maintainers of <strong>WordHoard</strong> have attempted to catch any potential exception and write these error messages to that logfile. The logfile is useful in troubleshooting any issue with this package or with the sources being queried by <strong>WordHoard</strong>.
 </p>
 
-
-### Rate limiting
+<h3 style="color:IndianRed;">Rate limiting</h3>
 
 <p align="justify">
 Some sources have rate limits, which can impact querying and parsing for that source. In some cases exceeding these rate limits will trigger a <i>Cloudflare</i> challenge session.  Errors related to these blocked sessions are written the <i>wordhoard_error.yaml</i> file.  Such entries can have either a <i>status code</i> of 521, which is a 
@@ -53,8 +53,7 @@ results = synonym.find_synonyms()
 When a rate limit is triggered a warning message is written to both the console and the <i>wordhoard_error.yaml</i> file.  The rate limit will <strong><i>automatically reset</i></strong> after a set time period.  This <strong style="color:red;">reset time period cannot be modified</strong> using a parameter passed in a <i>Class object</i>.  
 </p>
 
-
-### Proxy usage 
+<h3 style="color:IndianRed;">Proxy usage</h3>
 
 <p align="justify">
 <strong>WordHoard</strong> provides out of the box usage of proxies. Just define your proxies config as a dictionary and pass it to the corresponding module as shown below.
@@ -77,7 +76,7 @@ results = synonym.find_synonyms()
 </p>
 
 
-### User Agents
+<h3 style="color:IndianRed;">User Agents</h3>
 
 <p align="justify">
 <strong>WordHoard</strong> has an embedded file that contains an array of common user agents for these platforms. 

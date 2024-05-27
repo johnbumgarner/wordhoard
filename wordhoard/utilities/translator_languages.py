@@ -24,7 +24,7 @@ __copyright__ = "Copyright (C) 2023 John Bumgarner"
 # Date Completed: February 12, 2023
 # Author: John Bumgarner
 #
-# Date Last Revised: February 28, 2023
+# Date Last Revised: May 24, 2024
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -34,6 +34,14 @@ __copyright__ = "Copyright (C) 2023 John Bumgarner"
 from typing import Dict
 
 class Languages:
+    """
+        This class provides static methods to retrieve supported languages for different translation services.
+
+        Methods:
+            - deep_supported_languages: Retrieves the supported languages for the Deep Translation service.
+            - google_supported_languages: Retrieves the supported languages for the Google Translation service.
+            - mymemory_supported_languages: Retrieves the supported languages for the MyMemory Translation service.
+    """
 
     @staticmethod
     def deep_supported_languages() -> Dict[str, str]:
@@ -41,7 +49,7 @@ class Languages:
         This function returns the supported languages for the Deep Translation service.
 
         :return: languages
-        :rtype: string
+        :rtype: dict
         """
         # Deep Translator supported languages listed in as of 02-04-2023
         supported_languages = {'bg': 'bulgarian',
@@ -82,7 +90,7 @@ class Languages:
         This function returns the supported languages for the Google Translation service.
 
         :return: languages
-        :rtype: string
+        :rtype: dict
         """
         # Google Translator supported languages listed as of 02-10-2023
         supported_languages = {'af': 'afrikaans',
@@ -228,7 +236,7 @@ class Languages:
         This function returns the supported languages for the MyMemory Translation service.
 
         :return: languages
-        :rtype: string
+        :rtype: dict
         """
         # MyMemory Translator supported languages as of 02-09-2023
         supported_languages = {'af': 'afrikaans',
