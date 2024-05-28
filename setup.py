@@ -41,6 +41,7 @@ setuptools.setup(
                       'cloudscraper>=1.2.71',
                       'deckar01-ratelimit>=3.0.2',
                       'deepl>=1.18.0',
+                      'docutils>=0.21.2',
                       'idna>=3.7',
                       'lxml>=5.2.2',
                       'pyparsing>=3.1.2',

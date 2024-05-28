@@ -24,7 +24,7 @@ __copyright__ = "Copyright (C) 2020 John Bumgarner"
 # Date Completed: October 15, 2020
 # Author: John Bumgarner
 #
-# Date Last Revised: May 13, 2024
+# Date Last Revised: May 28, 2024
 # Revised by: John Bumgarner
 ##################################################################################
 
@@ -62,11 +62,16 @@ def insert_word_cache_antonyms(word: str, pos_category: str, antonyms: Set[str])
     :type antonyms: Set[str]
     :return: None
     """
-    if word in temporary_dict_antonyms:
-        deduplicated_values = set(antonyms) - set(temporary_dict_antonyms.get(word))
-        temporary_dict_antonyms[word][pos_category] += deduplicated_values
-    else:
+    if word not in temporary_dict_antonyms:
+        # Initialize the dictionary for the word with the given part of speech category
         temporary_dict_antonyms[word] = {pos_category: antonyms}
+    elif pos_category in temporary_dict_antonyms[word]:
+        # Deduplicate and update the existing antonyms list
+        deduplicated_values = set(antonyms) - set(temporary_dict_antonyms[word][pos_category])
+        temporary_dict_antonyms[word][pos_category] += list(deduplicated_values)
+    else:
+        # Initialize the list for the part of speech category
+        temporary_dict_antonyms[word][pos_category] = antonyms
 
 
 ##################################################################################
@@ -98,11 +103,16 @@ def insert_word_cache_synonyms(word: str, pos_category: str, synonyms: Set[str])
     :type synonyms: Set[str]
     :return: None
     """
-    if word in temporary_dict_synonyms:
-        deduplicated_values = set(synonyms) - set(temporary_dict_synonyms.get(word))
-        temporary_dict_synonyms[word][pos_category] += deduplicated_values
-    else:
+    if word not in temporary_dict_synonyms:
+        # Initialize the dictionary for the word with the given part of speech category
         temporary_dict_synonyms[word] = {pos_category: synonyms}
+    elif word in temporary_dict_synonyms and pos_category in temporary_dict_synonyms[word]:
+        # Deduplicate and update the existing synonyms list
+        deduplicated_values = set(synonyms) - set(temporary_dict_synonyms[word][pos_category])
+        temporary_dict_synonyms[word][pos_category] += list(deduplicated_values)
+    else:
+        # Initialize the list for the part of speech category
+        temporary_dict_synonyms[word][pos_category] = synonyms
 
 ##################################################################################
 # in memory temporary cache for definitions
@@ -133,11 +143,16 @@ def insert_word_cache_definition(word: str, pos_category: str, definitions: Set[
     :type definitions: Set[str]
     :return: None
     """
-    if word in temporary_dict_definition:
-        deduplicated_values = set(definitions) - set(temporary_dict_definition.get(word))
-        temporary_dict_definition[word][pos_category] += deduplicated_values
-    else:
+    if word not in temporary_dict_definition:
+        # Initialize the dictionary for the word with the given part of speech category
         temporary_dict_definition[word] = {pos_category: definitions}
+    elif word in temporary_dict_definition and pos_category in temporary_dict_definition[word]:
+        # Deduplicate and update the existing definitions list
+        deduplicated_values = set(definitions) - set(temporary_dict_definition[word][pos_category])
+        temporary_dict_definition[word][pos_category] += list(deduplicated_values)
+    else:
+        # Initialize the list for the part of speech category
+        temporary_dict_definition[word][pos_category] = definitions
 
 ##################################################################################
 # in memory temporary cache for hypernyms
