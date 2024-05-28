@@ -73,6 +73,7 @@ obtain parts of speech and data extract using <i> BeautifulSoup </i> .
 <strong>Date of Release:&nbsp;&nbsp;</strong> <i>03.21.2023</i>
 <br>
 <strong>Purpose:&nbsp;&nbsp;</strong> <i>Code enhancements to improve performance when querying online repositories and to obtain part of speech category for word being queried.</i>
+
 ---
 
 <p align="justify"> 
@@ -96,6 +97,7 @@ obtain parts of speech and data extract using <i> BeautifulSoup </i> .
 </p>
 
 <h2 style="color:IndianRed;"> Version 1.5.2 </h2>
+
 
 <strong>Date of Release:&nbsp;&nbsp;</strong>  <i>02.13.2023</i>
 <br>
